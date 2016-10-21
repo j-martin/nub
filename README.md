@@ -1,6 +1,6 @@
 # bub
 
-bench-hub ⇒ bhub ⇒ `bub` a cli tool for all your bench needs
+`bench-hub` ⇒ `bhub` ⇒ `bub` a cli tool for all your bench needs
 
 ![Our Lord Savior, Lil Bub!](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Lil_Bub_2013_%28crop_for_thumb%29.jpg/440px-Lil_Bub_2013_%28crop_for_thumb%29.jpg)
 
@@ -12,7 +12,7 @@ project is properly update.
 
 ## Prerequisites
 
-        $ brew install golang # must fix version in future.
+        $ brew install golang # tested with 1.7.3 must fix version in future.
         $ go get github.com/constabulary/gb/... # fix version when required.
 
 ## Build
