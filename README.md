@@ -1,6 +1,6 @@
 # bub
 
-bench-hub => bhub => `bub` a cli tool for all your bench needs
+bench-hub ⇒ bhub ⇒ `bub` a cli tool for all your bench needs
 
 ![Our Lord Savior, Lil Bub!](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Lil_Bub_2013_%28crop_for_thumb%29.jpg/440px-Lil_Bub_2013_%28crop_for_thumb%29.jpg)
 
@@ -33,7 +33,7 @@ can always call `gb` directly with `\gb` or use `unalias gb`.
 
 The one I care the most about is having sub-commands like.
 
-        $ bub open jenkins,
+        $ bub open jenkins
         $ bub update <version>
 
 - [ ] A real build deployment workflow through jenkins where users can download
