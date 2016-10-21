@@ -1,0 +1,6 @@
+---
+name: bub
+active: true
+language: go
+types:
+  - tool
