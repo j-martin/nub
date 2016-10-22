@@ -24,6 +24,7 @@ To be expanded
 
 ## Prerequisites
 
+        # macOS to use the open commands (you can symlink xdg-open to open on Linux)
         $ brew install golang # tested with 1.7.3 must fix version in future.
         $ go get github.com/constabulary/gb/... # fix version when required.
 
