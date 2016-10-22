@@ -1,95 +1,95 @@
 package main
 
 import (
-	"flag"
+	"github.com/docopt/docopt-go"
 	"gopkg.in/yaml.v2"
 	"log"
-	"os/exec"
 )
 
 func main() {
-	//TODO: Use proper subcommands, e.g. bub open jenkins
-	// with something like https://github.com/urfave/cli#subcommands
-
 	//TODO: Add open in splunk staging and prod
 	//TODO: Add open datadog
-	//TODO: Add other useful things.
+	usage := `bub.
 
-	update := flag.Bool("update", false, "Update the state current repo.")
-	list := flag.Bool("list", false, "List all projects.")
-	validate := flag.Bool("validate", false, "Validate manifest.")
+Usage:
+  bub list
+  bub manifest | m update --service-version <value>
+  bub manifest | m validate
+  bub open | o repo
+  bub open | o issues
+  bub open | o pr
+  bub open | o branches
+  bub open | o raml
+  bub open | o jenkins
+  bub open | o jenkins console
+  bub open | o docs
+  bub open | o circle
+  bub -h | --help
+  bub --version
 
-	repo := flag.Bool("repo", false, "Open repo.")
-	issues := flag.Bool("issues", false, "Open issues.")
-	pr := flag.Bool("pr", false, "Open pr.")
-	branches := flag.Bool("branches", false, "Open branches.")
-	raml := flag.Bool("raml", false, "Open raml.")
+Options:
+  -h --help             Show this screen.
+  --service-version     Show version.
+  --version             Version of the service to update.`
 
-	jenkins := flag.Bool("jenkins", false, "Open jenkins.")
-	jenkinsConsole := flag.Bool("jenkins-console", false, "Open jenkins console.")
+	arguments, _ := docopt.Parse(usage, nil, true, "bub 0.1-experimental", false)
 
-	wiki := flag.Bool("docs", false, "Open wiki.")
-	circle := flag.Bool("circle", false, "Open circle.")
-
-	flag.Parse()
 	m := BuildManifest()
 
-	if *validate {
+	if arguments["validate"].(bool) {
 		//TODO: Build proper validation
 		yml, _ := yaml.Marshal(m)
 		log.Println(string(yml))
 	}
 
-	if *update {
+	if arguments["update"].(bool) {
 		//TODO: Allow to pass version at build time so
 		// we can list the docker and eb images version available.
 		StoreManifest(m)
 	}
 
-	if *list {
+	if arguments["list"].(bool) {
 		manifests := GetAllManifests()
 		yml, _ := yaml.Marshal(manifests)
 		log.Println(string(yml))
 	}
 
-	ghUrl := "https://github.com/BenchLabs/"
-	jenkinsUrl := "https://jenkins.example.com/jobs/BenchLabs/job/"
-	wikiUrl := "https://example.atlassian.net/wiki/display/dev/"
-	circleUrl := "https://circleci.com/gh/BenchLabs/"
-
-	if *repo {
-		exec.Command("open", ghUrl + m.Repository).Run()
+	if arguments["repo"].(bool) {
+		OpenGH(m, "")
 	}
 
-	if *issues {
-		exec.Command("open", ghUrl + m.Repository + "/issues").Run()
+	if arguments["issues"].(bool) {
+		OpenGH(m, "issues")
 	}
 
-	if *branches {
-		exec.Command("open", ghUrl + m.Repository + "/branches").Run()
+	if arguments["branches"].(bool) {
+		OpenGH(m, "branches")
 	}
 
-	if *pr {
-		exec.Command("open", ghUrl + m.Repository + "/pulls").Run()
+	if arguments["pr"].(bool) {
+		OpenGH(m, "pulls")
 	}
 
-	if *raml {
-		exec.Command("open", ghUrl + m.Repository + "/pulls").Run()
+	if arguments["raml"].(bool) {
+		url := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
+		OpenURI(url + m.Repository + ".raml")
 	}
 
-	if *jenkins {
-		exec.Command("open", jenkinsUrl + m.Repository).Run()
+	if arguments["jenkins"].(bool) {
+		OpenJenkins(m, "")
 	}
 
-	if *jenkinsConsole {
-		exec.Command("open", jenkinsUrl + m.Repository + "/lastBuild/console").Run()
+	if arguments["console"].(bool) {
+		OpenJenkins(m, "lastBuild/console")
 	}
 
-	if *wiki {
-		exec.Command("open", wikiUrl + m.Name).Run()
+	if arguments["docs"].(bool) {
+		wikiUrl := "https://example.atlassian.net/wiki/display/dev/"
+		OpenURI(wikiUrl + m.Name)
 	}
 
-	if *circle {
-		exec.Command("open", circleUrl + m.Repository).Run()
+	if arguments["circle"].(bool) {
+		circleUrl := "https://circleci.com/gh/BenchLabs/"
+		OpenURI(circleUrl + m.Repository)
 	}
 }

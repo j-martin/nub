@@ -1,10 +1,10 @@
 package main
 
 import (
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"time"
-	"gopkg.in/yaml.v2"
 )
 
 type Manifest struct {
@@ -44,9 +44,6 @@ func BuildManifest() Manifest {
 	}
 
 	changelog, err := ioutil.ReadFile("CHANGELOG.md")
-	if err != nil {
-		log.Printf("Could not %v", err)
-	}
 
 	err = yaml.Unmarshal(data, &m)
 	if err != nil {
@@ -61,4 +58,3 @@ func BuildManifest() Manifest {
 
 	return m
 }
-

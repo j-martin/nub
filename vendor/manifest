@@ -9,6 +9,13 @@
 			"path": "/aws"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/private/endpoints",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
+			"branch": "master",
+			"path": "/private/endpoints"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/private/protocol",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
@@ -42,6 +49,19 @@
 			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
 			"branch": "master",
 			"path": "/service/dynamodb"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/sts",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
+			"branch": "master",
+			"path": "/service/sts"
+		},
+		{
+			"importpath": "github.com/docopt/docopt-go",
+			"repository": "https://github.com/docopt/docopt-go",
+			"revision": "784ddc588536785e7299f7272f39101f7faccc3f",
+			"branch": "master"
 		},
 		{
 			"importpath": "github.com/go-ini/ini",

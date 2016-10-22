@@ -1,20 +1,21 @@
 package main
 
 import (
-	"log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"log"
 )
 
 //TODO: Add GetAllActive
 
 var table = aws.String("manifests")
+var config = aws.Config{Region: aws.String("us-east-1")}
 
 func GetAllManifests() []Manifest {
 	manifests := []Manifest{}
-	svc := dynamodb.New(session.New(&aws.Config{Region: aws.String("us-east-1")}))
+	svc := dynamodb.New(session.New(&config))
 	params := &dynamodb.ScanInput{TableName: table}
 	result, err := svc.Scan(params)
 
@@ -27,7 +28,8 @@ func GetAllManifests() []Manifest {
 }
 
 func StoreManifest(m Manifest) {
-	svc := dynamodb.New(session.New(&aws.Config{Region: aws.String("us-east-1")}))
+	log.Printf("Update: %v", m.Name)
+	svc := dynamodb.New(session.New(&config))
 	manifest, err := dynamodbattribute.MarshalMap(m)
 
 	if err != nil {
@@ -41,5 +43,5 @@ func StoreManifest(m Manifest) {
 		log.Println(err)
 	}
 
-	log.Printf("%v updated.", m.Name)
+	log.Println("Update: complete.")
 }
