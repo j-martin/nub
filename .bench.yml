@@ -4,11 +4,3 @@ active: true
 language: go
 types:
   - tool
-dependencies:
-  - name: activemq
-    version: 5.13
-  - name: postgres
-    version: 9.4
-protocols:
-  - type: raml # currently a lie, there is no raml
-    path: client/src/main/raml
