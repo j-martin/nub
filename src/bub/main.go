@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	//TODO: Add open in splunk staging and prod
 	//TODO: Add open datadog
 	usage := `bub.
 
@@ -51,7 +50,7 @@ Options:
 	} else if args["sync"].(bool) {
 		msg := "Clone and/or Update all Bench repositories?\n" +
 			"Existing work will be stashed and pull the master branch.\n" +
-			"Please make sure you in the directory where you " +
+			"Please make sure you are in the directory where you " +
 			"store your repos and not a specific repo."
 
 		if args["--force"].(bool) || askForConfirmation(msg) {

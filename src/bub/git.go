@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-//TODO: Clone/Update All Active Projects
-
 func GetCurrentRepositoryName() string {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	result, err := cmd.Output()
@@ -33,7 +31,7 @@ func GetCurrentBranch() string {
 
 func CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
-	runCmd("git", "clone", "git@github.com:" + repository + ".git")
+	runCmd("git", "clone", "git@github.com:"+repository+".git")
 }
 
 func UpdateRepository(repository string) {
