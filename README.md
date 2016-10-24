@@ -30,8 +30,8 @@ To be expanded
 
 ## Build
 
-        $ gb vendor restore
-        $ gb build
+        $ make deps
+        $ make build
         $ bin/bub
 
 FYI: If you are using oh-my-zsh with the git plugin, `gb` gets aliases to `git branch`. You
