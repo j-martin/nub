@@ -16,6 +16,7 @@ type Manifest struct {
 	Types        []string
 	Dependencies []Dependency
 	Protocols    []Protocol
+	Version      string
 	Readme       string
 	ChangeLog    string
 }
@@ -30,12 +31,12 @@ type Protocol struct {
 	Path string
 }
 
-func BuildManifest() Manifest {
+func BuildManifest(version string) Manifest {
 	m := Manifest{}
 
 	data, err := ioutil.ReadFile(".bench.yml")
 	if err != nil {
-		log.Fatalf("Could not %v", err)
+		log.Fatalf("Could not %v\n Are you in a repository?", err)
 	}
 
 	readme, err := ioutil.ReadFile("README.md")
@@ -52,6 +53,7 @@ func BuildManifest() Manifest {
 
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
+	m.Version = version
 
 	m.Readme = string(readme)
 	m.ChangeLog = string(changelog)

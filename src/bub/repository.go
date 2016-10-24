@@ -14,6 +14,7 @@ var table = aws.String("manifests")
 var config = aws.Config{Region: aws.String("us-east-1")}
 
 func GetAllManifests() []Manifest {
+	log.Println("Fetching all manifests.")
 	manifests := []Manifest{}
 	svc := dynamodb.New(session.New(&config))
 	params := &dynamodb.ScanInput{TableName: table}
@@ -28,7 +29,7 @@ func GetAllManifests() []Manifest {
 }
 
 func StoreManifest(m Manifest) {
-	log.Printf("Update: %v", m.Name)
+	log.Printf("Updating manifest: %v", m.Name)
 	svc := dynamodb.New(session.New(&config))
 	manifest, err := dynamodbattribute.MarshalMap(m)
 
@@ -43,5 +44,5 @@ func StoreManifest(m Manifest) {
 		log.Println(err)
 	}
 
-	log.Println("Update: complete.")
+	log.Println("Updating manifest: complete.")
 }
