@@ -32,11 +32,15 @@ type Protocol struct {
 }
 
 func BuildManifest(version string) Manifest {
+	if !IsInRepository() {
+		log.Fatal("Must be executed in a repository.")
+	}
+
 	m := Manifest{}
 
 	data, err := ioutil.ReadFile(".bench.yml")
 	if err != nil {
-		log.Fatalf("Could not %v\n Are you in a repository?", err)
+		log.Fatalf("Could not %v", err)
 	}
 
 	readme, err := ioutil.ReadFile("README.md")

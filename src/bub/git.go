@@ -29,6 +29,14 @@ func GetCurrentBranch() string {
 	return strings.Trim(string(result), "\n ")
 }
 
+func IsInRepository() bool {
+	result, err := exists(".git")
+	if err != nil {
+		return false
+	}
+	return result
+}
+
 func CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
 	runCmd("git", "clone", "git@github.com:"+repository+".git")
