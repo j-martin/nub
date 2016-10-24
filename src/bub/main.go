@@ -85,7 +85,7 @@ Options:
 		OpenURI("https://github.com/BenchLabs/bench-raml/tree/master/specs/" + m.Repository + ".raml")
 
 	} else if args["jenkins"].(bool) && args["console"].(bool) {
-		OpenJenkins(m, "lastBuild/console")
+		OpenJenkins(m, "job/master/lastBuild/console")
 
 	} else if args["jenkins"].(bool) && args["trigger"].(bool) {
 		OpenJenkins(m, "job/master/trigger")

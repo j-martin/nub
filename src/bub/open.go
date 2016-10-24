@@ -19,7 +19,7 @@ func OpenGH(m Manifest, p string) {
 }
 
 func OpenJenkins(m Manifest, p string) {
-	base := "https://jenkins.example.com/jobs/BenchLabs/job"
+	base := "https://jenkins.example.com/job/BenchLabs/job"
 	OpenURI(base, m.Repository, p)
 }
 
