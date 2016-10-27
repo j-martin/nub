@@ -13,23 +13,23 @@ func main() {
 
 Usage:
   bub list
-  bub repository | r sync [--force]
-  bub manifest | m update [--artifact-version <value>]
-  bub manifest | m validate
-  bub open | o repo
-  bub open | o issues
-  bub open | o pr
-  bub open | o branches
-  bub open | o compare
-  bub open | o raml
-  bub open | o jenkins
-  bub open | o jenkins console
-  bub open | o jenkins trigger
-  bub open | o splunk
-  bub open | o splunk staging
-  bub open | o docs
-  bub open | o circle
-  bub open | o circle branch
+  bub repository sync [--force]
+  bub manifest update [--artifact-version <value>]
+  bub manifest validate
+  bub gh repo
+  bub gh issues
+  bub gh pr
+  bub gh branches
+  bub gh compare
+  bub gh raml
+  bub jenkins
+  bub jenkins console
+  bub jenkins trigger
+  bub splunk
+  bub splunk staging
+  bub docs
+  bub circle
+  bub circle branch
   bub -h | --help
   bub --version
 
