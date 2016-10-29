@@ -18,12 +18,12 @@ test:
 clean:
 	rm -rf bin
 
-.PHONY: publish
-publish: deps build
+.PHONY: release
+release: build
 	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | tr ' ' '-'))
 	find bin -type f -exec gzip {} \;
 	find bin -name *gz \
-		| sed -e "p;s/bin\/bub/s3:\/\/s3bucket\/contrib\/$(version)/" \
+		| sed -e "p;s#bin/bub#s3://s3bucket/contrib/$(version)#" \
 		| xargs -n2 aws s3 cp
 	git tag $(version)
 	git push --tags
