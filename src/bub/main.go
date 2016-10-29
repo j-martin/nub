@@ -22,6 +22,8 @@ Usage:
   bub gh branches
   bub gh compare
   bub gh raml
+  bub eb
+  bub eb events
   bub jenkins
   bub jenkins console
   bub jenkins trigger
@@ -84,6 +86,10 @@ Options:
 	} else if args["raml"].(bool) {
 		OpenURI("https://github.com/BenchLabs/bench-raml/tree/master/specs/" + m.Repository + ".raml")
 
+	} else if args["eb"].(bool) && args["events"].(bool) {
+		ListEvents()
+	} else if args["eb"].(bool) {
+		ListEnvironments()
 	} else if args["jenkins"].(bool) && args["console"].(bool) {
 		OpenJenkins(m, "job/master/lastBuild/console")
 

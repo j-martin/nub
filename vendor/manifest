@@ -51,6 +51,13 @@
 			"path": "/service/dynamodb"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/service/elasticbeanstalk",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4742f4bc1f93f618a2298544cb5f44a5fe91652c",
+			"branch": "master",
+			"path": "/service/elasticbeanstalk"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/service/sts",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
