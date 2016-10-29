@@ -41,7 +41,7 @@ Options:
   --force                      Force sync, wihtout prompt.
   --version                    Version of the service to update.`
 
-	args, _ := docopt.Parse(usage, nil, true, "bub 0.1-experimental", false)
+	args, _ := docopt.Parse(usage, nil, true, "bub 0.2-experimental", false)
 
 	if args["list"].(bool) {
 		manifests := GetAllManifests()
