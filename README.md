@@ -5,10 +5,15 @@
 ## Warning / Disclaimer
 
 Everything here is experimental and the commands set is subject to, and will,
-change. Also, when listing the manifests the list is also crap, until each
+change. Also, when listing the manifests the list is also incomplete, until each
 project is properly update.
 
 ![Our Lord Savior, Lil Bub!](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Lil_Bub_2013_%28crop_for_thumb%29.jpg/440px-Lil_Bub_2013_%28crop_for_thumb%29.jpg)
+
+## Installation
+
+    $ brew tap benchlabs/tools
+    $ brew install bub
 
 ## Usage
 
@@ -18,8 +23,8 @@ To be expanded
         $ bub list
 
         # in a repo
-        $ bub open repo
-        $ bub open issues
+        $ bub gh repo
+        $ bub gh issues
         # ...
 
 ## Prerequisites
@@ -32,7 +37,7 @@ To be expanded
 
         $ make deps
         $ make build
-        $ bin/bub
+        $ bin/bub<your-platform>
 
 FYI: If you are using oh-my-zsh with the git plugin, `gb` gets aliases to `git branch`. You
 can always call `gb` directly with `\gb` or use `unalias gb`.
