@@ -106,7 +106,6 @@ func ConnectToInstance(filter string) {
 			}
 			i, err := strconv.Atoi(strings.Trim(result, "\n"))
 			if err == nil && len(instances) > i {
-				log.Print(i)
 				connect(instances[i])
 				break
 			}
