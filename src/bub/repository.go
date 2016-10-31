@@ -11,7 +11,6 @@ import (
 //TODO: Add GetAllActive
 
 var manifestsTable = aws.String("manifests")
-var config = aws.Config{Region: aws.String("us-east-1")}
 
 func getDynamoSvc() *dynamodb.DynamoDB {
 	return dynamodb.New(session.New(&config))

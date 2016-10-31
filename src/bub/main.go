@@ -12,6 +12,7 @@ func main() {
 	usage := `bub.
 
 Usage:
+  bub setup
   bub list
   bub repository sync [--force]
   bub manifest update [--artifact-version <value>]
@@ -63,6 +64,9 @@ Options:
 			SyncRepositories(GetAllManifests())
 		}
 		os.Exit(0)
+
+	} else if args["setup"].(bool) {
+		Setup()
 
 	} else if args["ec2"].(bool) {
 		name := args["INSTANCE_NAME"]
