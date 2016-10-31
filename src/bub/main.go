@@ -71,12 +71,15 @@ Options:
 		} else {
 			ConnectToInstance("")
 		}
+		os.Exit(0)
 
 	} else if args["eb"].(bool) && args["events"].(bool) {
 		ListEvents()
+		os.Exit(0)
 
 	} else if args["eb"].(bool) {
 		ListEnvironments()
+		os.Exit(0)
 	}
 
 	m := BuildManifest(args["--artifact-version"].(string))
