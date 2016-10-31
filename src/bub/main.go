@@ -24,6 +24,7 @@ Usage:
   bub gh raml
   bub eb
   bub eb events
+  bub ec2 [INSTANCE_NAME]
   bub jenkins
   bub jenkins console
   bub jenkins trigger
@@ -34,6 +35,9 @@ Usage:
   bub circle branch
   bub -h | --help
   bub --version
+
+Arguments:
+  INSTANCE_NAME                optional ec2 instance name
 
 Options:
   -h --help                    Show this screen.
@@ -86,10 +90,20 @@ Options:
 	} else if args["raml"].(bool) {
 		OpenURI("https://github.com/BenchLabs/bench-raml/tree/master/specs/" + m.Repository + ".raml")
 
+	} else if args["ec2"].(bool) {
+		var name = args["INSTANCE_NAME"]
+		if name != nil {
+			ConnectToInstance(name.(string))
+		} else {
+			ConnectToInstance("")
+		}
+
 	} else if args["eb"].(bool) && args["events"].(bool) {
 		ListEvents()
+
 	} else if args["eb"].(bool) {
 		ListEnvironments()
+
 	} else if args["jenkins"].(bool) && args["console"].(bool) {
 		OpenJenkins(m, "job/master/lastBuild/console")
 
