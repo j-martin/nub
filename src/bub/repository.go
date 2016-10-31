@@ -10,15 +10,18 @@ import (
 
 //TODO: Add GetAllActive
 
-var table = aws.String("manifests")
+var manifestsTable = aws.String("manifests")
 var config = aws.Config{Region: aws.String("us-east-1")}
+
+func getDynamoSvc() *dynamodb.DynamoDB {
+	return dynamodb.New(session.New(&config))
+}
 
 func GetAllManifests() []Manifest {
 	log.Println("Fetching all manifests.")
 	manifests := []Manifest{}
-	svc := dynamodb.New(session.New(&config))
-	params := &dynamodb.ScanInput{TableName: table}
-	result, err := svc.Scan(params)
+	params := &dynamodb.ScanInput{TableName: manifestsTable}
+	result, err := getDynamoSvc().Scan(params)
 
 	if err != nil {
 		log.Fatal(err)
@@ -30,15 +33,14 @@ func GetAllManifests() []Manifest {
 
 func StoreManifest(m Manifest) {
 	log.Printf("Updating manifest: %v", m.Name)
-	svc := dynamodb.New(session.New(&config))
 	manifest, err := dynamodbattribute.MarshalMap(m)
 
 	if err != nil {
 		log.Println(err)
 	}
 
-	params := &dynamodb.PutItemInput{TableName: table, Item: manifest}
-	_, err = svc.PutItem(params)
+	params := &dynamodb.PutItemInput{TableName: manifestsTable, Item: manifest}
+	_, err = getDynamoSvc().PutItem(params)
 
 	if err != nil {
 		log.Println(err)

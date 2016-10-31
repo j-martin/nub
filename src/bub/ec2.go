@@ -48,12 +48,12 @@ func FetchInstances(filter string) []*ec2.Instance {
 			instances = append(instances, i)
 		}
 	}
-	w.Flush()
+	table.Flush()
 	return instances
 }
 
 func listInstances(instances []*ec2.Instance) {
-	fmt.Fprintln(w, "#\tName\tId\tPublicDNS\tType")
+	fmt.Fprintln(table, "#\tName\tId\tPublicDNS\tType")
 	for c, i := range instances {
 		instances = append(instances, i)
 		var name *string
@@ -65,9 +65,9 @@ func listInstances(instances []*ec2.Instance) {
 		idx := strconv.FormatInt(int64(c), 10)
 
 		row := []string{idx, *name, *i.InstanceId, *i.PublicDnsName, *i.InstanceType}
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+		fmt.Fprintln(table, strings.Join(row, "\t"))
 	}
-	w.Flush()
+	table.Flush()
 }
 
 func connect(i *ec2.Instance) {

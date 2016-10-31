@@ -54,10 +54,10 @@ Options:
 		os.Exit(0)
 
 	} else if args["sync"].(bool) {
-		msg := "Clone and/or Update all Bench repositories?\n" +
-			"Existing work will be stashed and pull the master branch.\n" +
-			"Please make sure you are in the directory where you " +
-			"store your repos and not a specific repo."
+		msg := `Clone and/or Update all Bench repositories?
+			Existing work will be stashed and pull the master branch.
+			Please make sure you are in the directory where you
+			store your repos and not a specific repo.`
 
 		if args["--force"].(bool) || askForConfirmation(msg) {
 			SyncRepositories(GetAllManifests())
@@ -88,10 +88,11 @@ Options:
 		OpenGH(m, "pulls")
 
 	} else if args["raml"].(bool) {
-		OpenURI("https://github.com/BenchLabs/bench-raml/tree/master/specs/" + m.Repository + ".raml")
+		base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
+		OpenURI(base + m.Repository + ".raml")
 
 	} else if args["ec2"].(bool) {
-		var name = args["INSTANCE_NAME"]
+		name := args["INSTANCE_NAME"]
 		if name != nil {
 			ConnectToInstance(name.(string))
 		} else {
@@ -117,7 +118,8 @@ Options:
 		OpenSplunk(m, args["staging"].(bool))
 
 	} else if args["docs"].(bool) {
-		OpenURI("https://example.atlassian.net/wiki/display/dev/" + m.Name)
+		base := "https://example.atlassian.net/wiki/display/dev/"
+		OpenURI(base + m.Name)
 
 	} else if args["circle"].(bool) {
 		OpenCircle(m, args["branch"].(bool))
