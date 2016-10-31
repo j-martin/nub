@@ -16,15 +16,15 @@ Usage:
   bub repository sync [--force]
   bub manifest update [--artifact-version <value>]
   bub manifest validate
+  bub eb
+  bub eb events
+  bub ec2 [INSTANCE_NAME]
   bub gh repo
   bub gh issues
   bub gh pr
   bub gh branches
   bub gh compare
   bub gh raml
-  bub eb
-  bub eb events
-  bub ec2 [INSTANCE_NAME]
   bub jenkins
   bub jenkins console
   bub jenkins trigger
@@ -45,7 +45,7 @@ Options:
   --force                      Force sync, wihtout prompt.
   --version                    Version of the service to update.`
 
-	args, _ := docopt.Parse(usage, nil, true, "bub 0.2-experimental", false)
+	args, _ := docopt.Parse(usage, nil, true, "bub 0.2.1-experimental", false)
 
 	if args["list"].(bool) {
 		manifests := GetAllManifests()
@@ -63,6 +63,20 @@ Options:
 			SyncRepositories(GetAllManifests())
 		}
 		os.Exit(0)
+
+	} else if args["ec2"].(bool) {
+		name := args["INSTANCE_NAME"]
+		if name != nil {
+			ConnectToInstance(name.(string))
+		} else {
+			ConnectToInstance("")
+		}
+
+	} else if args["eb"].(bool) && args["events"].(bool) {
+		ListEvents()
+
+	} else if args["eb"].(bool) {
+		ListEnvironments()
 	}
 
 	m := BuildManifest(args["--artifact-version"].(string))
@@ -90,20 +104,6 @@ Options:
 	} else if args["raml"].(bool) {
 		base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
 		OpenURI(base + m.Repository + ".raml")
-
-	} else if args["ec2"].(bool) {
-		name := args["INSTANCE_NAME"]
-		if name != nil {
-			ConnectToInstance(name.(string))
-		} else {
-			ConnectToInstance("")
-		}
-
-	} else if args["eb"].(bool) && args["events"].(bool) {
-		ListEvents()
-
-	} else if args["eb"].(bool) {
-		ListEnvironments()
 
 	} else if args["jenkins"].(bool) && args["console"].(bool) {
 		OpenJenkins(m, "job/master/lastBuild/console")
