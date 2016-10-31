@@ -12,6 +12,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"os/user"
 )
 
 func FetchInstances(filter string) []*ec2.Instance {
@@ -72,9 +73,10 @@ func listInstances(instances []*ec2.Instance) {
 
 func connect(i *ec2.Instance) {
 	log.Println(*i)
-	for _, user := range []string{"ubuntu", "ec2user"} {
-		host := user + "@" + *i.PublicDnsName
-		key := path.Join("~", ".ssh", *i.KeyName+".pem")
+	usr, _ := user.Current()
+	for _, sshUser := range []string{"ubuntu", "ec2user"} {
+		host := sshUser + "@" + *i.PublicDnsName
+		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
 
 		cmd := exec.Command("ssh", "-i", key, host, "-o", "ConnectTimeout=5")
 		cmd.Stdout = os.Stdout
