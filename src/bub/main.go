@@ -113,7 +113,7 @@ Options:
 		OpenURI(base + m.Repository + ".raml")
 
 	} else if args["jenkins"].(bool) && args["console"].(bool) {
-		OpenJenkins(m, "job/master/lastBuild/console")
+		OpenJenkins(m, "job/master/lastBuild/consoleFull")
 
 	} else if args["jenkins"].(bool) && args["trigger"].(bool) {
 		OpenJenkins(m, "job/master/trigger")
