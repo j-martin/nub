@@ -9,10 +9,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"strconv"
 	"strings"
-	"os/user"
 )
 
 func FetchInstances(filter string) []*ec2.Instance {
@@ -74,7 +74,7 @@ func listInstances(instances []*ec2.Instance) {
 func connect(i *ec2.Instance) {
 	log.Println(*i)
 	usr, _ := user.Current()
-	for _, sshUser := range []string{"ubuntu", "ec2user"} {
+	for _, sshUser := range []string{"ubuntu", "ec2-user"} {
 		host := sshUser + "@" + *i.PublicDnsName
 		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
 
