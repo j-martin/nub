@@ -76,13 +76,13 @@ func connect(i *ec2.Instance) {
 	usr, _ := user.Current()
 	for _, sshUser := range []string{"ubuntu", "ec2-user"} {
 		host := sshUser + "@" + *i.PublicDnsName
-		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
+		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
 
 		cmd := exec.Command("ssh", "-i", key, host, "-o", "ConnectTimeout=5")
 		cmd.Stdout = os.Stdout
 		cmd.Stdin = os.Stdin
 		cmd.Stderr = os.Stderr
-		log.Printf("Connecting to %v\n", host)
+		log.Printf("Connecting -i %v %v\n", key, host)
 
 		err := cmd.Run()
 		if err == nil {
