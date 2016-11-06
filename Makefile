@@ -24,3 +24,7 @@ release: build
 		| xargs -n2 aws s3 cp
 	git tag $(version)
 	git push --tags
+
+install: build
+	rm -f /usr/local/bin/bub
+	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub

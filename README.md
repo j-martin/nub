@@ -12,8 +12,15 @@ project is properly update.
 
 ## Installation
 
+### From Brew (macOS only)
     $ brew tap benchlabs/tools
     $ brew install bub
+
+### From source
+
+Install prereqs below.
+
+    $ make install
 
 ## Usage
 
@@ -36,7 +43,7 @@ To be expanded
 ## Build
 
         $ make deps
-        $ make build
+        $ make
         $ bin/bub<your-platform>
 
 FYI: If you are using oh-my-zsh with the git plugin, `gb` gets aliases to `git branch`. You
