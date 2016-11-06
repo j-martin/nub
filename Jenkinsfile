@@ -1,4 +1,4 @@
-node {
+commonNode {
   checkout scm
   def env = [
     "GOPATH=${env.HOME}/.go",
@@ -9,4 +9,5 @@ node {
     sh "make deps release"
     }
   }
+  tagRepository()
 }
