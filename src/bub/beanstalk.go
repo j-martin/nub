@@ -5,9 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"log"
+	"os"
 	"strings"
 	"text/tabwriter"
-	"os"
 )
 
 func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
@@ -50,11 +50,17 @@ func ListEvents() {
 		var message = *e.Message
 		const limit = 200
 		if len(message) < limit {
-			message = message[0 : len(message) - 1]
+			message = message[0 : len(message)-1]
 		} else {
 			message = message[0:limit] + "..."
 		}
-		row := []string{time.Format("2006-01-02T15:04:05Z"), *e.Severity, *e.EnvironmentName, message}
+
+		// EnvironmentName may be nil pointer.
+		name := *e.ApplicationName
+		if e.EnvironmentName != nil {
+			name = *e.EnvironmentName
+		}
+		row := []string{time.Format("2006-01-02T15:04:05Z"), *e.Severity, name, message}
 		fmt.Fprintln(table, strings.Join(row, "\t"))
 	}
 	table.Flush()
