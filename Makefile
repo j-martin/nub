@@ -20,9 +20,10 @@ release: build
 	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | tr ' ' '-'))
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
-	find bin -name *.gz \
+	find bin -type f -name *.gz \
 		| sed -e "p;s#bin/bub#s3://s3bucket/contrib/$(version)#" \
 		| xargs -n2 aws s3 cp
+	find bin -type f -name *.gz -exec shasum -a 256 {} \;
 
 install: build
 	rm -f /usr/local/bin/bub

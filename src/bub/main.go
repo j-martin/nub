@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	//TODO: Add open datadog
+	version := "bub 0.4.1-experiment"
 	usage := `bub.
 
 Usage:
@@ -47,7 +47,7 @@ Options:
   --force                      Force sync, wihtout prompt.
   --version                    Version of the service to update.`
 
-	args, _ := docopt.Parse(usage, nil, true, "bub 0.4.0-experiment", false)
+	args, _ := docopt.Parse(usage, nil, true, version, false)
 
 	if args["list"].(bool) {
 		manifests := GetAllManifests()
