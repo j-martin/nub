@@ -19,7 +19,7 @@ Usage:
   bub manifest validate
   bub eb
   bub eb events
-  bub ec2 [INSTANCE_NAME]
+  bub ec2 [INSTANCE_NAME] [COMMAND ...]
   bub gh repo
   bub gh issues
   bub gh pr
@@ -38,7 +38,8 @@ Usage:
   bub --version
 
 Arguments:
-  INSTANCE_NAME                optional ec2 instance name
+  INSTANCE_NAME                optional EC2 instance name.
+  COMMAND                      optional command to run on the EC2 instance.
 
 Options:
   -h --help                    Show this screen.
@@ -70,8 +71,22 @@ Options:
 
 	} else if args["ec2"].(bool) {
 		name := args["INSTANCE_NAME"]
+		command := []string{"-tC"}
+		if len(args["COMMAND"].([]string)) > 0 {
+			cmd := args["COMMAND"].([]string)
+			switch cmd[0] {
+			case "exec":
+				command = append(append(command, "/opt/bench/exec"), cmd[1:]...)
+			case "jstack":
+				command = append(append(command, "/opt/bench/jstack"), cmd[1:]...)
+			case "jmap":
+				command = append(append(command, "/opt/bench/jmap"), cmd[1:]...)
+			default:
+				command = append(command, cmd...)
+			}
+		}
 		if name != nil {
-			ConnectToInstance(name.(string))
+			ConnectToInstance(name.(string), command...)
 		} else {
 			ConnectToInstance("")
 		}

@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"log"
 	"strings"
+	"text/tabwriter"
+	"os"
 )
 
 func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
@@ -17,6 +19,7 @@ func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
 
 }
 func ListEnvironments() {
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	params := &elasticbeanstalk.DescribeEnvironmentsInput{}
 	resp, err := getBeanstalkSvc().DescribeEnvironments(params)
 
@@ -40,6 +43,7 @@ func ListEvents() {
 		log.Fatal(err.Error())
 	}
 
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(table, "EventDate\tSev.\tEnvironmentName\tMessage")
 	for _, e := range resp.Events {
 		time := *e.EventDate

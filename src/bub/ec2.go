@@ -13,6 +13,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 )
 
 func FetchInstances(filter string) []*ec2.Instance {
@@ -49,12 +50,12 @@ func FetchInstances(filter string) []*ec2.Instance {
 			instances = append(instances, i)
 		}
 	}
-	table.Flush()
 	return instances
 }
 
 func listInstances(instances []*ec2.Instance) {
-	fmt.Fprintln(table, "#\tName\tId\tPublicDNS\tType")
+	table := tabwriter.NewWriter(os.Stderr, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(table, "#\tName\tId\tPublicName\tPrivateName\tType")
 	for c, i := range instances {
 		instances = append(instances, i)
 		var name *string
@@ -65,23 +66,37 @@ func listInstances(instances []*ec2.Instance) {
 		}
 		idx := strconv.FormatInt(int64(c), 10)
 
-		row := []string{idx, *name, *i.InstanceId, *i.PublicDnsName, *i.InstanceType}
+		row := []string{idx, *name, *i.InstanceId, *i.PublicDnsName, *i.PrivateDnsName, *i.InstanceType}
 		fmt.Fprintln(table, strings.Join(row, "\t"))
 	}
 	table.Flush()
 }
 
-func connect(i *ec2.Instance) {
+func getUsers(i *ec2.Instance) []string {
+	users := []string{}
+	for _, t := range i.Tags {
+		if *t.Key == "elasticbeanstalk:environment-name" {
+			users = append(users, "ec2-user")
+		}
+	}
+
+	return append(users, "ubuntu")
+}
+
+func connect(i *ec2.Instance, args ...string) {
 	log.Println(*i)
 	usr, _ := user.Current()
-	for _, sshUser := range []string{"ubuntu", "ec2-user"} {
+	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + *i.PublicDnsName
 		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
+		baseArgs := []string{"-i", key, host, "-o", "ConnectTimeout=3"}
+		args := append(baseArgs, args...)
 
-		cmd := exec.Command("ssh", "-i", key, host, "-o", "ConnectTimeout=5")
+		cmd := exec.Command("ssh", args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stdin = os.Stdin
 		cmd.Stderr = os.Stderr
+
 		log.Printf("Connecting -i %v %v\n", key, host)
 
 		err := cmd.Run()
@@ -91,24 +106,24 @@ func connect(i *ec2.Instance) {
 	}
 }
 
-func ConnectToInstance(filter string) {
+func ConnectToInstance(filter string, args ...string) {
 	instances := FetchInstances(filter)
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		connect(instances[0])
+		connect(instances[0], args...)
 	} else {
 		listInstances(instances)
 		reader := bufio.NewReader(os.Stdin)
 		for {
-			fmt.Print("Enter a valid instance number: ")
+			fmt.Fprint(os.Stderr, "Enter a valid instance number: ")
 			result, err := reader.ReadString('\n')
 			if err != nil {
 				log.Fatal(err)
 			}
 			i, err := strconv.Atoi(strings.Trim(result, "\n"))
 			if err == nil && len(instances) > i {
-				connect(instances[i])
+				connect(instances[i], args...)
 				break
 			}
 		}

@@ -2,15 +2,12 @@ package main
 
 import (
 	"bufio"
-	"os"
 	"fmt"
 	"log"
-	"strings"
-	"text/tabwriter"
+	"os"
 	"os/exec"
+	"strings"
 )
-
-var table = tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 func askForConfirmation(s string) bool {
 	reader := bufio.NewReader(os.Stdin)
