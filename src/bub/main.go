@@ -5,6 +5,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"
+	"fmt"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 
 Usage:
   bub setup
-  bub list
+  bub list [--full]
   bub repository sync [--force]
   bub manifest update [--artifact-version <value>]
   bub manifest validate
@@ -38,11 +39,12 @@ Usage:
   bub --version
 
 Arguments:
-  INSTANCE_NAME                optional EC2 instance name.
-  COMMAND                      optional command to run on the EC2 instance.
+  INSTANCE_NAME                Optional EC2 instance name.
+  COMMAND                      Optional command to run on the EC2 instance. e.g.: jstack
 
 Options:
   -h --help                    Show this screen.
+  --full                       List every defails contained in every manifests.
   --artifact-version <value>   Artifact version [default: n/a].
   --force                      Force sync, wihtout prompt.
   --version                    Version of the service to update.`
@@ -51,8 +53,14 @@ Options:
 
 	if args["list"].(bool) {
 		manifests := GetAllManifests()
-		yml, _ := yaml.Marshal(manifests)
-		log.Println(string(yml))
+		for _, m := range manifests {
+			if !args["--full"].(bool) {
+				m.Readme = ""
+				m.ChangeLog = ""
+			}
+			yml, _ := yaml.Marshal(m)
+			fmt.Println(string(yml))
+		}
 		os.Exit(0)
 
 	} else if args["sync"].(bool) {
