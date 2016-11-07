@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	version := "bub 0.4.2-experiment"
+	version := "bub 0.4.3-experiment"
 	usage := `bub.
 
 Usage:
