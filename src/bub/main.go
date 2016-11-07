@@ -1,15 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"github.com/docopt/docopt-go"
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"
-	"fmt"
 )
 
 func main() {
-	version := "bub 0.4.1-experiment"
+	version := "bub 0.4.2-experiment"
 	usage := `bub.
 
 Usage:
