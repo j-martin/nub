@@ -30,3 +30,4 @@ pkg/**
 vendor/**
 !vendor/manifest
 /.idea/
+output-*

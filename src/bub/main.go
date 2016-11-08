@@ -20,7 +20,7 @@ Usage:
   bub manifest validate
   bub eb
   bub eb events
-  bub ec2 [INSTANCE_NAME] [COMMAND ...]
+  bub ec2 [--output] [INSTANCE_NAME] [COMMAND ...]
   bub gh repo
   bub gh issues
   bub gh pr
@@ -47,6 +47,7 @@ Options:
   --full                       List every defails contained in every manifests.
   --artifact-version <value>   Artifact version [default: n/a].
   --force                      Force sync, wihtout prompt.
+  --output                     Ouput ssh command stdout to a file(s).
   --version                    Version of the service to update.`
 
 	args, _ := docopt.Parse(usage, nil, true, version, false)
@@ -80,6 +81,7 @@ Options:
 	} else if args["ec2"].(bool) {
 		name := args["INSTANCE_NAME"]
 		command := []string{"-tC"}
+		output := args["--output"].(bool)
 		if len(args["COMMAND"].([]string)) > 0 {
 			cmd := args["COMMAND"].([]string)
 			switch cmd[0] {
@@ -94,9 +96,9 @@ Options:
 			}
 		}
 		if name != nil {
-			ConnectToInstance(name.(string), command...)
+			ConnectToInstance(name.(string), output, command...)
 		} else {
-			ConnectToInstance("")
+			ConnectToInstance("", output)
 		}
 		os.Exit(0)
 
