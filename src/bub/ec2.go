@@ -89,8 +89,10 @@ func getUsers(i *ec2.Instance) []string {
 	return append(users, "ubuntu")
 }
 
-func connect(i *ec2.Instance, output bool, args ...string) {
-	log.Println(*i)
+func connect(i *ec2.Instance, output bool, all bool, args ...string) {
+	if !(output || all ) {
+		log.Println(*i)
+	}
 	usr, _ := user.Current()
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + *i.PublicDnsName
@@ -138,15 +140,15 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 	return err
 }
 
-func ConnectToInstance(filter string, output bool, args ...string) {
+func ConnectToInstance(filter string, output bool, all bool, args ...string) {
 	instances := FetchInstances(filter)
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		connect(instances[0], output, args...)
-	} else if output {
+		connect(instances[0], output, all, args...)
+	} else if output || all {
 		for _, i := range instances {
-			connect(i, output, args...)
+			connect(i, output, all, args...)
 		}
 	} else {
 		listInstances(instances)
@@ -159,7 +161,7 @@ func ConnectToInstance(filter string, output bool, args ...string) {
 			}
 			i, err := strconv.Atoi(strings.Trim(result, "\n"))
 			if err == nil && len(instances) > i {
-				connect(instances[i], output, args...)
+				connect(instances[i], output, all, args...)
 				break
 			}
 		}
