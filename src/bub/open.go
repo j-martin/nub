@@ -24,7 +24,7 @@ func OpenJenkins(m Manifest, p string) {
 }
 
 func OpenSplunk(m Manifest, isStaging bool) {
-	base := "https://splunk.example.com/en-US/app/search/search/?q=search%20sourcetype%3D"
+	base := "https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
 	var sourceType []string
 	if isStaging {
 		sourceType = append(sourceType, "staging")
