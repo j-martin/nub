@@ -16,6 +16,16 @@ func getDynamoSvc() *dynamodb.DynamoDB {
 	return dynamodb.New(session.New(&config))
 }
 
+func GetAllActiveManifests() []Manifest {
+	ms := []Manifest{}
+	for _, m := range GetAllManifests() {
+		if m.Active {
+			ms = append(ms, m)
+		}
+	}
+	return ms
+}
+
 func GetAllManifests() []Manifest {
 	log.Println("Fetching all manifests.")
 	manifests := []Manifest{}

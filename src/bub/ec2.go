@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+type ConnectionParams struct {
+	Filter string
+	Output bool
+	All    bool
+	Args   []string
+}
+
 func FetchInstances(filter string) []*ec2.Instance {
 	sess, err := session.NewSession()
 	if err != nil {
@@ -89,8 +96,8 @@ func getUsers(i *ec2.Instance) []string {
 	return append(users, "ubuntu")
 }
 
-func connect(i *ec2.Instance, output bool, all bool, args ...string) {
-	if !(output || all ) {
+func connect(i *ec2.Instance, params ConnectionParams) {
+	if !(params.Output || params.All ) {
 		log.Println(*i)
 	}
 	usr, _ := user.Current()
@@ -98,7 +105,7 @@ func connect(i *ec2.Instance, output bool, all bool, args ...string) {
 		host := sshUser + "@" + *i.PublicDnsName
 		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
 		baseArgs := []string{"-i", key, host, "-o", "ConnectTimeout=3"}
-		args := append(baseArgs, args...)
+		args := append(baseArgs, params.Args...)
 
 		cmd := exec.Command("ssh", args...)
 		cmd.Stdin = os.Stdin
@@ -107,7 +114,7 @@ func connect(i *ec2.Instance, output bool, all bool, args ...string) {
 		log.Printf("Connecting -i %v %v\n", key, host)
 
 		var err error
-		if output {
+		if params.Output {
 			err = saveCommandOutput(i, cmd)
 		} else {
 			cmd.Stdout = os.Stdout
@@ -140,15 +147,36 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 	return err
 }
 
-func ConnectToInstance(filter string, output bool, all bool, args ...string) {
-	instances := FetchInstances(filter)
+func prepareArgs(params ConnectionParams) []string {
+	cmd := params.Args
+	if len(cmd) > 1 {
+		baseArgs := []string{"-tC"}
+		switch cmd[1] {
+		case "bash":
+			return append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
+		case "exec":
+			return append(append(baseArgs, "/opt/bench/exec"), cmd[1:]...)
+		case "jstack":
+			return append(append(baseArgs, "/opt/bench/jstack"), cmd[1:]...)
+		case "jmap":
+			return append(append(baseArgs, "/opt/bench/jmap"), cmd[1:]...)
+		default:
+			return append(baseArgs, cmd...)
+		}
+	}
+	return nil
+}
+
+func ConnectToInstance(params ConnectionParams) {
+	params.Args = prepareArgs(params)
+	instances := FetchInstances(params.Filter)
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		connect(instances[0], output, all, args...)
-	} else if output || all {
+		connect(instances[0], params)
+	} else if params.Output || params.All {
 		for _, i := range instances {
-			connect(i, output, all, args...)
+			connect(i, params)
 		}
 	} else {
 		listInstances(instances)
@@ -161,7 +189,7 @@ func ConnectToInstance(filter string, output bool, all bool, args ...string) {
 			}
 			i, err := strconv.Atoi(strings.Trim(result, "\n"))
 			if err == nil && len(instances) > i {
-				connect(instances[i], output, all, args...)
+				connect(instances[i], params)
 				break
 			}
 		}

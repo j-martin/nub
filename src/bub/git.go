@@ -52,8 +52,8 @@ func UpdateRepository(repository string) {
 	os.Chdir(dir)
 }
 
-func SyncRepositories(ms []Manifest) {
-	for _, m := range ms {
+func SyncRepositories() {
+	for _, m := range GetAllActiveManifests() {
 		syncRepository(m)
 	}
 }

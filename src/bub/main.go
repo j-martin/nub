@@ -2,162 +2,280 @@ package main
 
 import (
 	"fmt"
-	"github.com/docopt/docopt-go"
+	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 )
 
 func main() {
-	version := "bub 0.4.4-experimental"
-	usage := `bub.
+	app := cli.NewApp()
+	app.Name = "bub"
+	app.Usage = "A tool for all your Bench things."
+	app.Version = "0.5.0"
+	app.EnableBashCompletion = true
+	app.Commands = []cli.Command{
+		{
+			Name:  "setup",
+			Usage: "Setup bub on your machine.",
+			Action: func(c *cli.Context) error {
+				Setup()
+				return nil
+			},
+		},
+		{
+			Name:    "repository",
+			Aliases: []string{"r"},
+			Usage:   "Synchronize the all the active repositories.",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "force", Usage: "Skips the confirmation prompt."},
+			},
+			Action: func(c *cli.Context) error {
+				msg := `
+This command will clone and/or Update all 'active' Bench repositories.
+Existing work will be stashed and pull the master branch. Your work won't be lost, but be careful.
+Please make sure you are in the directory where you store your repos and not a specific repo.
 
-Usage:
-  bub setup
-  bub list [--full]
-  bub repository sync [--force]
-  bub manifest update [--artifact-version <value>]
-  bub manifest validate
-  bub eb
-  bub eb events
-  bub ec2 [--output] [--all] [INSTANCE_NAME] [COMMAND ...]
-  bub gh repo
-  bub gh issues
-  bub gh pr
-  bub gh branches
-  bub gh compare
-  bub gh raml
-  bub jenkins
-  bub jenkins console
-  bub jenkins trigger
-  bub splunk
-  bub splunk staging
-  bub docs
-  bub circle
-  bub circle branch
-  bub -h | --help
-  bub --version
+Continue?`
+				if c.Bool("force") || askForConfirmation(msg) {
+					SyncRepositories()
+				} else {
+					os.Exit(1)
+				}
+				return nil
+			},
+		},
+		{
+			Name:    "manifest",
+			Aliases: []string{"m"},
+			Usage:   "List all manifests.",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "full"},
+			},
+			Action: func(c *cli.Context) error {
+				manifests := GetAllManifests()
+				for _, m := range manifests {
+					if !c.Bool("full") {
+						m.Readme = ""
+						m.ChangeLog = ""
+					}
+					yml, _ := yaml.Marshal(m)
+					fmt.Println(string(yml))
+				}
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "Updates/uploads the manifest to the database.",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "artifact-version"},
+					},
+					Action: func(c *cli.Context) error {
+						m := BuildManifest(c.String("artifact-version"))
+						StoreManifest(m)
+						return nil
+					},
+				},
+				{
+					Name:    "validate",
+					Aliases: []string{"v"},
+					Usage:   "Validates the manifest.",
+					Action: func(c *cli.Context) error {
+						//TODO: Build proper validation
+						yml, _ := yaml.Marshal(BuildManifest(""))
+						log.Println(string(yml))
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:      "ec2",
+			Usage:     "EC2 related related actions.",
+			ArgsUsage: "[INSTANCE_NAME] [COMMAND ...]",
+			Aliases:   []string{"ssh"},
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "all", Usage: "Execute the command on all the instance matchrd."},
+				cli.BoolFlag{Name: "output", Usage: "Saves the stdout of the command to a file."},
+			},
+			Action: func(c *cli.Context) error {
+				var (
+					name string
+					args []string
+				)
 
-Arguments:
-  INSTANCE_NAME                Optional EC2 instance name.
-  COMMAND                      Optional command to run on the EC2 instance. e.g.: jstack
+				if c.NArg() > 0 {
+					name = c.Args().Get(0)
+				}
 
-Options:
-  -h --help                    Show this screen.
-  --full                       List every defails contained in every manifests.
-  --artifact-version <value>   Artifact version [default: n/a].
-  --force                      Force sync, wihtout prompt.
-  --all                        Runs the ssh command on all instrances that matches.
-  --output                     Ouput ssh command stdout to a file(s), will use --all.
-  --version                    Version of the service to update.`
+				if c.NArg() > 1 {
+					args = c.Args()[1:]
+				}
 
-	args, _ := docopt.Parse(usage, nil, true, version, false)
-
-	if args["list"].(bool) {
-		manifests := GetAllManifests()
-		for _, m := range manifests {
-			if !args["--full"].(bool) {
-				m.Readme = ""
-				m.ChangeLog = ""
-			}
-			yml, _ := yaml.Marshal(m)
-			fmt.Println(string(yml))
-		}
-		os.Exit(0)
-
-	} else if args["sync"].(bool) {
-		msg := `Clone and/or Update all Bench repositories?
-			Existing work will be stashed and pull the master branch.
-			Please make sure you are in the directory where you
-			store your repos and not a specific repo.`
-
-		if args["--force"].(bool) || askForConfirmation(msg) {
-			SyncRepositories(GetAllManifests())
-		}
-		os.Exit(0)
-
-	} else if args["setup"].(bool) {
-		Setup()
-
-	} else if args["ec2"].(bool) {
-		name := args["INSTANCE_NAME"]
-		command := []string{"-tC"}
-		output := args["--output"].(bool)
-		all := args["--all"].(bool)
-		if len(args["COMMAND"].([]string)) > 0 {
-			cmd := args["COMMAND"].([]string)
-			switch cmd[0] {
-			case "bash":
-				command = append(append(command, "/opt/bench/exec bash"), cmd[1:]...)
-			case "exec":
-				command = append(append(command, "/opt/bench/exec"), cmd[1:]...)
-			case "jstack":
-				command = append(append(command, "/opt/bench/jstack"), cmd[1:]...)
-			case "jmap":
-				command = append(append(command, "/opt/bench/jmap"), cmd[1:]...)
-			default:
-				command = append(command, cmd...)
-			}
-		}
-		if name != nil {
-			ConnectToInstance(name.(string), output, all, command...)
-		} else {
-			ConnectToInstance("", output, all)
-		}
-		os.Exit(0)
-
-	} else if args["eb"].(bool) && args["events"].(bool) {
-		ListEvents()
-		os.Exit(0)
-
-	} else if args["eb"].(bool) {
-		ListEnvironments()
-		os.Exit(0)
+				ConnectToInstance(ConnectionParams{name, c.Bool("output"), c.Bool("all"), args})
+				return nil
+			},
+		},
+		{
+			Name:    "elasticbeanstalk",
+			Usage:   "Elasticbeanstalk actions. If no sub-action specified, lists the environements.",
+			Aliases: []string{"eb"},
+			Action: func(c *cli.Context) error {
+				ListEnvironments()
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "environments",
+					Aliases: []string{"env"},
+					Usage:   "List enviroments and their states.",
+					Action: func(c *cli.Context) error {
+						ListEnvironments()
+						return nil
+					},
+				},
+				{
+					Name:    "events",
+					Aliases: []string{"e"},
+					Usage:   "List events for all environments.",
+					Action: func(c *cli.Context) error {
+						ListEvents()
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:    "github",
+			Usage:   "GitHub related actions.",
+			Aliases: []string{"gh"},
+			Subcommands: []cli.Command{
+				{
+					Name:    "repo",
+					Aliases: []string{"r"},
+					Usage:   "Open repo in your browser.",
+					Action: func(c *cli.Context) error {
+						OpenGH(BuildManifest(""), "")
+						return nil
+					},
+				},
+				{
+					Name:    "issues",
+					Aliases: []string{"i"},
+					Usage:   "Open issues list in your browser.",
+					Action: func(c *cli.Context) error {
+						OpenGH(BuildManifest(""), "issues")
+						return nil
+					},
+				},
+				{
+					Name:    "branches",
+					Aliases: []string{"b"},
+					Usage:   "Open branches list in your browser.",
+					Action: func(c *cli.Context) error {
+						OpenGH(BuildManifest(""), "branches")
+						return nil
+					},
+				},
+				{
+					Name:    "pr",
+					Aliases: []string{"p"},
+					Usage:   "Open Pull Request list in your browser.",
+					Action: func(c *cli.Context) error {
+						OpenGH(BuildManifest(""), "pulls")
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:    "jenkins",
+			Usage:   "Jenkins related actions.",
+			Aliases: []string{"j"},
+			Action: func(c *cli.Context) error {
+				OpenJenkins(BuildManifest(""), "")
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "console",
+					Aliases: []string{"c"},
+					Usage:   "Opens the console of the last build.",
+					Action: func(c *cli.Context) error {
+						OpenJenkins(BuildManifest(""), "job/master/lastBuild/consoleFull")
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:    "splunk",
+			Usage:   "Open the service production logs.",
+			Aliases: []string{"s"},
+			Action: func(c *cli.Context) error {
+				m := BuildManifest("")
+				OpenSplunk(m, false)
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "staging",
+					Aliases: []string{"s"},
+					Usage:   "Open the service staging logs.",
+					Action: func(c *cli.Context) error {
+						m := BuildManifest("")
+						OpenSplunk(m, true)
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:    "docs",
+			Usage:   "Documentation related actions.",
+			Aliases: []string{"d"},
+			Action: func(c *cli.Context) error {
+				m := BuildManifest("")
+				base := "https://example.atlassian.net/wiki/display/dev/"
+				OpenURI(base + m.Name)
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "raml",
+					Usage:   "Opens raml file on GitHub.",
+					Aliases: []string{"r"},
+					Action: func(c *cli.Context) error {
+						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
+						OpenURI(base + BuildManifest("").Name + ".raml")
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:    "circle",
+			Usage:   "Opens the repo's CircleCI test results.",
+			Aliases: []string{"c"},
+			Action: func(c *cli.Context) error {
+				OpenCircle(BuildManifest(""), false)
+				return nil
+			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "circle",
+					Usage:   "Opens the result for the current branch.",
+					Aliases: []string{"c"},
+					Action: func(c *cli.Context) error {
+						OpenCircle(BuildManifest(""), true)
+						return nil
+					},
+				},
+			},
+		},
 	}
 
-	m := BuildManifest(args["--artifact-version"].(string))
-
-	if args["validate"].(bool) {
-		//TODO: Build proper validation
-		yml, _ := yaml.Marshal(m)
-		log.Println(string(yml))
-
-	} else if args["update"].(bool) {
-		StoreManifest(m)
-
-	} else if args["repo"].(bool) {
-		OpenGH(m, "")
-
-	} else if args["issues"].(bool) {
-		OpenGH(m, "issues")
-
-	} else if args["branches"].(bool) {
-		OpenGH(m, "branches")
-
-	} else if args["pr"].(bool) {
-		OpenGH(m, "pulls")
-
-	} else if args["raml"].(bool) {
-		base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-		OpenURI(base + m.Repository + ".raml")
-
-	} else if args["jenkins"].(bool) && args["console"].(bool) {
-		OpenJenkins(m, "job/master/lastBuild/consoleFull")
-
-	} else if args["jenkins"].(bool) && args["trigger"].(bool) {
-		OpenJenkins(m, "job/master/trigger")
-
-	} else if args["jenkins"].(bool) {
-		OpenJenkins(m, "")
-
-	} else if args["splunk"].(bool) {
-		OpenSplunk(m, args["staging"].(bool))
-
-	} else if args["docs"].(bool) {
-		base := "https://example.atlassian.net/wiki/display/dev/"
-		OpenURI(base + m.Name)
-
-	} else if args["circle"].(bool) {
-		OpenCircle(m, args["branch"].(bool))
-	}
+	app.Run(os.Args)
 }
