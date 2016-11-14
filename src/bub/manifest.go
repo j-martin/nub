@@ -2,10 +2,14 @@ package main
 
 import (
 	"gopkg.in/yaml.v2"
+	"html/template"
 	"io/ioutil"
 	"log"
+	"os"
 	"time"
 )
+
+const manifestFile = ".bench.yml"
 
 type Manifest struct {
 	Name         string
@@ -38,7 +42,7 @@ func BuildManifest(version string) Manifest {
 
 	m := Manifest{}
 
-	data, err := ioutil.ReadFile(".bench.yml")
+	data, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
 		log.Fatalf("Could not %v", err)
 	}
@@ -63,4 +67,48 @@ func BuildManifest(version string) Manifest {
 	m.ChangeLog = string(changelog)
 
 	return m
+}
+
+func CreateManifest() {
+
+	manifest := Manifest{
+		Name: GetCurrentRepositoryName(),
+	}
+	manifestString := `---
+name: {{.Name}}
+active: true
+language: scala
+types:
+  - service
+dependencies:
+  - name: activemq
+	version: 5.13
+  - name: postgres
+	version: 9.4
+protocols:
+  - type: raml
+	path: client/src/main/raml
+`
+	manifestTemplate, err := template.New("manifest").Parse(manifestString)
+	if err != nil {
+		panic(err)
+	}
+
+	fileExists, err := exists(manifestFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !fileExists {
+		log.Println("Creating manifest.")
+		writer, err := os.Create(manifestFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		manifestTemplate.Execute(writer, manifest)
+	}
+
+	log.Println("Edit the manifest file.")
+	editFile(manifestFile)
+	log.Println("Done. Don't forget to add and commit the file.")
 }

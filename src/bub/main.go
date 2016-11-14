@@ -31,13 +31,13 @@ func main() {
 				cli.BoolFlag{Name: "force", Usage: "Skips the confirmation prompt."},
 			},
 			Action: func(c *cli.Context) error {
-				msg := `
+				message := `
 This command will clone and/or Update all 'active' Bench repositories.
 Existing work will be stashed and pull the master branch. Your work won't be lost, but be careful.
 Please make sure you are in the directory where you store your repos and not a specific repo.
 
 Continue?`
-				if c.Bool("force") || askForConfirmation(msg) {
+				if c.Bool("force") || askForConfirmation(message) {
 					SyncRepositories()
 				} else {
 					os.Exit(1)
@@ -48,23 +48,40 @@ Continue?`
 		{
 			Name:    "manifest",
 			Aliases: []string{"m"},
-			Usage:   "List all manifests.",
-			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "full"},
-			},
-			Action: func(c *cli.Context) error {
-				manifests := GetAllManifests()
-				for _, m := range manifests {
-					if !c.Bool("full") {
-						m.Readme = ""
-						m.ChangeLog = ""
-					}
-					yml, _ := yaml.Marshal(m)
-					fmt.Println(string(yml))
-				}
-				return nil
-			},
+			Usage:   "Manifest related actions.",
 			Subcommands: []cli.Command{
+				{
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "List all manifests.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "full", Usage: "Display all information, including readmes and changelogs."},
+						cli.BoolFlag{Name: "active", Usage: "Display only active projects."},
+					},
+					Action: func(c *cli.Context) error {
+						manifests := GetAllManifests()
+						for _, m := range manifests {
+							if !c.Bool("full") {
+								m.Readme = ""
+								m.ChangeLog = ""
+							}
+							if !c.Bool("active") || (c.Bool("active") && m.Active) {
+								yml, _ := yaml.Marshal(m)
+								fmt.Println(string(yml))
+							}
+						}
+						return nil
+					},
+				},
+				{
+					Name:    "create",
+					Aliases: []string{"c"},
+					Usage:   "Creates a base manifest.",
+					Action: func(c *cli.Context) error {
+						CreateManifest()
+						return nil
+					},
+				},
 				{
 					Name:    "update",
 					Aliases: []string{"u"},
