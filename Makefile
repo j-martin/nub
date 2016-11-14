@@ -17,7 +17,7 @@ clean:
 	rm -rf bin
 
 release: build
-	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | tr ' ' '-'))
+	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | sed 's/ version /-/g'))
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
 	find bin -type f -name *.gz \
