@@ -12,7 +12,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench things."
-	app.Version = "0.5.0"
+	app.Version = "0.6.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -92,6 +92,7 @@ Continue?`
 					Action: func(c *cli.Context) error {
 						m := BuildManifest(c.String("artifact-version"))
 						StoreManifest(m)
+						UpdateDocumentation(m)
 						return nil
 					},
 				},

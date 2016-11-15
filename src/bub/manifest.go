@@ -23,6 +23,7 @@ type Manifest struct {
 	Version      string
 	Readme       string
 	ChangeLog    string
+	Page string
 }
 
 type Dependency struct {
