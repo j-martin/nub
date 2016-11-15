@@ -23,7 +23,7 @@ type Manifest struct {
 	Version      string
 	Readme       string
 	ChangeLog    string
-	Page string
+	Page         string
 }
 
 type Dependency struct {
@@ -89,6 +89,7 @@ dependencies:
 protocols:
   - type: raml
 	path: client/src/main/raml
+page: pageID from confluence, not the name.
 `
 	manifestTemplate, err := template.New("manifest").Parse(manifestString)
 	if err != nil {
