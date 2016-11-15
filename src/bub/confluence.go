@@ -8,7 +8,7 @@ import (
 
 	"github.com/bndr/gopencils"
 	"github.com/russross/blackfriday"
-	"strings"
+	"gopkg.in/yaml.v2"
 )
 
 type PageInfo struct {
@@ -23,19 +23,19 @@ type PageInfo struct {
 	} `json:"ancestors"`
 }
 
-func createPage() []byte {
-	markdownData := []byte("```\nThis page and its children are automatically generated. Any changes will be lost.\n```\n")
-	for _, document := range []string{"README", "CHANGELOG"} {
-		filename := document + ".md"
-		content, err := ioutil.ReadFile(filename)
-		if err != nil {
-			log.Printf("Update Page: %v not found. Continuing.", filename)
-		} else {
-			markdownData = append(markdownData, "# " + strings.Title(strings.ToLower(document)) + "\n"...)
-			markdownData = append(markdownData, content...)
-			markdownData = append(markdownData, "\n"...)
-		}
-	}
+func shortManifest(m Manifest) ([]byte, error) {
+	m.Readme = "See below."
+	m.ChangeLog = "See below."
+	return yaml.Marshal(m)
+}
+
+func createPage(m Manifest) []byte {
+	yml, _ := shortManifest(m)
+	header := fmt.Sprintf("```\nThis page is automatically generated. Any changes will be lost.\n\n%v\n```\n", string(yml))
+	markdownData := []byte(header)
+
+	markdownData = append(markdownData, m.Readme + "\n"...)
+	markdownData = append(markdownData, m.ChangeLog + "\n"...)
 
 	return blackfriday.MarkdownCommon(markdownData)
 }
@@ -43,11 +43,11 @@ func createPage() []byte {
 func UpdateDocumentation(m Manifest) {
 
 	if m.Page == "" {
-		log.Print("Update Page: No confluence page defined in manifest. Moving on.")
+		log.Print("Page: No confluence page defined in manifest. Moving on.")
 		return
 	}
 
-	htmlData := createPage()
+	htmlData := createPage(m)
 
 	username := os.Getenv("CONFLUENCE_USER")
 	password := os.Getenv("CONFLUENCE_PASSWORD")
@@ -58,6 +58,7 @@ func UpdateDocumentation(m Manifest) {
 	)
 
 	pageInfo, err := getPageInfo(api, m.Page)
+	pageInfo.Title = m.Name
 	if err != nil {
 		log.Fatal(err)
 	}
