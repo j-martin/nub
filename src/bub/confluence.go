@@ -6,21 +6,31 @@ import (
 	"log"
 	"os"
 
+	"bufio"
+	"bytes"
 	"github.com/bndr/gopencils"
 	"github.com/russross/blackfriday"
 	"gopkg.in/yaml.v2"
+	"strings"
+	"text/template"
 )
 
 type PageInfo struct {
-	Title     string `json:"title"`
+	Title string `json:"title"`
 
-	Version   struct {
-				  Number int64 `json:"number"`
-			  } `json:"version"`
+	Version struct {
+		Number int64 `json:"number"`
+	} `json:"version"`
 
 	Ancestors []struct {
 		Id string `json:"id"`
 	} `json:"ancestors"`
+}
+
+type PageParams struct {
+	Manifest   string
+	Repository string
+	Name       string
 }
 
 func shortManifest(m Manifest) ([]byte, error) {
@@ -31,13 +41,29 @@ func shortManifest(m Manifest) ([]byte, error) {
 
 func createPage(m Manifest) []byte {
 	yml, _ := shortManifest(m)
-	header := fmt.Sprintf("```\nThis page is automatically generated. Any changes will be lost.\n\n%v\n```\n", string(yml))
-	markdownData := []byte(header)
+	t, err := template.New("readme").Parse(
+		"[Repository](https://github.com/BenchLabs/{{.Repository}}) | " +
+			"[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) | " +
+			"[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D{{.Name}}-hec&display.page.search.mode=smart)\n\n" +
+			"This page is automatically generated. Any changes will be lost.\n" +
+			"```\n{{.Manifest}}\n```\n")
 
-	markdownData = append(markdownData, m.Readme + "\n"...)
-	markdownData = append(markdownData, m.ChangeLog + "\n"...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var templated bytes.Buffer
+	writer := bufio.NewWriter(&templated)
+	err = t.Execute(writer, PageParams{string(yml), m.Repository, m.Name})
+	writer.Flush()
 
-	return blackfriday.MarkdownCommon(markdownData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	markdown := append(templated.Bytes(), m.Readme+"\n"...)
+	markdown = append(markdown, m.ChangeLog+"\n"...)
+
+	return blackfriday.MarkdownCommon(markdown)
 }
 
 func UpdateDocumentation(m Manifest) {
@@ -58,7 +84,7 @@ func UpdateDocumentation(m Manifest) {
 	)
 
 	pageInfo, err := getPageInfo(api, m.Page)
-	pageInfo.Title = m.Name
+	pageInfo.Title = strings.Title(m.Name) + " - Readme"
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,8 +98,8 @@ func UpdateDocumentation(m Manifest) {
 }
 
 func updatePage(
-api *gopencils.Resource, pageID string,
-pageInfo PageInfo, newContent []byte,
+	api *gopencils.Resource, pageID string,
+	pageInfo PageInfo, newContent []byte,
 ) error {
 	nextPageVersion := pageInfo.Version.Number + 1
 
@@ -86,7 +112,7 @@ pageInfo PageInfo, newContent []byte,
 
 	// picking only the last one, which is required by confluence
 	oldAncestors := []map[string]interface{}{
-		{"id": pageInfo.Ancestors[len(pageInfo.Ancestors) - 1].Id},
+		{"id": pageInfo.Ancestors[len(pageInfo.Ancestors)-1].Id},
 	}
 
 	payload := map[string]interface{}{
@@ -107,7 +133,7 @@ pageInfo PageInfo, newContent []byte,
 	}
 
 	request, err := api.Res(
-		"content/" + pageID, &map[string]interface{}{},
+		"content/"+pageID, &map[string]interface{}{},
 	).Put(payload)
 	if err != nil {
 		return err
@@ -118,7 +144,7 @@ pageInfo PageInfo, newContent []byte,
 		defer request.Raw.Body.Close()
 
 		return fmt.Errorf(
-			"Confluence REST API returns unexpected HTTP status: %s, " +
+			"Confluence REST API returns unexpected HTTP status: %s, "+
 				"output: %s",
 			request.Raw.Status, output,
 		)
@@ -128,10 +154,10 @@ pageInfo PageInfo, newContent []byte,
 }
 
 func getPageInfo(
-api *gopencils.Resource, pageID string,
+	api *gopencils.Resource, pageID string,
 ) (PageInfo, error) {
 	request, err := api.Res(
-		"content/" + pageID, &PageInfo{},
+		"content/"+pageID, &PageInfo{},
 	).Get(map[string]string{"expand": "ancestors,version"})
 
 	if err != nil {

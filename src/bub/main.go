@@ -12,7 +12,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench things."
-	app.Version = "0.6.2"
+	app.Version = "0.6.3"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
