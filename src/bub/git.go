@@ -39,7 +39,7 @@ func IsInRepository() bool {
 
 func CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
-	runCmd("git", "clone", "git@github.com:"+repository+".git")
+	runCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
 func UpdateRepository(repository string) {
@@ -69,9 +69,11 @@ func syncRepository(m Manifest) {
 }
 
 func runCmd(cmd string, args ...string) {
-	err := exec.Command(cmd, args...).Run()
+	command := exec.Command(cmd, args...)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	err := command.Run()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
-
