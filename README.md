@@ -1,6 +1,6 @@
 # bub
 
-`bench-hub` ⇒ `bhub` ⇒ `bub` a cli tool for all your bench needs
+`bench-hub` ⇒ `bhub` ⇒ `bub` a cli tool for all your Bench related needs.
 
 ## Warning / Disclaimer
 
@@ -13,57 +13,43 @@ project is properly update.
 ## Installation
 
 ### From Brew (macOS only)
-    $ brew tap benchlabs/tools
-    $ brew install bub
+	$ brew tap benchlabs/tools
+	$ brew install bub
 
 ### From source
 
 Install prereqs below.
 
-    $ make install
+	$ make install
 
 ## Usage
 
 To be expanded
 
-        # anywhere
-        $ bub list
+		# anywhere
+		$ bub list
 
-        # in a repo
-        $ bub gh repo
-        $ bub gh issues
-        # ...
+		# in a repo
+		$ bub gh repo
+		$ bub gh issues
+		# ...
 
 ## Prerequisites
 
-        # macOS to use the open commands (you can symlink xdg-open to open on Linux)
-        $ brew install golang # tested with 1.7.3 must fix version in future.
-        $ go get github.com/constabulary/gb/... # fix version when required.
+		# macOS to use the open commands (you can symlink xdg-open to open on Linux)
+		$ brew install golang # tested with 1.7.3 must fix version in future.
+		$ go get github.com/constabulary/gb/... # fix version when required.
 
 ## Build
 
-        $ make deps
-        $ make
-        $ bin/bub<your-platform>
+		$ make deps
+		$ make
+		$ bin/bub<your-platform>
 
 FYI: If you are using oh-my-zsh with the git plugin, `gb` gets aliases to `git branch`. You
 can always call `gb` directly with `\gb` or use `unalias gb`.
 
 ## Dependency management
 
-        $ gb vendor fetch # to add stuff.
+$ gb vendor fetch # to add stuff.
         $ gb vendor # for more options.
-
-## Todos
-
-- [ ] A real build deployment workflow through jenkins where users can download
-  prebuilt binaries.
-- [ ] Integrating -update with jenkins build pipeline.
-- [ ] Use sub commands and stabilize the command set.
-- [ ] Add more documentation once the commands are stable.
-- [ ] Add readme boilerplate.
-- [ ] Add unit tests
-- [ ] Proper way to enforce go version.
-- [ ] Probably will end up writing a Makefile while still using gb.
-
-For more todos `ag -q '//TODO'` there is quite a few.
