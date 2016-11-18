@@ -153,18 +153,18 @@ func prepareArgs(params ConnectionParams) []string {
 		baseArgs := []string{"-tC"}
 		switch cmd[1] {
 		case "bash":
-			return append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
+			cmd = append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
 		case "exec":
-			return append(append(baseArgs, "/opt/bench/exec"), cmd[1:]...)
+			cmd = append(append(baseArgs, "/opt/bench/exec"), cmd[1:]...)
 		case "jstack":
-			return append(append(baseArgs, "/opt/bench/jstack"), cmd[1:]...)
+			cmd = append(append(baseArgs, "/opt/bench/jstack"), cmd[1:]...)
 		case "jmap":
-			return append(append(baseArgs, "/opt/bench/jmap"), cmd[1:]...)
+			cmd = append(append(baseArgs, "/opt/bench/jmap"), cmd[1:]...)
 		default:
-			return append(baseArgs, cmd...)
+			cmd = append(baseArgs, cmd...)
 		}
 	}
-	return nil
+	return cmd
 }
 
 func ConnectToInstance(params ConnectionParams) {

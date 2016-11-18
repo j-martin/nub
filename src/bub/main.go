@@ -11,8 +11,8 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
-	app.Usage = "A tool for all your Bench things."
-	app.Version = "0.6.3"
+	app.Usage = "A tool for all your Bench related things."
+	app.Version = "0.6.4"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -32,6 +32,9 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				message := `
+
+STOP!
+
 This command will clone and/or Update all 'active' Bench repositories.
 Existing work will be stashed and pull the master branch. Your work won't be lost, but be careful.
 Please make sure you are in the directory where you store your repos and not a specific repo.
@@ -113,7 +116,7 @@ Continue?`
 			Name:      "ec2",
 			Usage:     "EC2 related related actions.",
 			ArgsUsage: "[INSTANCE_NAME] [COMMAND ...]",
-			Aliases:   []string{"ssh"},
+			Aliases:   []string{"e"},
 			Flags: []cli.Flag{
 				cli.BoolFlag{Name: "all", Usage: "Execute the command on all the instance matchrd."},
 				cli.BoolFlag{Name: "output", Usage: "Saves the stdout of the command to a file."},
