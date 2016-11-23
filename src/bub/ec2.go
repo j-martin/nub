@@ -97,13 +97,13 @@ func getUsers(i *ec2.Instance) []string {
 }
 
 func connect(i *ec2.Instance, params ConnectionParams) {
-	if !(params.Output || params.All ) {
+	if !(params.Output || params.All) {
 		log.Println(*i)
 	}
 	usr, _ := user.Current()
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + *i.PublicDnsName
-		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
+		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
 		baseArgs := []string{"-i", key, host, "-o", "ConnectTimeout=3"}
 		args := append(baseArgs, params.Args...)
 
@@ -149,9 +149,9 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 
 func prepareArgs(params ConnectionParams) []string {
 	cmd := params.Args
-	if len(cmd) > 1 {
+	if len(cmd) > 0 {
 		baseArgs := []string{"-tC"}
-		switch cmd[1] {
+		switch cmd[0] {
 		case "bash":
 			cmd = append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
 		case "exec":
