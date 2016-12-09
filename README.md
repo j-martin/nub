@@ -13,7 +13,7 @@ project is properly update.
 ## Installation
 
 ### From Brew (macOS only)
-  $ brew install benchlabs/bub/bub
+  $ brew install benchlabs/tools/bub
 
 ### From source
 
