@@ -14,7 +14,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related things."
-	app.Version = "0.7.0"
+	app.Version = "0.7.1"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -218,6 +218,7 @@ Continue?`
 								application = result[1]
 							}
 							ListApplicationVersions(application)
+							log.Println("Version required. Specify one of the application versions above.")
 							os.Exit(2)
 						}
 						version := c.Args().Get(1)

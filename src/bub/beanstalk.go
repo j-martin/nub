@@ -62,7 +62,6 @@ func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
 		log.Fatal("Failed to create session,", err)
 	}
 	return elasticbeanstalk.New(sess)
-
 }
 
 func EnvironmentIsReady(environment string) {
@@ -80,7 +79,7 @@ func EnvironmentIsReady(environment string) {
 		EnvironmentName: &environment,
 	}
 
-	WaitForReady:
+WaitForReady:
 	for {
 		resp, err := svc.DescribeEnvironmentHealth(&request)
 		if err != nil {
@@ -88,10 +87,10 @@ func EnvironmentIsReady(environment string) {
 		}
 		if *resp.Status != previousStatus {
 			causes := []string{}
-			for _, cause := range resp.Causes{
+			for _, cause := range resp.Causes {
 				causes = append(causes, *cause)
 			}
-			log.Printf("EnvironmentName: %v, Status: %v, HealthStatus: %v, Color: %v, Causes: %v\n", *resp.EnvironmentName, *resp.Status, *resp.HealthStatus, *resp.Color, strings.Join(causes, ", "))
+			log.Printf("Status: %v, HealthStatus: %v, Color: %v, Causes: %v\n", *resp.Status, *resp.HealthStatus, *resp.Color, strings.Join(causes, ", "))
 		}
 		previousStatus = *resp.Status
 		if *resp.Status == elasticbeanstalk.EnvironmentStatusReady && *resp.HealthStatus == elasticbeanstalk.EnvironmentHealthStatusOk {
@@ -100,7 +99,7 @@ func EnvironmentIsReady(environment string) {
 		lastEvent = ListEvents(environment, lastEvent, true, false)
 		time.Sleep(5 * time.Second)
 	}
-	log.Println("Environment Ready")
+	log.Println("Done")
 }
 
 func DeployVersion(environment string, version string) {
@@ -195,7 +194,7 @@ func ListEvents(environment string, startTime time.Time, reverse bool, header bo
 	if len(events) > 0 {
 		if reverse {
 			sort.Sort(sort.Reverse(events))
-			lastEvent = *events[len(events) - 1].EventDate
+			lastEvent = *events[len(events)-1].EventDate
 		} else {
 			sort.Sort(events)
 			lastEvent = *events[0].EventDate
@@ -209,7 +208,7 @@ func ListEvents(environment string, startTime time.Time, reverse bool, header bo
 		var message = *e.Message
 		const limit = 200
 		if len(message) < limit {
-			message = message[0 : len(message) - 1]
+			message = message[0 : len(message)-1]
 		} else {
 			message = message[0:limit] + "..."
 		}
