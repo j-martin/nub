@@ -6,13 +6,15 @@ import (
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related things."
-	app.Version = "0.6.5"
+	app.Version = "0.7.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -158,11 +160,68 @@ Continue?`
 					},
 				},
 				{
-					Name:    "events",
-					Aliases: []string{"e"},
-					Usage:   "List events for all environments.",
+					Name:      "events",
+					Aliases:   []string{"e"},
+					Usage:     "List events for all environments.",
+					UsageText: "[ENVIRONMENT_NAME] Optional filter by environment name.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "reverse"},
+					},
 					Action: func(c *cli.Context) error {
-						ListEvents()
+						environment := ""
+						if c.NArg() > 0 {
+							environment = c.Args().Get(0)
+						}
+						ListEvents(environment, time.Time{}, c.Bool("reverse"), true)
+						return nil
+					},
+				},
+				{
+					Name:      "ready",
+					Aliases:   []string{"r"},
+					Usage:     "Wait for environment to be ready.",
+					UsageText: "ENVIRONMENT_NAME",
+					Action: func(c *cli.Context) error {
+						EnvironmentIsReady(c.Args().Get(0))
+						return nil
+					},
+				},
+				{
+					Name:      "versions",
+					Aliases:   []string{"v"},
+					Usage:     "List all versions available.",
+					ArgsUsage: "[APPLICATION_NAME] Optional, limits the versions to the application name.",
+					Action: func(c *cli.Context) error {
+						application := ""
+						if c.NArg() > 0 {
+							application = c.Args().Get(0)
+						}
+						ListApplicationVersions(application)
+						return nil
+					},
+				},
+				{
+					Name:      "deploy",
+					Aliases:   []string{"d"},
+					Usage:     "Deploy version to an environment.",
+					ArgsUsage: "[ENVIRONMENT_NAME] [VERSION]",
+					Action: func(c *cli.Context) error {
+						if c.NArg() == 0 {
+							log.Fatal("Environment required. Stopping.")
+							os.Exit(1)
+						}
+						environment := c.Args().Get(0)
+						if c.NArg() < 2 {
+							application := ""
+							result := strings.Split(environment, "-")
+							if len(result) > 1 {
+								application = result[1]
+							}
+							ListApplicationVersions(application)
+							os.Exit(2)
+						}
+						version := c.Args().Get(1)
+						DeployVersion(environment, version)
 						return nil
 					},
 				},
