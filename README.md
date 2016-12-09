@@ -13,7 +13,7 @@ project is properly update.
 ## Installation
 
 ### From Brew (macOS only)
-  $ brew install benchlabs/homebrew-tools/bub
+  $ brew install benchlabs/bub/bub
 
 ### From source
 
@@ -25,27 +25,27 @@ Install prereqs below.
 
 To be expanded
 
-    # anywhere
-    $ bub # or with --help
-    $ bub eb
-    $ bub ec2
+  # anywhere
+  $ bub # or with --help
+  $ bub eb
+  $ bub ec2
 
-    # in a repo
-    $ bub gh repo
-    $ bub gh issues
-    # ...
+  # in a repo
+  $ bub gh repo
+  $ bub gh issues
+  # ...
 
 ## Prerequisites
 
-    # macOS to use the open commands (you can symlink xdg-open to open on Linux)
-    $ brew install golang # tested with 1.7.3 must fix version in future.
-    $ go get github.com/constabulary/gb/... # fix version when required.
+  # macOS to use the open commands (you can symlink xdg-open to open on Linux)
+  $ brew install golang # tested with 1.7.3 must fix version in future.
+  $ go get github.com/constabulary/gb/... # fix version when required.
 
 ## Build
 
-    $ make deps
-    $ make
-    $ bin/bub<your-platform>
+  $ make deps
+  $ make
+  $ bin/bub<your-platform>
 
 FYI: If you are using oh-my-zsh with the git plugin, `gb` gets aliases to `git branch`. You
 can always call `gb` directly with `\gb` or use `unalias gb`.
@@ -53,4 +53,4 @@ can always call `gb` directly with `\gb` or use `unalias gb`.
 ## Dependency management
 
 $ gb vendor fetch # to add stuff.
-    $ gb vendor # for more options.
+  $ gb vendor # for more options.
