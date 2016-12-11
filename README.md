@@ -25,14 +25,14 @@ Install prereqs below.
 
 To be expanded
 
-    # anywhere
+    # from any directory
     $ bub # or with --help
     $ bub eb
     $ bub ec2
 
-      # in a repo
-      $ bub gh repo
-      $ bub gh issues
+    # in a repo
+    $ bub gh repo
+    $ bub gh issues
     # ...
 
 ## Prerequisites
