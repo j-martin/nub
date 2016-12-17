@@ -100,9 +100,9 @@ func UpdateDocumentation(m Manifest) {
 		log.Fatal(err)
 	}
 
+	newContent := string(htmlData[:])
 	currentBody := pageInfo.Body.Storage.Value
-	newContent := strings.Trim(string(htmlData[:]), "\n")
-	if (strings.EqualFold(currentBody, newContent)) {
+	if (strings.Contains(newContent, currentBody)) {
 		log.Print("No update needed. Skipping.")
 		return
 	}
