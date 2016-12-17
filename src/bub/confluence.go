@@ -17,6 +17,7 @@ import (
 
 type PageInfo struct {
 	Title string `json:"title"`
+	Body PageBody `json:"body"`
 
 	Version struct {
 		Number int64 `json:"number"`
@@ -25,6 +26,14 @@ type PageInfo struct {
 	Ancestors []struct {
 		Id string `json:"id"`
 	} `json:"ancestors"`
+}
+
+type PageBody struct {
+	Storage PageBodyValue `json:"storage"`
+}
+
+type PageBodyValue struct {
+	Value string `json:"value"`
 }
 
 type PageParams struct {
@@ -89,6 +98,13 @@ func UpdateDocumentation(m Manifest) {
 	pageInfo.Title = strings.Title(m.Name) + " - Readme"
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	currentBody := pageInfo.Body.Storage.Value
+	newContent := strings.Trim(string(htmlData[:]), "\n")
+	if (strings.EqualFold(currentBody, newContent)) {
+		log.Print("No update needed. Skipping.")
+		return
 	}
 
 	err = updatePage(api, m.Page, pageInfo, htmlData)
@@ -160,7 +176,7 @@ func getPageInfo(
 ) (PageInfo, error) {
 	request, err := api.Res(
 		"content/"+pageID, &PageInfo{},
-	).Get(map[string]string{"expand": "ancestors,version"})
+	).Get(map[string]string{"expand": "body.storage,ancestors,version"})
 
 	if err != nil {
 		return PageInfo{}, err
