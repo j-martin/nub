@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"path"
-	"os"
 	"io/ioutil"
 	"log"
+	"os"
 	"os/user"
+	"path"
 )
 
 var config = aws.Config{Region: aws.String("us-east-1")}
@@ -49,5 +49,3 @@ aws_secret_access_key = CHANHE_ME`
 	editFile(credentialsPath)
 	log.Println("Done.")
 }
-
-

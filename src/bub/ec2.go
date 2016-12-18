@@ -3,9 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"log"
 	"os"
 	"os/exec"
@@ -15,6 +12,10 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 type ConnectionParams struct {

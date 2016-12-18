@@ -16,8 +16,8 @@ import (
 )
 
 type PageInfo struct {
-	Title string `json:"title"`
-	Body PageBody `json:"body"`
+	Title string   `json:"title"`
+	Body  PageBody `json:"body"`
 
 	Version struct {
 		Number int64 `json:"number"`
@@ -102,7 +102,7 @@ func UpdateDocumentation(m Manifest) {
 
 	newContent := string(htmlData[:])
 	currentBody := pageInfo.Body.Storage.Value
-	if (strings.Contains(newContent, currentBody)) {
+	if strings.Contains(newContent, currentBody) {
 		log.Print("No update needed. Skipping.")
 		return
 	}

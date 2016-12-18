@@ -11,10 +11,11 @@ import (
 )
 
 func main() {
+	manifest, manifestErr := BuildManifest("")
 	app := cli.NewApp()
 	app.Name = "bub"
-	app.Usage = "A tool for all your Bench related things."
-	app.Version = "0.7.3"
+	app.Usage = "A tool for all your Bench related needs."
+	app.Version = "0.8.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -95,9 +96,13 @@ Continue?`
 						cli.StringFlag{Name: "artifact-version"},
 					},
 					Action: func(c *cli.Context) error {
-						m := BuildManifest(c.String("artifact-version"))
-						StoreManifest(m)
-						UpdateDocumentation(m)
+						if manifestErr != nil {
+							log.Fatal(manifestErr)
+							os.Exit(1)
+						}
+						manifest.Version = c.String("artifact-version")
+						StoreManifest(manifest)
+						UpdateDocumentation(manifest)
 						return nil
 					},
 				},
@@ -107,7 +112,12 @@ Continue?`
 					Usage:   "Validates the manifest.",
 					Action: func(c *cli.Context) error {
 						//TODO: Build proper validation
-						yml, _ := yaml.Marshal(BuildManifest(""))
+						if manifestErr != nil {
+							log.Fatal(manifestErr)
+							os.Exit(1)
+						}
+						manifest.Version = c.String("artifact-version")
+						yml, _ := yaml.Marshal(manifest)
 						log.Println(string(yml))
 						return nil
 					},
@@ -131,6 +141,9 @@ Continue?`
 
 				if c.NArg() > 0 {
 					name = c.Args().Get(0)
+				} else if manifestErr == nil {
+					log.Printf("Manifest found. Using '%v'", name)
+					name = manifest.Name
 				}
 
 				if c.NArg() > 1 {
@@ -171,6 +184,9 @@ Continue?`
 						environment := ""
 						if c.NArg() > 0 {
 							environment = c.Args().Get(0)
+						} else if manifestErr == nil {
+							environment = "prod-" + manifest.Name
+							log.Printf("Manifest found. Using '%v'", environment)
 						}
 						ListEvents(environment, time.Time{}, c.Bool("reverse"), true)
 						return nil
@@ -182,7 +198,14 @@ Continue?`
 					Usage:     "Wait for environment to be ready.",
 					UsageText: "ENVIRONMENT_NAME",
 					Action: func(c *cli.Context) error {
-						EnvironmentIsReady(c.Args().Get(0))
+						environment := ""
+						if c.NArg() > 0 {
+							environment = c.Args().Get(0)
+						} else if manifestErr == nil {
+							environment = "prod-" + manifest.Name
+							log.Printf("Manifest found. Using '%v'", environment)
+						}
+						EnvironmentIsReady(environment)
 						return nil
 					},
 				},
@@ -195,7 +218,11 @@ Continue?`
 						application := ""
 						if c.NArg() > 0 {
 							application = c.Args().Get(0)
+						} else if manifestErr == nil {
+							application = manifest.Name
+							log.Printf("Manifest found. Using '%v'", application)
 						}
+
 						ListApplicationVersions(application)
 						return nil
 					},
@@ -206,11 +233,17 @@ Continue?`
 					Usage:     "Deploy version to an environment.",
 					ArgsUsage: "[ENVIRONMENT_NAME] [VERSION]",
 					Action: func(c *cli.Context) error {
-						if c.NArg() == 0 {
+						environment := ""
+						if c.NArg() > 0 {
+							environment = c.Args().Get(0)
+						} else if manifestErr == nil {
+							environment = "prod-" + manifest.Name
+							log.Printf("Manifest found. Using '%v'", environment)
+						} else {
 							log.Fatal("Environment required. Stopping.")
 							os.Exit(1)
 						}
-						environment := c.Args().Get(0)
+
 						if c.NArg() < 2 {
 							application := ""
 							result := strings.Split(environment, "-")
@@ -238,7 +271,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(BuildManifest(""), "")
+						OpenGH(manifest, "")
 						return nil
 					},
 				},
@@ -247,7 +280,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(BuildManifest(""), "issues")
+						OpenGH(manifest, "issues")
 						return nil
 					},
 				},
@@ -256,7 +289,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(BuildManifest(""), "branches")
+						OpenGH(manifest, "branches")
 						return nil
 					},
 				},
@@ -265,7 +298,7 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(BuildManifest(""), "pulls")
+						OpenGH(manifest, "pulls")
 						return nil
 					},
 				},
@@ -276,7 +309,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
-				OpenJenkins(BuildManifest(""), "")
+				OpenJenkins(manifest, "")
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -285,7 +318,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the console of the last build.",
 					Action: func(c *cli.Context) error {
-						OpenJenkins(BuildManifest(""), "job/master/lastBuild/consoleFull")
+						OpenJenkins(manifest, "job/master/lastBuild/consoleFull")
 						return nil
 					},
 				},
@@ -296,8 +329,7 @@ Continue?`
 			Usage:   "Open the service production logs.",
 			Aliases: []string{"s"},
 			Action: func(c *cli.Context) error {
-				m := BuildManifest("")
-				OpenSplunk(m, false)
+				OpenSplunk(manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -306,8 +338,7 @@ Continue?`
 					Aliases: []string{"s"},
 					Usage:   "Open the service staging logs.",
 					Action: func(c *cli.Context) error {
-						m := BuildManifest("")
-						OpenSplunk(m, true)
+						OpenSplunk(manifest, true)
 						return nil
 					},
 				},
@@ -318,9 +349,8 @@ Continue?`
 			Usage:   "Documentation related actions.",
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
-				m := BuildManifest("")
 				base := "https://example.atlassian.net/wiki/display/dev/"
-				OpenURI(base + m.Name)
+				OpenURI(base + manifest.Name)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -330,7 +360,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Action: func(c *cli.Context) error {
 						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						OpenURI(base + BuildManifest("").Name + ".raml")
+						OpenURI(base + manifest.Name + ".raml")
 						return nil
 					},
 				},
@@ -341,7 +371,7 @@ Continue?`
 			Usage:   "Opens the repo's CircleCI test results.",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
-				OpenCircle(BuildManifest(""), false)
+				OpenCircle(manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -350,7 +380,7 @@ Continue?`
 					Usage:   "Opens the result for the current branch.",
 					Aliases: []string{"c"},
 					Action: func(c *cli.Context) error {
-						OpenCircle(BuildManifest(""), true)
+						OpenCircle(manifest, true)
 						return nil
 					},
 				},

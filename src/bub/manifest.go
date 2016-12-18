@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
@@ -36,28 +37,28 @@ type Protocol struct {
 	Path string
 }
 
-func BuildManifest(version string) Manifest {
-	if !IsInRepository() {
-		log.Fatal("Must be executed in a repository.")
-	}
-
+func BuildManifest(version string) (Manifest, error) {
 	m := Manifest{}
+
+	if !IsInRepository() {
+		return Manifest{}, errors.New("Must be executed in a repository.")
+	}
 
 	data, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
-		log.Fatalf("Could not %v", err)
+		return Manifest{}, errors.New("Must be executed in a repository.")
 	}
 
 	readme, err := ioutil.ReadFile("README.md")
 	if err != nil {
-		log.Printf("Could not %v", err)
+		return Manifest{}, err
 	}
 
 	changelog, err := ioutil.ReadFile("CHANGELOG.md")
 
 	err = yaml.Unmarshal(data, &m)
 	if err != nil {
-		log.Fatalf("Could not unmarshal manifest: %v", err)
+		return Manifest{}, err
 	}
 
 	m.LastUpdate = time.Now().Unix()
@@ -67,7 +68,7 @@ func BuildManifest(version string) Manifest {
 	m.Readme = string(readme)
 	m.ChangeLog = string(changelog)
 
-	return m
+	return m, nil
 }
 
 func CreateManifest() {
