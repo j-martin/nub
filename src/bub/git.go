@@ -23,7 +23,7 @@ func GetCurrentRepositoryName() string {
 func GetCurrentBranch() string {
 	result, err := exec.Command("git", "symbolic-ref", "--short", "-q", "HEAD").Output()
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Printf("Error: %v", err)
 	}
 
 	return strings.Trim(string(result), "\n ")

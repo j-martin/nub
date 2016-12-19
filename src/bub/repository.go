@@ -8,8 +8,6 @@ import (
 	"log"
 )
 
-//TODO: Add GetAllActive
-
 var manifestsTable = aws.String("manifests")
 
 func getDynamoSvc() *dynamodb.DynamoDB {

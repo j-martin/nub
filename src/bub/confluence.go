@@ -77,7 +77,7 @@ func createPage(m Manifest) []byte {
 	return blackfriday.MarkdownCommon(markdown)
 }
 
-func UpdateDocumentation(m Manifest) {
+func UpdateDocumentation(cfg Configuration, m Manifest) {
 
 	if m.Page == "" {
 		log.Print("Page: No confluence page defined in manifest. Moving on.")
@@ -87,10 +87,17 @@ func UpdateDocumentation(m Manifest) {
 	htmlData := createPage(m)
 
 	username := os.Getenv("CONFLUENCE_USER")
+	if username == "" {
+		username = cfg.Confluence.Username
+	}
+
 	password := os.Getenv("CONFLUENCE_PASSWORD")
+	if password == "" {
+		password = cfg.Confluence.Password
+	}
 
 	api := gopencils.Api(
-		"https://example.atlassian.net/wiki/rest/api",
+		cfg.Confluence.Server + "/wiki/rest/api",
 		&gopencils.BasicAuth{Username: username, Password: password},
 	)
 

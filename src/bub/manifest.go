@@ -22,6 +22,7 @@ type Manifest struct {
 	Dependencies []Dependency
 	Protocols    []Protocol
 	Version      string
+	Branch       string
 	Readme       string
 	ChangeLog    string
 	Page         string
@@ -37,7 +38,7 @@ type Protocol struct {
 	Path string
 }
 
-func BuildManifest(version string) (Manifest, error) {
+func LoadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
 	if !IsInRepository() {
@@ -63,6 +64,7 @@ func BuildManifest(version string) (Manifest, error) {
 
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
+	m.Branch = GetCurrentBranch()
 	m.Version = version
 
 	m.Readme = string(readme)

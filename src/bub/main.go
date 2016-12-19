@@ -11,7 +11,9 @@ import (
 )
 
 func main() {
-	manifest, manifestErr := BuildManifest("")
+	cfg := LoadConfiguration()
+	manifest, manifestErr := LoadManifest("")
+
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
@@ -102,7 +104,7 @@ Continue?`
 						}
 						manifest.Version = c.String("artifact-version")
 						StoreManifest(manifest)
-						UpdateDocumentation(manifest)
+						UpdateDocumentation(cfg, manifest)
 						return nil
 					},
 				},
@@ -319,6 +321,24 @@ Continue?`
 					Usage:   "Opens the console of the last build.",
 					Action: func(c *cli.Context) error {
 						OpenJenkins(manifest, "job/master/lastBuild/consoleFull")
+						return nil
+					},
+				},
+				{
+					Name:    "jobs",
+					Aliases: []string{"j"},
+					Usage:   "Opens the console of the last build.",
+					Action: func(c *cli.Context) error {
+						ShowJobs(cfg, manifest)
+						return nil
+					},
+				},
+				{
+					Name:    "artifacts",
+					Aliases: []string{"a"},
+					Usage:   "List artifacts",
+					Action: func(c *cli.Context) error {
+						ListArtifacts(cfg, manifest)
 						return nil
 					},
 				},

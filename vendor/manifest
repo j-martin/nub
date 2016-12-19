@@ -78,6 +78,12 @@
 			"path": "/service/sts"
 		},
 		{
+			"importpath": "github.com/bndr/gojenkins",
+			"repository": "https://github.com/bndr/gojenkins",
+			"revision": "fb64d609b014879a799204f02b50db404fc6d995",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/bndr/gopencils",
 			"repository": "https://github.com/bndr/gopencils",
 			"revision": "22e283ad76118c1e1f3812b4a3553809cd434e6a",
