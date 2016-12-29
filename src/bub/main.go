@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.8.1"
+	app.Version = "0.9.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -318,7 +318,7 @@ Continue?`
 				{
 					Name:    "console",
 					Aliases: []string{"c"},
-					Usage:   "Opens the console of the last build.",
+					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
 						OpenJenkins(manifest, "job/master/lastBuild/consoleFull")
 						return nil
@@ -327,18 +327,27 @@ Continue?`
 				{
 					Name:    "jobs",
 					Aliases: []string{"j"},
-					Usage:   "Opens the console of the last build.",
+					Usage:   "Shows the console output of the last build.",
 					Action: func(c *cli.Context) error {
-						ShowJobs(cfg, manifest)
+						ShowConsoleOutput(cfg, manifest)
 						return nil
 					},
 				},
 				{
 					Name:    "artifacts",
 					Aliases: []string{"a"},
-					Usage:   "List artifacts",
+					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						ListArtifacts(cfg, manifest)
+						GetArtifacts(cfg, manifest)
+						return nil
+					},
+				},
+				{
+					Name:    "build",
+					Aliases: []string{"b"},
+					Usage:   "Trigger build of the current branch.",
+					Action: func(c *cli.Context) error {
+						BuildJob(cfg, manifest)
 						return nil
 					},
 				},
