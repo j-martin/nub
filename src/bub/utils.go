@@ -51,3 +51,15 @@ func editFile(file string) {
 		log.Fatal(err)
 	}
 }
+
+func joinStringPointers(ptrs []*string, joinStr string) string {
+	arr := []string{}
+	for _, ref := range ptrs {
+		if ref == nil {
+			arr = append(arr, "")
+		} else {
+			arr = append(arr, *ref)
+		}
+	}
+	return strings.Join(arr, joinStr)
+}

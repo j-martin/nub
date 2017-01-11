@@ -165,8 +165,8 @@ func ListEnvironments() {
 	environments = resp.Environments
 	sort.Sort(environments)
 	for _, e := range environments {
-		row := []string{*e.ApplicationName, *e.EnvironmentName, *e.Status, *e.Health, *e.HealthStatus, *e.VersionLabel, *e.CNAME}
-		fmt.Fprintln(table, strings.Join(row, "\t"))
+		row := []*string{e.ApplicationName, e.EnvironmentName, e.Status, e.Health, e.HealthStatus, e.VersionLabel, e.CNAME}
+		fmt.Fprintln(table, joinStringPointers(row, "\t"))
 	}
 	table.Flush()
 }
