@@ -74,7 +74,19 @@ func createPage(m Manifest) []byte {
 	markdown := append(templated.Bytes(), m.Readme+"\n"...)
 	markdown = append(markdown, m.ChangeLog+"\n"...)
 
-	return blackfriday.MarkdownBasic(markdown)
+	htmlFlags := blackfriday.HTML_USE_XHTML
+	renderer := blackfriday.HtmlRenderer(htmlFlags, "", "")
+
+	extensions := 0 |
+		blackfriday.EXTENSION_FENCED_CODE |
+		blackfriday.EXTENSION_TABLES |
+		blackfriday.EXTENSION_AUTOLINK |
+		blackfriday.EXTENSION_BACKSLASH_LINE_BREAK |
+		blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
+		blackfriday.EXTENSION_DEFINITION_LISTS
+
+	opts := blackfriday.Options{Extensions: extensions }
+	return blackfriday.MarkdownOptions(markdown, renderer, opts)
 }
 
 func UpdateDocumentation(cfg Configuration, m Manifest) {
