@@ -74,7 +74,7 @@ func createPage(m Manifest) []byte {
 	markdown := append(templated.Bytes(), m.Readme+"\n"...)
 	markdown = append(markdown, m.ChangeLog+"\n"...)
 
-	return blackfriday.MarkdownCommon(markdown)
+	return blackfriday.MarkdownBasic(markdown)
 }
 
 func UpdateDocumentation(cfg Configuration, m Manifest) {
@@ -85,6 +85,8 @@ func UpdateDocumentation(cfg Configuration, m Manifest) {
 	}
 
 	htmlData := createPage(m)
+	newContent := string(htmlData[:])
+	fmt.Println(newContent)
 
 	username := os.Getenv("CONFLUENCE_USER")
 	if username == "" {
@@ -97,7 +99,7 @@ func UpdateDocumentation(cfg Configuration, m Manifest) {
 	}
 
 	api := gopencils.Api(
-		cfg.Confluence.Server + "/wiki/rest/api",
+		cfg.Confluence.Server+"/wiki/rest/api",
 		&gopencils.BasicAuth{Username: username, Password: password},
 	)
 
@@ -107,7 +109,6 @@ func UpdateDocumentation(cfg Configuration, m Manifest) {
 		log.Fatal(err)
 	}
 
-	newContent := string(htmlData[:])
 	currentBody := pageInfo.Body.Storage.Value
 	if strings.Contains(newContent, currentBody) {
 		log.Print("No update needed. Skipping.")
