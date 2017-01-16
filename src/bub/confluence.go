@@ -85,7 +85,7 @@ func createPage(m Manifest) []byte {
 		blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
 		blackfriday.EXTENSION_DEFINITION_LISTS
 
-	opts := blackfriday.Options{Extensions: extensions }
+	opts := blackfriday.Options{Extensions: extensions}
 	return blackfriday.MarkdownOptions(markdown, renderer, opts)
 }
 
@@ -111,7 +111,7 @@ func UpdateDocumentation(cfg Configuration, m Manifest) {
 	}
 
 	api := gopencils.Api(
-		cfg.Confluence.Server+"/wiki/rest/api",
+		cfg.Confluence.Server+"/rest/api",
 		&gopencils.BasicAuth{Username: username, Password: password},
 	)
 

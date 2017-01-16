@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/bndr/gojenkins"
-	"log"
-	"strings"
-	"io/ioutil"
-	"path"
 	"fmt"
+	"github.com/bndr/gojenkins"
+	"io/ioutil"
+	"log"
+	"path"
+	"strings"
 )
 
 func GetJobName(m Manifest) string {

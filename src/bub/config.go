@@ -3,21 +3,21 @@ package main
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"path"
-	"os/user"
 	"log"
+	"os/user"
+	"path"
 )
 
 type Configuration struct {
-	Github     struct {
-				   Organization string
-			   }
-	Jenkins    struct {
-				   Server, Username, Password string
-			   }
+	Github struct {
+		Organization string
+	}
+	Jenkins struct {
+		Server, Username, Password string
+	}
 	Confluence struct {
-				   Server, Username, Password string
-			   }
+		Server, Username, Password string
+	}
 }
 
 func LoadConfiguration() Configuration {
