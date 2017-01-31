@@ -97,7 +97,7 @@ WaitForReady:
 			break WaitForReady
 		}
 		lastEvent = ListEvents(environment, lastEvent, true, false)
-		time.Sleep(5 * time.Second)
+		time.Sleep(15 * time.Second)
 	}
 	log.Println("Done")
 }
