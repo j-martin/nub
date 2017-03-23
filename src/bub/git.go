@@ -23,7 +23,11 @@ func GetCurrentRepositoryName() string {
 func GetCurrentBranch() string {
 	result, err := exec.Command("git", "symbolic-ref", "--short", "-q", "HEAD").Output()
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("Failed to get branch name from git: %v", err)
+		
+		// if on jenkins the HEAD is usually detached, but you can infer the branch name.
+		jobName := strings.SplitAfter(os.Getenv("JOB_NAME"), "/")
+		return jobName[len(jobName)-1]
 	}
 
 	return strings.Trim(string(result), "\n ")
