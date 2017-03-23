@@ -19,9 +19,8 @@ func TriggerAndWaitForSuccess(cfg Configuration, m Manifest) {
 
 	client := circleci.Client{Token: token}
 	build, err := client.Build(cfg.Github.Organization, m.Repository, m.Branch)
-
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("The job could not be triggered.", err)
 	}
 
 	log.Printf("Triggered build: %s", build.BuildURL)
@@ -30,9 +29,8 @@ func TriggerAndWaitForSuccess(cfg Configuration, m Manifest) {
 
 	for {
 		build, err = client.GetBuild(cfg.Github.Organization, m.Repository, build.BuildNum)
-
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("The job status could not be fetched.", err)
 		}
 
 		if build.Lifecycle == "finished" || build.Status == "not_run" || build.Lifecycle == "not_running" {
