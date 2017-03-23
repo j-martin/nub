@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.9.4"
+	app.Version = "0.10.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -397,7 +397,7 @@ Continue?`
 		},
 		{
 			Name:    "circle",
-			Usage:   "Opens the repo's CircleCI test results.",
+			Usage:   "CircleCI related actions",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
 				OpenCircle(manifest, false)
@@ -405,9 +405,18 @@ Continue?`
 			},
 			Subcommands: []cli.Command{
 				{
+					Name:    "trigger",
+					Usage:   "Trigger the current branch of the current repo and wait for success.",
+					Aliases: []string{"t"},
+					Action: func(c *cli.Context) error {
+						TriggerAndWaitForSuccess(cfg, manifest)
+						return nil
+					},
+				},
+				{
 					Name:    "circle",
 					Usage:   "Opens the result for the current branch.",
-					Aliases: []string{"c"},
+					Aliases: []string{"b"},
 					Action: func(c *cli.Context) error {
 						OpenCircle(manifest, true)
 						return nil

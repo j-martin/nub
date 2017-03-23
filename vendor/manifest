@@ -102,6 +102,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/jszwedko/go-circleci",
+			"repository": "https://github.com/jszwedko/go-circleci",
+			"revision": "820efab65ef1993416cd18434ea18fe09b185627",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/russross/blackfriday",
 			"repository": "https://github.com/russross/blackfriday",
 			"revision": "5f33e7b7878355cd2b7e6b8eefc48a5472c69f70",
