@@ -23,11 +23,10 @@ func GetCurrentRepositoryName() string {
 func GetCurrentBranch() string {
 	result, err := exec.Command("git", "symbolic-ref", "--short", "-q", "HEAD").Output()
 	if err != nil {
-		log.Printf("Failed to get branch name from git: %v", err)
-		
 		// if on jenkins the HEAD is usually detached, but you can infer the branch name.
-		jobName := strings.SplitAfter(os.Getenv("JOB_NAME"), "/")
-		return jobName[len(jobName)-1]
+		log.Printf("could not get branch name from git: %v", err)
+		log.Print("trying to infer from environment variables.")
+		return os.Getenv("BRANCH_NAME")
 	}
 
 	return strings.Trim(string(result), "\n ")
@@ -42,7 +41,7 @@ func IsInRepository() bool {
 }
 
 func CloneRepository(repository string) {
-	log.Printf("Cloning: %v", repository)
+	log.Printf("cloning: %v", repository)
 	runCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
@@ -78,6 +77,6 @@ func runCmd(cmd string, args ...string) {
 	command.Stderr = os.Stderr
 	err := command.Run()
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("command failed: %v", err)
 	}
 }
