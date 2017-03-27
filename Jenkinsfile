@@ -1,6 +1,12 @@
 commonNode {
   checkout scm
-  sh 'printenv'
+  for (cause in currentBuild.rawBuild.getCauses()) {
+    if (cause instanceof Cause.UserIdCause) {
+      println(cause.getUserName())
+    } else {
+      println(cause)
+    }
+  }
   def env = [
     "GOPATH=${env.HOME}/.go",
     "PATH=${env.PATH}:/usr/local/go/bin:/${env.HOME}/.go/bin"
