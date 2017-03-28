@@ -3,6 +3,10 @@ commonNode {
   for (cause in currentBuild.rawBuild.getCauses()) {
     if (cause instanceof Cause.UserIdCause) {
       println(cause.getUserName())
+    } else if (cause instanceof Cause.UserCause) {
+      println('userCause')
+    } else if (cause instanceof Cause.UpstreamCause) {
+      println('upstrema')
     } else {
       println(cause)
     }
