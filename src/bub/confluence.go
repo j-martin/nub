@@ -45,6 +45,7 @@ type PageParams struct {
 func shortManifest(m Manifest) ([]byte, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
+	m.Branch = ""
 	m.LastUpdate = 0
 	m.Version = ""
 	return yaml.Marshal(m)
