@@ -17,7 +17,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.10.3"
+	app.Version = "0.10.4"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -190,7 +190,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						ListEvents(environment, time.Time{}, c.Bool("reverse"), true)
+						ListEvents(environment, time.Time{}, c.Bool("reverse"), true, false)
 						return nil
 					},
 				},
@@ -207,7 +207,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						EnvironmentIsReady(environment)
+						EnvironmentIsReady(environment, true)
 						return nil
 					},
 				},

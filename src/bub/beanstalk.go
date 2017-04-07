@@ -64,7 +64,7 @@ func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
 	return elasticbeanstalk.New(sess)
 }
 
-func EnvironmentIsReady(environment string) {
+func EnvironmentIsReady(environment string, failOnError bool) {
 	svc := getBeanstalkSvc()
 	lastEvent := time.Now().In(time.UTC)
 	previousStatus := ""
@@ -96,8 +96,9 @@ WaitForReady:
 		if *resp.Status == elasticbeanstalk.EnvironmentStatusReady && *resp.HealthStatus == elasticbeanstalk.EnvironmentHealthStatusOk {
 			break WaitForReady
 		}
-		lastEvent = ListEvents(environment, lastEvent, true, false)
-		time.Sleep(15 * time.Second)
+
+		lastEvent = ListEvents(environment, lastEvent, true, false, failOnError)
+		time.Sleep(30 * time.Second)
 	}
 	log.Println("Done")
 }
@@ -110,7 +111,7 @@ func DeployVersion(environment string, version string) {
 		log.Fatal(err.Error())
 	}
 	log.Printf("Environment: %v, Status: %v", *resp.EnvironmentName, *resp.Status)
-	EnvironmentIsReady(environment)
+	EnvironmentIsReady(environment, true)
 	log.Print("Done")
 }
 
@@ -171,7 +172,7 @@ func ListEnvironments() {
 	table.Flush()
 }
 
-func ListEvents(environment string, startTime time.Time, reverse bool, header bool) time.Time {
+func ListEvents(environment string, startTime time.Time, reverse bool, header bool, failOnError bool) time.Time {
 	params := &elasticbeanstalk.DescribeEventsInput{StartTime: &startTime}
 	if environment != "" {
 		params.EnvironmentName = &environment
@@ -222,6 +223,11 @@ func ListEvents(environment string, startTime time.Time, reverse bool, header bo
 		if e.EventDate.After(startTime) {
 			row := []string{eventDate.Format("2006-01-02 15:04:05Z"), *e.Severity, name, message}
 			fmt.Fprintln(table, strings.Join(row, "\t"))
+		}
+
+		if failOnError && *e.Severity == elasticbeanstalk.EventSeverityError {
+			table.Flush()
+			log.Fatal("There was an error in the deployment.")
 		}
 	}
 	table.Flush()
