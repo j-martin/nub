@@ -42,7 +42,11 @@ func exists(path string) (bool, error) {
 }
 
 func editFile(file string) {
-	cmd := exec.Command(os.Getenv("EDITOR"), file)
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vim"
+	}
+	cmd := exec.Command(editor, file)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
