@@ -51,7 +51,7 @@ func LoadConfiguration() Configuration {
 	}
 
 	if len(cfg.Aws.Regions) == 0 {
-		cfg.Aws.Regions = []string{"us-east-1"}
+		cfg.Aws.Regions = []string{"us-east-1", "us-west-2"}
 	}
 
 	return cfg
