@@ -11,6 +11,7 @@ import (
 var manifestsTable = aws.String("manifests")
 
 func getDynamoSvc() *dynamodb.DynamoDB {
+	config := getAwsConfig("us-east-1")
 	return dynamodb.New(session.New(&config))
 }
 

@@ -56,7 +56,8 @@ func (e Versions) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
+func getBeanstalkSvc(region string) *elasticbeanstalk.ElasticBeanstalk {
+	config := getAwsConfig(region)
 	sess, err := session.NewSession(&config)
 	if err != nil {
 		log.Fatal("Failed to create session,", err)
@@ -64,8 +65,8 @@ func getBeanstalkSvc() *elasticbeanstalk.ElasticBeanstalk {
 	return elasticbeanstalk.New(sess)
 }
 
-func EnvironmentIsReady(environment string, failOnError bool) {
-	svc := getBeanstalkSvc()
+func EnvironmentIsReady(region string, environment string, failOnError bool) {
+	svc := getBeanstalkSvc(region)
 	lastEvent := time.Now().In(time.UTC)
 	previousStatus := ""
 
@@ -79,7 +80,7 @@ func EnvironmentIsReady(environment string, failOnError bool) {
 		EnvironmentName: &environment,
 	}
 
-WaitForReady:
+	WaitForReady:
 	for {
 		resp, err := svc.DescribeEnvironmentHealth(&request)
 		if err != nil {
@@ -97,27 +98,44 @@ WaitForReady:
 			break WaitForReady
 		}
 
-		lastEvent = ListEvents(environment, lastEvent, true, false, failOnError)
+		lastEvent = ListEvents(region, environment, lastEvent, true, false, failOnError)
 		time.Sleep(30 * time.Second)
 	}
 	log.Println("Done")
 }
 
-func DeployVersion(environment string, version string) {
+func versionAlreadyDeployed(svc *elasticbeanstalk.ElasticBeanstalk, region string, environment string, version string) {
+	params := elasticbeanstalk.DescribeEnvironmentsInput{EnvironmentNames: []*string{&environment}}
+	environments, err := svc.DescribeEnvironments(&params)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if len(environments.Environments) == 0 {
+		log.Fatalf("No environment found for %v in %v", environment, region)
+	}
+	if *environments.Environments[0].VersionLabel == version {
+		log.Print("The same version is already deployed. Skipping.")
+		os.Exit(0)
+	}
+}
+func DeployVersion(region string, environment string, version string) {
 	params := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
-	resp, err := getBeanstalkSvc().UpdateEnvironment(params)
 
+	svc := getBeanstalkSvc(region)
+	versionAlreadyDeployed(svc, region, environment, version)
+
+	resp, err := svc.UpdateEnvironment(params)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Printf("Environment: %v, Status: %v", *resp.EnvironmentName, *resp.Status)
-	EnvironmentIsReady(environment, true)
+	EnvironmentIsReady(region, environment, true)
 	log.Print("Done")
 }
 
-func getEnvironmentVersion() map[string][]string {
+func getEnvironmentVersion(region string) map[string][]string {
 	result := make(map[string][]string)
-	envResp, err := getBeanstalkSvc().DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{})
+	envResp, err := getBeanstalkSvc(region).DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -128,57 +146,72 @@ func getEnvironmentVersion() map[string][]string {
 	return result
 }
 
-func ListApplicationVersions(application string) {
+func ListApplicationVersions(region string, application string) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	params := &elasticbeanstalk.DescribeApplicationVersionsInput{}
 	if application != "" {
 		params.ApplicationName = &application
 	}
-	resp, err := getBeanstalkSvc().DescribeApplicationVersions(params)
+	resp, err := getBeanstalkSvc(region).DescribeApplicationVersions(params)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	versionMapping := getEnvironmentVersion()
+	versionMapping := getEnvironmentVersion(region)
 
 	var versions Versions
 	versions = resp.ApplicationVersions
 	sort.Sort(versions)
-	fmt.Fprintln(table, "Application\tVersion\tEnvironment(s)")
+	fmt.Fprintln(table, "Application\tVersion\tRegion\tEnvironment(s)")
 	for _, v := range versions {
-		row := []string{*v.ApplicationName, *v.VersionLabel, strings.Join(versionMapping[*v.VersionLabel], ", ")}
+		row := []string{*v.ApplicationName, *v.VersionLabel, region, strings.Join(versionMapping[*v.VersionLabel], ", ")}
 		fmt.Fprintln(table, strings.Join(row, "\t"))
 	}
 	table.Flush()
 }
 
-func ListEnvironments() {
+func ListEnvironments(cfg Configuration) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	params := &elasticbeanstalk.DescribeEnvironmentsInput{}
-	resp, err := getBeanstalkSvc().DescribeEnvironments(params)
+	fmt.Fprintln(table, "Application\tEnvironment\tRegion\tStatus\tHealth\tHealthStatus\tVersionLabel\tCNAME")
 
-	if err != nil {
-		log.Fatal(err.Error())
+	params := &elasticbeanstalk.DescribeEnvironmentsInput{}
+	channel := make(chan []string)
+	for _, region := range cfg.Aws.Regions {
+		go func(region string) {
+			log.Printf("Listing environments in %v...", region)
+			resp, err := getBeanstalkSvc(region).DescribeEnvironments(params)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			var rows []string
+			for _, e := range resp.Environments {
+				row := []*string{e.ApplicationName, e.EnvironmentName, &region, e.Status, e.Health, e.HealthStatus, e.VersionLabel, e.CNAME}
+				rows = append(rows, joinStringPointers(row, "\t"))
+			}
+			channel <- rows
+		}(region)
 	}
 
-	fmt.Fprintln(table, "Application\tEnvironment\tStatus\tHealth\tHealthStatus\tVersionLabel\tCNAME")
-	var environments Environments
-	environments = resp.Environments
-	sort.Sort(environments)
+	var environments []string
+	for i := 0; i < len(cfg.Aws.Regions); i++ {
+		environments = append(environments, <-channel...)
+	}
+	close(channel)
+	sort.Strings(environments)
+
 	for _, e := range environments {
-		row := []*string{e.ApplicationName, e.EnvironmentName, e.Status, e.Health, e.HealthStatus, e.VersionLabel, e.CNAME}
-		fmt.Fprintln(table, joinStringPointers(row, "\t"))
+		fmt.Fprintln(table, e)
 	}
 	table.Flush()
 }
 
-func ListEvents(environment string, startTime time.Time, reverse bool, header bool, failOnError bool) time.Time {
+func ListEvents(region string, environment string, startTime time.Time, reverse bool, header bool, failOnError bool) time.Time {
 	params := &elasticbeanstalk.DescribeEventsInput{StartTime: &startTime}
 	if environment != "" {
 		params.EnvironmentName = &environment
 	}
 
-	resp, err := getBeanstalkSvc().DescribeEvents(params)
+	resp, err := getBeanstalkSvc(region).DescribeEvents(params)
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -195,7 +228,7 @@ func ListEvents(environment string, startTime time.Time, reverse bool, header bo
 	if len(events) > 0 {
 		if reverse {
 			sort.Sort(sort.Reverse(events))
-			lastEvent = *events[len(events)-1].EventDate
+			lastEvent = *events[len(events) - 1].EventDate
 		} else {
 			sort.Sort(events)
 			lastEvent = *events[0].EventDate
@@ -209,7 +242,7 @@ func ListEvents(environment string, startTime time.Time, reverse bool, header bo
 		var message = *e.Message
 		const limit = 200
 		if len(message) < limit {
-			message = message[0 : len(message)-1]
+			message = message[0 : len(message) - 1]
 		} else {
 			message = message[0:limit] + "..."
 		}

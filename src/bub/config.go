@@ -10,6 +10,9 @@ import (
 )
 
 type Configuration struct {
+	Aws struct {
+		Regions []string
+	}
 	Github struct {
 		Organization string
 	}
@@ -47,6 +50,10 @@ func LoadConfiguration() Configuration {
 		return cfg
 	}
 
+	if len(cfg.Aws.Regions) == 0 {
+		cfg.Aws.Regions = []string{"us-east-1"}
+	}
+
 	return cfg
 
 }
@@ -65,6 +72,11 @@ aws_access_key_id = CHANGE_ME
 aws_secret_access_key = CHANGE_ME`
 
 	config := `---
+aws:
+  regions:
+	- us-east-1
+	- us-west-2
+
 github:
   organization: benchlabs
 

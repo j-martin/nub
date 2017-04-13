@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+func getRegion(cfg Configuration,c *cli.Context) string {
+
+	region := c.String("region")
+	if region == "" {
+		region = cfg.Aws.Regions[0]
+	}
+	return region
+}
+
 func main() {
 	cfg := LoadConfiguration()
 	manifest, manifestErr := LoadManifest("")
@@ -17,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.10.4"
+	app.Version = "0.11.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -127,8 +136,9 @@ Continue?`
 			},
 		},
 		{
-			Name:      "ec2",
-			Usage:     "EC2 related related actions.",
+			Name: "ec2",
+			Usage: "EC2 related related actions. The commands 'bash', 'exec', " +
+				"'jstack' and 'jmap' will be executed inside the container.",
 			ArgsUsage: "[INSTANCE_NAME] [COMMAND ...]",
 			Aliases:   []string{"e"},
 			Flags: []cli.Flag{
@@ -152,7 +162,7 @@ Continue?`
 					args = c.Args()[1:]
 				}
 
-				ConnectToInstance(ConnectionParams{name, c.Bool("output"), c.Bool("all"), args})
+				ConnectToInstance(ConnectionParams{cfg, name, c.Bool("output"), c.Bool("all"), args})
 				return nil
 			},
 		},
@@ -160,8 +170,11 @@ Continue?`
 			Name:    "elasticbeanstalk",
 			Usage:   "Elasticbeanstalk actions. If no sub-action specified, lists the environements.",
 			Aliases: []string{"eb"},
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "region"},
+			},
 			Action: func(c *cli.Context) error {
-				ListEnvironments()
+				ListEnvironments(cfg)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -169,8 +182,11 @@ Continue?`
 					Name:    "environments",
 					Aliases: []string{"env"},
 					Usage:   "List enviroments and their states.",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
+					},
 					Action: func(c *cli.Context) error {
-						ListEnvironments()
+						ListEnvironments(cfg)
 						return nil
 					},
 				},
@@ -180,6 +196,7 @@ Continue?`
 					Usage:     "List events for all environments.",
 					UsageText: "[ENVIRONMENT_NAME] Optional filter by environment name.",
 					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
 						cli.BoolFlag{Name: "reverse"},
 					},
 					Action: func(c *cli.Context) error {
@@ -190,7 +207,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						ListEvents(environment, time.Time{}, c.Bool("reverse"), true, false)
+						ListEvents(getRegion(cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
 						return nil
 					},
 				},
@@ -199,6 +216,9 @@ Continue?`
 					Aliases:   []string{"r"},
 					Usage:     "Wait for environment to be ready.",
 					UsageText: "ENVIRONMENT_NAME",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
+					},
 					Action: func(c *cli.Context) error {
 						environment := ""
 						if c.NArg() > 0 {
@@ -207,7 +227,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						EnvironmentIsReady(environment, true)
+						EnvironmentIsReady(getRegion(cfg, c), environment, true)
 						return nil
 					},
 				},
@@ -216,6 +236,9 @@ Continue?`
 					Aliases:   []string{"v"},
 					Usage:     "List all versions available.",
 					ArgsUsage: "[APPLICATION_NAME] Optional, limits the versions to the application name.",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
+					},
 					Action: func(c *cli.Context) error {
 						application := ""
 						if c.NArg() > 0 {
@@ -225,7 +248,7 @@ Continue?`
 							log.Printf("Manifest found. Using '%v'", application)
 						}
 
-						ListApplicationVersions(application)
+						ListApplicationVersions(getRegion(cfg, c), application)
 						return nil
 					},
 				},
@@ -234,6 +257,9 @@ Continue?`
 					Aliases:   []string{"d"},
 					Usage:     "Deploy version to an environment.",
 					ArgsUsage: "[ENVIRONMENT_NAME] [VERSION]",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
+					},
 					Action: func(c *cli.Context) error {
 						environment := ""
 						if c.NArg() > 0 {
@@ -246,18 +272,20 @@ Continue?`
 							os.Exit(1)
 						}
 
+						region := getRegion(cfg, c)
+
 						if c.NArg() < 2 {
 							application := ""
 							result := strings.Split(environment, "-")
 							if len(result) > 1 {
 								application = result[1]
 							}
-							ListApplicationVersions(application)
+							ListApplicationVersions(region, application)
 							log.Println("Version required. Specify one of the application versions above.")
 							os.Exit(2)
 						}
 						version := c.Args().Get(1)
-						DeployVersion(environment, version)
+						DeployVersion(region, environment, version)
 						return nil
 					},
 				},

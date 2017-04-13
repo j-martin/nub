@@ -19,20 +19,22 @@ import (
 )
 
 type ConnectionParams struct {
-	Filter string
-	Output bool
-	All    bool
-	Args   []string
+	Configuration Configuration
+	Filter        string
+	Output        bool
+	All           bool
+	Args          []string
 }
 
-func FetchInstances(filter string) []*ec2.Instance {
+func FetchInstances(done chan []*ec2.Instance, region string, filter string) {
 	sess, err := session.NewSession()
 	if err != nil {
 		log.Fatalf("Failed to create session %v\n", err)
 	}
 
+	config := getAwsConfig(region)
 	svc := ec2.New(sess, &config)
-	log.Printf("Fetching instances with tag '%v'\n", filter)
+	log.Printf("Fetching instances with tag '%v' in '%v'\n", filter, region)
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -59,7 +61,8 @@ func FetchInstances(filter string) []*ec2.Instance {
 			instances = append(instances, i)
 		}
 	}
-	return instances
+	done <- instances
+	return
 }
 
 func getInstanceName(i *ec2.Instance) string {
@@ -104,7 +107,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	usr, _ := user.Current()
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + *i.PublicDnsName
-		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
+		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
 		baseArgs := []string{"-i", key, host, "-o", "ConnectTimeout=3"}
 		args := append(baseArgs, params.Args...)
 
@@ -170,7 +173,18 @@ func prepareArgs(params ConnectionParams) []string {
 
 func ConnectToInstance(params ConnectionParams) {
 	params.Args = prepareArgs(params)
-	instances := FetchInstances(params.Filter)
+	var instances []*ec2.Instance
+
+	channel := make(chan []*ec2.Instance)
+	regions := params.Configuration.Aws.Regions
+	for _, region := range regions {
+		go FetchInstances(channel, region, params.Filter)
+	}
+	for i := 0; i < len(regions); i++ {
+		instances = append(instances, <-channel...)
+	}
+	close(channel)
+
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
