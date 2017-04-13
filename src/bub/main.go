@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.12.0"
+	app.Version = "0.12.1"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -38,9 +38,8 @@ func main() {
 			},
 		},
 		{
-			Name:    "repository",
-			Aliases: []string{"r"},
-			Usage:   "Synchronize the all the active repositories.",
+			Name:  "repository",
+			Usage: "Synchronize the all the active repositories.",
 			Flags: []cli.Flag{
 				cli.BoolFlag{Name: "force", Usage: "Skips the confirmation prompt."},
 			},
@@ -167,8 +166,9 @@ Continue?`
 			},
 		},
 		{
-			Name:  "rds",
-			Usage: "RDS actions.",
+			Name:    "rds",
+			Usage:   "RDS actions.",
+			Aliases: []string{"r"},
 			Action: func(c *cli.Context) error {
 				ListRDSInstances(cfg)
 				return nil
