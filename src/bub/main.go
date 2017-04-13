@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func getRegion(cfg Configuration,c *cli.Context) string {
+func getRegion(cfg Configuration, c *cli.Context) string {
 
 	region := c.String("region")
 	if region == "" {
@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.11.0"
+	app.Version = "0.12.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -163,6 +163,14 @@ Continue?`
 				}
 
 				ConnectToInstance(ConnectionParams{cfg, name, c.Bool("output"), c.Bool("all"), args})
+				return nil
+			},
+		},
+		{
+			Name:  "rds",
+			Usage: "RDS actions.",
+			Action: func(c *cli.Context) error {
+				ListRDSInstances(cfg)
 				return nil
 			},
 		},

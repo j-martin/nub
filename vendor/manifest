@@ -15,6 +15,13 @@
 			"path": "/aws"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/aws/endpoints",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "baba9e786eae5ba978f2007f8e718557b29157c8",
+			"branch": "master",
+			"path": "/aws/endpoints"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/private/endpoints",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
@@ -69,6 +76,13 @@
 			"revision": "4742f4bc1f93f618a2298544cb5f44a5fe91652c",
 			"branch": "master",
 			"path": "/service/elasticbeanstalk"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/rds",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "32cdc88aa5cd2ba4afa049da884aaf9a3d103ef4",
+			"branch": "master",
+			"path": "/service/rds"
 		},
 		{
 			"importpath": "github.com/aws/aws-sdk-go/service/sts",
