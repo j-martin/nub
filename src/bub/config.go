@@ -74,8 +74,8 @@ aws_secret_access_key = CHANGE_ME`
 	config := `---
 aws:
   regions:
-	- us-east-1
-	- us-west-2
+    - us-east-1
+    - us-west-2
 
 github:
   organization: benchlabs
