@@ -90,8 +90,8 @@ confluence:
   username: <optional-change-me>
   password: <optional-change-me>
 
- circle:
-   token: <optional-change-me>
+circle:
+  token: <optional-change-me>
 `
 
 	createDir(path.Join(usr.HomeDir, ".aws"), "credentials", awsCredentials)
