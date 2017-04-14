@@ -14,7 +14,22 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+	"sort"
 )
+
+type DBInstances []*rds.DBInstance
+
+func (e DBInstances) Len() int {
+	return len(e)
+}
+
+func (e DBInstances) Less(i, j int) bool {
+	return *e[i].Endpoint.Address < *e[j].Endpoint.Address
+}
+
+func (e DBInstances) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
 
 type EngineConfiguration struct {
 	Port                int
@@ -42,11 +57,13 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 		}(region)
 	}
 
-	var instances []*rds.DBInstance
+	var instances DBInstances
 	for i := 0; i < len(regions); i++ {
 		instances = append(instances, <-channel...)
 	}
 	close(channel)
+
+	sort.Sort(instances)
 
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
