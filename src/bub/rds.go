@@ -107,7 +107,7 @@ func getRDSConfig(endpoint string, credentials []RDSConfiguration) RDSConfigurat
 			return i
 		}
 	}
-	log.Fatalf("No RDS Configuration found for %s, please check your configuration. Run: 'bub config'", endpoint)
+	log.Fatalf("No RDS Configuration found for %s, please check your configuration. Run 'bub config'.", endpoint)
 	return RDSConfiguration{}
 }
 
@@ -117,7 +117,7 @@ func getEnvironment(endpoint string, environments []Environment) Environment {
 			return i
 		}
 	}
-	log.Fatalf("No environment matched %s, please check your configuration. Run: 'bub config'", endpoint)
+	log.Fatalf("No environment matched %s, please check your configuration. Run 'bub config'.", endpoint)
 	return Environment{}
 }
 
@@ -183,13 +183,15 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configura
 		fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
 		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
 		"PGHOST=127.0.0.1",
-		"MYSQL_HOST=127.0.0.1",
+		fmt.Sprintf("PGPORT=%v", port),
 		"PGDATABASE=" + rdsConfig.Database,
 		"PGUSER=" + rdsConfig.User,
 		"PGPASSWORD=" + rdsConfig.Password,
-		"MYSQL_PWD=" + rdsConfig.Password,
-		fmt.Sprintf("PGPORT=%v", port),
-		fmt.Sprintf("MYSQL_TCP_PORT=%v", port)}
+		"MYSQL_HOST=127.0.0.1",
+		fmt.Sprintf("MYSQL_TCP_PORT=%v", port),
+		"MYSQL_USER=" + rdsConfig.User,
+		"MYSQL_DATABASE=" + rdsConfig.Database,
+		"MYSQL_PWD=" + rdsConfig.Password}
 
 	command := ""
 	if len(args) == 0 {
