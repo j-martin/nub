@@ -78,7 +78,7 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 	}
 }
 
-func getRDSConfig(endpoint string, credentials []RDSInstances) RDSInstances {
+func getRDSConfig(endpoint string, credentials []RDSConfiguration) RDSConfiguration {
 	for _, i := range credentials {
 		if strings.HasPrefix(endpoint, i.Prefix) {
 			if i.Database == "" {
@@ -90,8 +90,8 @@ func getRDSConfig(endpoint string, credentials []RDSInstances) RDSInstances {
 			return i
 		}
 	}
-	log.Fatalf("No RDS Credentials found for %s", endpoint)
-	return RDSInstances{}
+	log.Fatalf("No RDS Configuration found for %s, please check your configuration. Run: 'bub config'", endpoint)
+	return RDSConfiguration{}
 }
 
 func getEnvironment(endpoint string, environments []Environment) Environment {
@@ -100,7 +100,7 @@ func getEnvironment(endpoint string, environments []Environment) Environment {
 			return i
 		}
 	}
-	log.Fatalf("No environemnt matched %s", endpoint)
+	log.Fatalf("No environment matched %s, please check your configuration. Run: 'bub config'", endpoint)
 	return Environment{}
 }
 

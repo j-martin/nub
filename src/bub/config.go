@@ -9,7 +9,7 @@ import (
 	"path"
 )
 
-type RDSInstances struct {
+type RDSConfiguration struct {
 	Prefix, Database, User, Password string
 }
 
@@ -19,7 +19,7 @@ type Environment struct {
 type Configuration struct {
 	AWS struct {
 		Regions      []string
-		RDS          []RDSInstances
+		RDS          []RDSConfiguration
 		Environments []Environment
 	}
 	Github struct {
@@ -64,7 +64,15 @@ func LoadConfiguration() Configuration {
 	}
 
 	return cfg
+}
 
+func EditConfig() {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	configPath := path.Join(usr.HomeDir, ".config", "bub", "config.yml")
+	editFile(configPath)
 }
 
 func Setup() {
@@ -85,12 +93,14 @@ aws:
   regions:
     - us-east-1
     - us-west-2
+
   rds:
   # the first prefix match will be used. The database will be infered from the host name.
     - prefix: staging
       database: <optional>
       user: <optional>
       password: <optional>
+
   environments:
     - name: prod
       domain: example.com

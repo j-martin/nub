@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.13.0"
+	app.Version = "0.13.1"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -34,6 +34,14 @@ func main() {
 			Usage: "Setup bub on your machine.",
 			Action: func(c *cli.Context) error {
 				Setup()
+				return nil
+			},
+		},
+		{
+			Name:  "config",
+			Usage: "Edit your bub config",
+			Action: func(c *cli.Context) error {
+				EditConfig()
 				return nil
 			},
 		},
