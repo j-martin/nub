@@ -9,9 +9,18 @@ import (
 	"path"
 )
 
+type RDSInstances struct {
+	Prefix, Database, User, Password string
+}
+
+type Environment struct {
+	Name, Domain, Jumphost string
+}
 type Configuration struct {
-	Aws struct {
-		Regions []string
+	AWS struct {
+		Regions      []string
+		RDS          []RDSInstances
+		Environments []Environment
 	}
 	Github struct {
 		Organization string
@@ -50,8 +59,8 @@ func LoadConfiguration() Configuration {
 		return cfg
 	}
 
-	if len(cfg.Aws.Regions) == 0 {
-		cfg.Aws.Regions = []string{"us-east-1", "us-west-2"}
+	if len(cfg.AWS.Regions) == 0 {
+		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
 	}
 
 	return cfg
@@ -76,6 +85,22 @@ aws:
   regions:
     - us-east-1
     - us-west-2
+  rds:
+  # the first prefix match will be used. The database will be infered from the host name.
+    - prefix: staging
+      database: <optional>
+      user: <optional>
+      password: <optional>
+  environments:
+    - name: prod
+      domain: example.com
+      jumphost: jump.example.com
+    - name: staging2
+      domain: staging2.example.com
+      jumphost: jump.staging2.example.com
+    - name: staging
+      domain: example.com
+      jumphost: jump.example.com
 
 github:
   organization: benchlabs

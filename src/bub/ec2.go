@@ -107,7 +107,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	usr, _ := user.Current()
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + *i.PublicDnsName
-		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName + ".pem")
+		key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
 		baseArgs := []string{"-i", key, host, "-o", "ConnectTimeout=3"}
 		args := append(baseArgs, params.Args...)
 
@@ -176,7 +176,7 @@ func ConnectToInstance(params ConnectionParams) {
 	var instances []*ec2.Instance
 
 	channel := make(chan []*ec2.Instance)
-	regions := params.Configuration.Aws.Regions
+	regions := params.Configuration.AWS.Regions
 	for _, region := range regions {
 		go FetchInstances(channel, region, params.Filter)
 	}

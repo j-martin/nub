@@ -14,7 +14,7 @@ func getRegion(cfg Configuration, c *cli.Context) string {
 
 	region := c.String("region")
 	if region == "" {
-		region = cfg.Aws.Regions[0]
+		region = cfg.AWS.Regions[0]
 	}
 	return region
 }
@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.12.5"
+	app.Version = "0.13.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -170,7 +170,7 @@ Continue?`
 			Usage:   "RDS actions.",
 			Aliases: []string{"r"},
 			Action: func(c *cli.Context) error {
-				ListRDSInstances(cfg)
+				ConnectToRDSInstance(cfg, c.Args().First(), c.Args().Tail())
 				return nil
 			},
 		},

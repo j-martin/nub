@@ -80,7 +80,7 @@ func EnvironmentIsReady(region string, environment string, failOnError bool) {
 		EnvironmentName: &environment,
 	}
 
-	WaitForReady:
+WaitForReady:
 	for {
 		resp, err := svc.DescribeEnvironmentHealth(&request)
 		if err != nil {
@@ -176,7 +176,7 @@ func ListEnvironments(cfg Configuration) {
 
 	params := &elasticbeanstalk.DescribeEnvironmentsInput{}
 	channel := make(chan []string)
-	for _, region := range cfg.Aws.Regions {
+	for _, region := range cfg.AWS.Regions {
 		go func(region string) {
 			log.Printf("Listing environments in %v...", region)
 			resp, err := getBeanstalkSvc(region).DescribeEnvironments(params)
@@ -193,7 +193,7 @@ func ListEnvironments(cfg Configuration) {
 	}
 
 	var environments []string
-	for i := 0; i < len(cfg.Aws.Regions); i++ {
+	for i := 0; i < len(cfg.AWS.Regions); i++ {
 		environments = append(environments, <-channel...)
 	}
 	close(channel)
@@ -228,7 +228,7 @@ func ListEvents(region string, environment string, startTime time.Time, reverse 
 	if len(events) > 0 {
 		if reverse {
 			sort.Sort(sort.Reverse(events))
-			lastEvent = *events[len(events) - 1].EventDate
+			lastEvent = *events[len(events)-1].EventDate
 		} else {
 			sort.Sort(events)
 			lastEvent = *events[0].EventDate
@@ -242,7 +242,7 @@ func ListEvents(region string, environment string, startTime time.Time, reverse 
 		var message = *e.Message
 		const limit = 200
 		if len(message) < limit {
-			message = message[0 : len(message) - 1]
+			message = message[0 : len(message)-1]
 		} else {
 			message = message[0:limit] + "..."
 		}
