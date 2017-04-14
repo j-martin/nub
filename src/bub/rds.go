@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-type Engine struct {
+type EngineConfiguration struct {
 	Port                int
 	Command, CommandAlt string
 }
@@ -117,11 +117,11 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func getEngine(engine string) Engine {
+func getEngineConfiguration(engine string) EngineConfiguration {
 	if engine == "mysql" {
-		return Engine{3306, "mycli", "mysql"}
+		return EngineConfiguration{3306, "mycli", "mysql"}
 	}
-	return Engine{5432, "pgcli", "psql"}
+	return EngineConfiguration{5432, "pgcli", "psql"}
 }
 
 // Escape codes for iTerm2
@@ -145,11 +145,11 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configura
 	jump := getEnvironment(endpoint, cfg.AWS.Environments).Jumphost
 	rdsConfig := getRDSConfig(endpoint, cfg.AWS.RDS)
 	port := random(40000, 60000)
-	engine := getEngine(*instance.Engine)
+	engine := getEngineConfiguration(*instance.Engine)
 
-	tunnelUri := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
-	log.Printf("Connecting to %s through %s", tunnelUri, jump)
-	tunnel := exec.Command("ssh", "-NL", tunnelUri, jump)
+	tunnelPath := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
+	log.Printf("Connecting to %s through %s", tunnelPath, jump)
+	tunnel := exec.Command("ssh", "-NL", tunnelPath, jump)
 	tunnel.Stderr = os.Stderr
 	err := tunnel.Start()
 
