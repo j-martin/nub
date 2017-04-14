@@ -180,6 +180,8 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configura
 
 	env := []string{
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
+		fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
+		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
 		"PGHOST=127.0.0.1",
 		"MYSQL_HOST=127.0.0.1",
 		"PGDATABASE=" + rdsConfig.Database,
