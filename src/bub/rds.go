@@ -10,11 +10,11 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
-	"sort"
 )
 
 type DBInstances []*rds.DBInstance
