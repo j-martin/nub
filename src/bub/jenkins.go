@@ -12,38 +12,53 @@ import (
 func GetJobName(m Manifest) string {
 	return strings.Join([]string{"BenchLabs", "job", m.Repository, "job", m.Branch}, "/")
 }
+
 func GetClient(cfg Configuration) *gojenkins.Jenkins {
 	if cfg.Jenkins.Server == "" {
-		log.Fatal("Server cannot be empty, make sure the config file is properly configured.")
+		log.Fatal("Server cannot be empty, make sure the config file is properly configured. Run 'bub config'.")
 	}
-	client, _ := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password).Init()
+	if strings.HasPrefix(cfg.Jenkins.Username, "<") ||
+		cfg.Jenkins.Username == "" ||
+		cfg.Jenkins.Password == "" {
+		log.Fatal("Please set your jenkins credentials. Run 'bub config'.")
+	}
+	client, err := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password).Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return client
 }
 
 func GetJob(cfg Configuration, m Manifest) *gojenkins.Job {
 	client := GetClient(cfg)
 	uri := GetJobName(m)
-	job, _ := client.GetJob(uri)
+	job, err := client.GetJob(uri)
+	if err != nil {
+		log.Fatalf("Failed to fetch job details. Error: %s", err)
+	}
 	return job
 }
 
 func GetLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
 	log.Printf("Fetching last build for '%v' '%v'.", m.Repository, m.Branch)
-	lastBuild, _ := GetJob(cfg, m).GetLastBuild()
+	lastBuild, err := GetJob(cfg, m).GetLastBuild()
+	if err != nil {
+		log.Fatalf("Failed to fetch build details. Error: %s", err)
+	}
 	return lastBuild
 }
 
 func GetArtifacts(cfg Configuration, m Manifest) {
-	log.Print("Fetching artifacts.")
+	log.Print("fetching artifacts.")
 	artifacts := GetLastBuild(cfg, m).GetArtifacts()
 	dir, _ := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
-	for _, a := range artifacts {
-		if !strings.Contains(a.FileName, ".png") {
-			artifactPath := path.Join(dir, a.FileName)
+	for _, artifact := range artifacts {
+		if !strings.Contains(artifact.FileName, ".png") {
+			artifactPath := path.Join(dir, artifact.FileName)
 			log.Println(artifactPath)
-			a.Save(artifactPath)
+			artifact.Save(artifactPath)
 		} else {
-			log.Println(cfg.Jenkins.Server + a.Path)
+			log.Println(cfg.Jenkins.Server + artifact.Path)
 		}
 	}
 }
