@@ -1,7 +1,7 @@
 PLATFORM	= $(shell uname | tr 'A-Z' 'a-z')
 ARCH		= amd64
 
-.PHONY: build deps test clean release
+.PHONY: build deps test clean release fmt
 
 build: clean test
 	GOOS=darwin GOARCH=$(ARCH) gb build
@@ -28,3 +28,6 @@ release: build
 install: build
 	rm -f /usr/local/bin/bub
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
+
+fmt:
+	(cd src/bub && go fmt)
