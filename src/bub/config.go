@@ -14,7 +14,7 @@ type RDSConfiguration struct {
 }
 
 type Environment struct {
-	Name, Domain, Jumphost string
+	Prefix, Jumphost string
 }
 type Configuration struct {
 	AWS struct {
@@ -35,6 +35,43 @@ type Configuration struct {
 		Token string
 	}
 }
+
+var config string = `---
+aws:
+  regions:
+    - us-east-1
+    - us-west-2
+
+  rds:
+    # The first prefix match will be used.
+    # The database name, unless specified, will be infered from the host name.
+    - prefix: staging
+      database: <optional>
+      user: <optional>
+      password: <optional>
+
+  environments:
+    - prefix: staging2
+      jumphost: jump.staging2.example.com
+    # if not prefix, act as a catch all.
+    - jumphost: jump.example.com
+
+github:
+  organization: benchlabs
+
+jenkins:
+  server: "https://jenkins.example.com"
+  username: <optional-change-me>
+  password: <optional-change-me>
+
+confluence:
+  server: "https://example.atlassian.net/wiki"
+  username: <optional-change-me>
+  password: <optional-change-me>
+
+circle:
+  token: <optional-change-me>
+`
 
 func LoadConfiguration() Configuration {
 	cfg := Configuration{}
@@ -87,47 +124,6 @@ output=json
 region=us-east-1
 aws_access_key_id = CHANGE_ME
 aws_secret_access_key = CHANGE_ME`
-
-	config := `---
-aws:
-  regions:
-    - us-east-1
-    - us-west-2
-
-  rds:
-  # the first prefix match will be used. The database will be infered from the host name.
-    - prefix: staging
-      database: <optional>
-      user: <optional>
-      password: <optional>
-
-  environments:
-    - name: prod
-      domain: example.com
-      jumphost: jump.example.com
-    - name: staging2
-      domain: staging2.example.com
-      jumphost: jump.staging2.example.com
-    - name: staging
-      domain: example.com
-      jumphost: jump.example.com
-
-github:
-  organization: benchlabs
-
-jenkins:
-  server: "https://jenkins.example.com"
-  username: <optional-change-me>
-  password: <optional-change-me>
-
-confluence:
-  server: "https://example.atlassian.net/wiki"
-  username: <optional-change-me>
-  password: <optional-change-me>
-
-circle:
-  token: <optional-change-me>
-`
 
 	createDir(path.Join(usr.HomeDir, ".aws"), "credentials", awsCredentials)
 	createDir(path.Join(usr.HomeDir, ".config", "bub"), "config.yml", config)

@@ -113,7 +113,7 @@ func getRDSConfig(endpoint string, credentials []RDSConfiguration) RDSConfigurat
 
 func getEnvironment(endpoint string, environments []Environment) Environment {
 	for _, i := range environments {
-		if strings.HasPrefix(endpoint, i.Name) {
+		if strings.HasPrefix(endpoint, i.Prefix) {
 			return i
 		}
 	}

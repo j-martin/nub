@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.13.3"
+	app.Version = "0.13.4"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -40,8 +40,15 @@ func main() {
 		{
 			Name:  "config",
 			Usage: "Edit your bub config",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "show-default", Usage: "Show default config for reference"},
+			},
 			Action: func(c *cli.Context) error {
-				EditConfig()
+				if c.Bool("show-default") {
+					print(config)
+				} else {
+					EditConfig()
+				}
 				return nil
 			},
 		},

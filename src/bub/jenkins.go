@@ -18,8 +18,7 @@ func GetClient(cfg Configuration) *gojenkins.Jenkins {
 		log.Fatal("Server cannot be empty, make sure the config file is properly configured. Run 'bub config'.")
 	}
 	if strings.HasPrefix(cfg.Jenkins.Username, "<") ||
-		cfg.Jenkins.Username == "" ||
-		cfg.Jenkins.Password == "" {
+		cfg.Jenkins.Username == "" || cfg.Jenkins.Password == "" {
 		log.Fatal("Please set your jenkins credentials. Run 'bub config'.")
 	}
 	client, err := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password).Init()
