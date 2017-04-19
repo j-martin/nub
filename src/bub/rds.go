@@ -182,6 +182,8 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configura
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 		fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
 		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
+		fmt.Sprintf("LC_ALL=%s", getEnvWithDefault("LC_ALL", "en_US.UTF-8")),
+		fmt.Sprintf("LANG=%s", getEnvWithDefault("LANG", "en_US.UTF-8")),
 		"PGHOST=127.0.0.1",
 		fmt.Sprintf("PGPORT=%v", port),
 		"PGDATABASE=" + rdsConfig.Database,
