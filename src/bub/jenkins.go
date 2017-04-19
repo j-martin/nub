@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/bndr/gojenkins"
 	"io/ioutil"
 	"log"
@@ -64,19 +63,19 @@ func GetArtifacts(cfg Configuration, m Manifest) {
 }
 
 func ShowConsoleOutput(cfg Configuration, m Manifest) {
-	var lastLine int
+	var lastChar int
 	for {
 		build, err := GetJob(cfg, m).GetLastBuild()
 		if err != nil {
 			log.Fatal(err)
 		}
 		consoleOutput := build.GetConsoleOutput()
-		for i, line := range strings.Split(consoleOutput, "\n") {
-			if i > lastLine {
-				fmt.Println(line)
-				lastLine = i
+		for i, char := range consoleOutput {
+			if i > lastChar {
+				print(string(char))
 			}
 		}
+		lastChar = len(consoleOutput) - 1
 		if !build.IsRunning() {
 			if !build.IsGood() {
 				log.Fatal("the job failed on jenkins.")

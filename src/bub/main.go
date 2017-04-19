@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.13.6"
+	app.Version = "0.13.7"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
