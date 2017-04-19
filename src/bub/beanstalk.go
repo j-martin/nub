@@ -60,7 +60,7 @@ func getBeanstalkSvc(region string) *elasticbeanstalk.ElasticBeanstalk {
 	config := getAwsConfig(region)
 	sess, err := session.NewSession(&config)
 	if err != nil {
-		log.Fatal("Failed to create session,", err)
+		log.Fatal("failed to create session,", err)
 	}
 	return elasticbeanstalk.New(sess)
 }
@@ -91,7 +91,7 @@ WaitForReady:
 			for _, cause := range resp.Causes {
 				causes = append(causes, *cause)
 			}
-			log.Printf("Status: %v, HealthStatus: %v, Color: %v, Causes: %v\n", *resp.Status, *resp.HealthStatus, *resp.Color, strings.Join(causes, ", "))
+			log.Printf("status: %v, healthstatus: %v, color: %v, causes: %v\n", *resp.Status, *resp.HealthStatus, *resp.Color, strings.Join(causes, ", "))
 		}
 		previousStatus = *resp.Status
 		if *resp.Status == elasticbeanstalk.EnvironmentStatusReady && *resp.HealthStatus == elasticbeanstalk.EnvironmentHealthStatusOk {
@@ -111,12 +111,14 @@ func versionAlreadyDeployed(svc *elasticbeanstalk.ElasticBeanstalk, region strin
 		log.Fatal(err.Error())
 	}
 	if len(environments.Environments) == 0 {
-		log.Fatalf("No environment found for %v in %v", environment, region)
+		log.Fatalf("no environment found for %v in %v", environment, region)
 	}
-	if *environments.Environments[0].VersionLabel == version {
-		log.Print("The same version is already deployed. Skipping.")
+	currentVersion := *environments.Environments[0].VersionLabel
+	if currentVersion == version {
+		log.Print("the same version is already deployed. skipping.")
 		os.Exit(0)
 	}
+	log.Printf("updating from verson %s to %s", currentVersion, version)
 }
 func DeployVersion(region string, environment string, version string) {
 	params := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
@@ -128,9 +130,9 @@ func DeployVersion(region string, environment string, version string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	log.Printf("Environment: %v, Status: %v", *resp.EnvironmentName, *resp.Status)
+	log.Printf("environment: %v, Status: %v", *resp.EnvironmentName, *resp.Status)
 	EnvironmentIsReady(region, environment, true)
-	log.Print("Done")
+	log.Print("done")
 }
 
 func getEnvironmentVersion(region string) map[string][]string {
@@ -178,7 +180,7 @@ func ListEnvironments(cfg Configuration) {
 	channel := make(chan []string)
 	for _, region := range cfg.AWS.Regions {
 		go func(region string) {
-			log.Printf("Listing environments in %v...", region)
+			log.Printf("listing environments in %v...", region)
 			resp, err := getBeanstalkSvc(region).DescribeEnvironments(params)
 			if err != nil {
 				log.Fatal(err.Error())
@@ -260,7 +262,7 @@ func ListEvents(region string, environment string, startTime time.Time, reverse 
 
 		if failOnError && *e.Severity == elasticbeanstalk.EventSeverityError {
 			table.Flush()
-			log.Fatal("There was an error in the deployment.")
+			log.Fatal("there was an error in the deployment.")
 		}
 	}
 	table.Flush()
