@@ -99,7 +99,7 @@ page: pageID from confluence, not the name.
 		panic(err)
 	}
 
-	fileExists, err := exists(manifestFile)
+	fileExists, err := pathExists(manifestFile)
 	if err != nil {
 		log.Fatal(err)
 	}

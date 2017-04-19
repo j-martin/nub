@@ -133,7 +133,7 @@ aws_secret_access_key = CHANGE_ME`
 
 func createDir(directory string, filename string, content string) {
 	filePath := path.Join(directory, filename)
-	dirExists, err := exists(directory)
+	dirExists, err := pathExists(directory)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func createDir(directory string, filename string, content string) {
 		os.MkdirAll(directory, 0700)
 	}
 
-	fileExists, err := exists(filePath)
+	fileExists, err := pathExists(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}

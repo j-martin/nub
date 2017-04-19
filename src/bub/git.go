@@ -33,7 +33,7 @@ func GetCurrentBranch() string {
 }
 
 func IsInRepository() bool {
-	result, err := exists(".git")
+	result, err := pathExists(".git")
 	if err != nil {
 		return false
 	}
@@ -63,7 +63,7 @@ func SyncRepositories() {
 
 func syncRepository(m Manifest) {
 	repository := m.Repository
-	repositoryExists, _ := exists(repository)
+	repositoryExists, _ := pathExists(repository)
 	if repositoryExists {
 		UpdateRepository(repository)
 	} else {

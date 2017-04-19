@@ -30,7 +30,15 @@ func askForConfirmation(s string) bool {
 	}
 }
 
-func exists(path string) (bool, error) {
+func getEnvWithDefault(key string, defaultValue string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		val = defaultValue
+	}
+	return val
+}
+
+func pathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil

@@ -7,6 +7,7 @@ import (
 	"log"
 	"path"
 	"strings"
+	"time"
 )
 
 func GetJobName(m Manifest) string {
@@ -15,11 +16,11 @@ func GetJobName(m Manifest) string {
 
 func GetClient(cfg Configuration) *gojenkins.Jenkins {
 	if cfg.Jenkins.Server == "" {
-		log.Fatal("Server cannot be empty, make sure the config file is properly configured. Run 'bub config'.")
+		log.Fatal("server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
 	}
 	if strings.HasPrefix(cfg.Jenkins.Username, "<") ||
 		cfg.Jenkins.Username == "" || cfg.Jenkins.Password == "" {
-		log.Fatal("Please set your jenkins credentials. Run 'bub config'.")
+		log.Fatal("please set your jenkins credentials. run 'bub config'.")
 	}
 	client, err := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password).Init()
 	if err != nil {
@@ -33,16 +34,16 @@ func GetJob(cfg Configuration, m Manifest) *gojenkins.Job {
 	uri := GetJobName(m)
 	job, err := client.GetJob(uri)
 	if err != nil {
-		log.Fatalf("Failed to fetch job details. Error: %s", err)
+		log.Fatalf("failed to fetch job details. error: %s", err)
 	}
 	return job
 }
 
 func GetLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
-	log.Printf("Fetching last build for '%v' '%v'.", m.Repository, m.Branch)
+	log.Printf("fetching last build for '%v' '%v'.", m.Repository, m.Branch)
 	lastBuild, err := GetJob(cfg, m).GetLastBuild()
 	if err != nil {
-		log.Fatalf("Failed to fetch build details. Error: %s", err)
+		log.Fatalf("failed to fetch build details. error: %s", err)
 	}
 	return lastBuild
 }
@@ -63,11 +64,33 @@ func GetArtifacts(cfg Configuration, m Manifest) {
 }
 
 func ShowConsoleOutput(cfg Configuration, m Manifest) {
-	fmt.Println(GetLastBuild(cfg, m).GetConsoleOutput())
+	var lastLine int
+	for {
+		build, err := GetJob(cfg, m).GetLastBuild()
+		if err != nil {
+			log.Fatal(err)
+		}
+		consoleOutput := build.GetConsoleOutput()
+		for i, line := range strings.Split(consoleOutput, "\n") {
+			if i > lastLine {
+				fmt.Println(line)
+				lastLine = i
+			}
+		}
+		if !build.IsRunning() {
+			if !build.IsGood() {
+				log.Fatal("the job failed on jenkins.")
+			}
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func BuildJob(cfg Configuration, m Manifest) {
 	jobName := GetJobName(m)
 	GetJob(cfg, m).InvokeSimple(nil)
-	log.Printf("Job Triggered: %v", jobName)
+	log.Printf("job triggered: %v", jobName)
+	time.Sleep(10 * time.Second)
+	ShowConsoleOutput(cfg, m)
 }
