@@ -44,6 +44,7 @@ func GetLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
 	if err != nil {
 		log.Fatalf("failed to fetch build details. error: %s", err)
 	}
+	log.Printf(lastBuild.GetUrl())
 	return lastBuild
 }
 
@@ -90,6 +91,6 @@ func BuildJob(cfg Configuration, m Manifest) {
 	jobName := GetJobName(m)
 	GetJob(cfg, m).InvokeSimple(nil)
 	log.Printf("job triggered: %v", jobName)
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 	ShowConsoleOutput(cfg, m)
 }
