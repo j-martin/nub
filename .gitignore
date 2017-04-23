@@ -30,4 +30,5 @@ pkg/**
 vendor/**
 !vendor/manifest
 /.idea/
+/.vscode/
 output-*
