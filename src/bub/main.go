@@ -26,7 +26,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.13.10"
+	app.Version = "0.13.11"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -251,6 +251,27 @@ Continue?`
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
 						EnvironmentIsReady(getRegion(cfg, c), environment, true)
+						return nil
+					},
+				},
+				{
+					Name:      "settings",
+					Aliases:   []string{"s"},
+					Usage:     "List Environment settings",
+					UsageText: "ENVIRONMENT_NAME",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "region"},
+						cli.BoolFlag{Name: "all", Usage: "Display all settings, not just environment variables."},
+					},
+					Action: func(c *cli.Context) error {
+						environment := ""
+						if c.NArg() > 0 {
+							environment = c.Args().Get(0)
+						} else if manifestErr == nil {
+							environment = "prod-" + manifest.Name
+							log.Printf("Manifest found. Using '%v'", environment)
+						}
+						DescribeEnvironment(getRegion(cfg, c), environment, c.Bool("all"))
 						return nil
 					},
 				},

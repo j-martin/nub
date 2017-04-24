@@ -80,7 +80,6 @@ func EnvironmentIsReady(region string, environment string, failOnError bool) {
 		EnvironmentName: &environment,
 	}
 
-WaitForReady:
 	for {
 		resp, err := svc.DescribeEnvironmentHealth(&request)
 		if err != nil {
@@ -95,7 +94,7 @@ WaitForReady:
 		}
 		previousStatus = *resp.Status
 		if *resp.Status == elasticbeanstalk.EnvironmentStatusReady && *resp.HealthStatus == elasticbeanstalk.EnvironmentHealthStatusOk {
-			break WaitForReady
+			break
 		}
 
 		lastEvent = ListEvents(region, environment, lastEvent, true, false, failOnError)
@@ -120,6 +119,30 @@ func versionAlreadyDeployed(svc *elasticbeanstalk.ElasticBeanstalk, region strin
 	}
 	log.Printf("updating from verson %s to %s", currentVersion, version)
 }
+
+func DescribeEnvironment(region string, environment string, all bool) {
+	application := strings.Split(environment, "-")[0]
+	params := &elasticbeanstalk.DescribeConfigurationSettingsInput{ApplicationName: &application, EnvironmentName: &environment}
+
+	svc := getBeanstalkSvc(region)
+	resp, err := svc.DescribeConfigurationSettings(params)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(table, "Option\tValue")
+	for _, s := range resp.ConfigurationSettings {
+		for _, o :=range s.OptionSettings {
+			if o.Value != nil {
+				if all || *o.Namespace == "aws:elasticbeanstalk:application:environment" {
+					fmt.Fprintln(table, strings.Join([]string{*o.OptionName, *o.Value}, "\t"))
+				}
+			}
+		}
+	}
+	table.Flush()
+}
+
 func DeployVersion(region string, environment string, version string) {
 	params := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
 
