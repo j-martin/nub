@@ -99,7 +99,6 @@ func UpdateDocumentation(cfg Configuration, m Manifest) {
 
 	htmlData := createPage(m)
 	newContent := string(htmlData[:])
-	fmt.Println(newContent)
 
 	username := os.Getenv("CONFLUENCE_USER")
 	if username == "" {
