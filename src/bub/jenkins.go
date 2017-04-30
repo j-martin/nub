@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"fmt"
 )
 
 func GetJobName(m Manifest) string {
@@ -73,7 +74,7 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 		consoleOutput := build.GetConsoleOutput()
 		for i, char := range consoleOutput {
 			if i > lastChar {
-				print(string(char))
+				fmt.Print(string(char))
 			}
 		}
 		lastChar = len(consoleOutput) - 1
