@@ -13,7 +13,7 @@ func GetCurrentRepositoryName() string {
 	result, err := cmd.Output()
 
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("failed to get repository: %v", err)
 	}
 
 	repositoryUri := string(result)

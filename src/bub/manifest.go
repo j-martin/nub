@@ -42,35 +42,24 @@ func LoadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
 	if !IsInRepository() {
-		return Manifest{}, errors.New("Must be executed in a repository.")
+		return Manifest{}, errors.New("must be executed in a repository.")
 	}
 
 	data, err := ioutil.ReadFile(manifestFile)
-	if err != nil {
-		return Manifest{}, errors.New("Must be executed in a repository.")
-	}
-
-	readme, err := ioutil.ReadFile("README.md")
-	if err != nil {
-		return Manifest{}, err
-	}
-
-	changelog, err := ioutil.ReadFile("CHANGELOG.md")
-
 	err = yaml.Unmarshal(data, &m)
-	if err != nil {
-		return Manifest{}, err
-	}
 
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
 	m.Branch = GetCurrentBranch()
 	m.Version = version
 
+	readme, err := ioutil.ReadFile("README.md")
 	m.Readme = string(readme)
+
+	changelog, err := ioutil.ReadFile("CHANGELOG.md")
 	m.ChangeLog = string(changelog)
 
-	return m, nil
+	return m, err
 }
 
 func CreateManifest() {
