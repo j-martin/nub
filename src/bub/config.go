@@ -14,7 +14,7 @@ type RDSConfiguration struct {
 }
 
 type Environment struct {
-	Prefix, Jumphost string
+	Prefix, Jumphost, Region string
 }
 type Configuration struct {
 	AWS struct {
@@ -53,8 +53,13 @@ aws:
   environments:
     - prefix: staging2
       jumphost: jump.staging2.example.com
+      region: us-west-2
+    - prefix: staging
+      jumphost: jump.example.com
+      region: us-west-2
     # if not prefix, act as a catch all.
     - jumphost: jump.example.com
+      region: us-east-1
 
 github:
   organization: benchlabs

@@ -10,11 +10,17 @@ import (
 	"time"
 )
 
-func getRegion(cfg Configuration, c *cli.Context) string {
+func getRegion(environment string, cfg Configuration, c *cli.Context) string {
 
 	region := c.String("region")
 	if region == "" {
-		region = cfg.AWS.Regions[0]
+		prefix := strings.Split(environment, "-")[0]
+		for _, i := range cfg.AWS.Environments {
+			if i.Prefix == prefix {
+				return i.Region
+			}
+		}
+		return cfg.AWS.Regions[0]
 	}
 	return region
 }
@@ -230,7 +236,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						ListEvents(getRegion(cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
+						ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
 						return nil
 					},
 				},
@@ -250,7 +256,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						EnvironmentIsReady(getRegion(cfg, c), environment, true)
+						EnvironmentIsReady(getRegion(environment, cfg, c), environment, true)
 						return nil
 					},
 				},
@@ -271,7 +277,7 @@ Continue?`
 							environment = "prod-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						DescribeEnvironment(getRegion(cfg, c), environment, c.Bool("all"))
+						DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool("all"))
 						return nil
 					},
 				},
@@ -292,7 +298,7 @@ Continue?`
 							log.Printf("Manifest found. Using '%v'", application)
 						}
 
-						ListApplicationVersions(getRegion(cfg, c), application)
+						ListApplicationVersions(getRegion(application, cfg, c), application)
 						return nil
 					},
 				},
@@ -316,7 +322,7 @@ Continue?`
 							os.Exit(1)
 						}
 
-						region := getRegion(cfg, c)
+						region := getRegion(environment, cfg, c)
 
 						if c.NArg() < 2 {
 							application := ""
