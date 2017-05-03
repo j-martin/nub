@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bndr/gojenkins"
 	"io/ioutil"
 	"log"
 	"path"
 	"strings"
 	"time"
-	"fmt"
+	"os"
 )
 
 func GetJobName(m Manifest) string {
@@ -90,8 +91,25 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 
 func BuildJob(cfg Configuration, m Manifest) {
 	jobName := GetJobName(m)
-	GetJob(cfg, m).InvokeSimple(nil)
-	log.Printf("job triggered: %v", jobName)
-	time.Sleep(5 * time.Second)
+	job := GetJob(cfg, m)
+	lastBuild, err := job.GetLastBuild()
+	if err != nil {
+		log.Fatalf("failed to get job status: %v", err)
+	}
+
+	job.InvokeSimple(nil)
+	log.Printf("job triggered: %v, wating for the job to start.", jobName)
+	for {
+		newBuild, err := GetJob(cfg, m).GetLastBuild()
+		if err != nil {
+			log.Fatalf("failed to get job status: %v", err)
+		}
+		os.Stderr.WriteString(".")
+		if lastBuild.GetUrl() != newBuild.GetUrl() {
+			os.Stderr.WriteString("\n")
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
 	ShowConsoleOutput(cfg, m)
 }
