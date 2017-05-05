@@ -1,8 +1,8 @@
 commonNode {
   checkout scm
-
-  tagRepository('test', '', true)
-
+  checkoutRepository("benchception")
+  checkout scm
+  sh 'git remote -v'
   def env = [
     "GOPATH=${env.HOME}/.go",
     "PATH=${env.PATH}:/usr/local/go/bin:/${env.HOME}/.go/bin"
