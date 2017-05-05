@@ -1,6 +1,8 @@
 commonNode {
   checkout scm
 
+  tagRepository('test', '', true)
+
   def env = [
     "GOPATH=${env.HOME}/.go",
     "PATH=${env.PATH}:/usr/local/go/bin:/${env.HOME}/.go/bin"
