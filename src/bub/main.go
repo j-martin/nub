@@ -32,7 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.13.16"
+	app.Version = "0.14.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -94,6 +94,10 @@ Continue?`
 					Flags: []cli.Flag{
 						cli.BoolFlag{Name: "full", Usage: "Display all information, including readmes and changelogs."},
 						cli.BoolFlag{Name: "active", Usage: "Display only active projects."},
+						cli.BoolFlag{Name: "name", Usage: "Display only the project names."},
+						cli.BoolFlag{Name: "service", Usage: "Display only the services projects."},
+						cli.BoolFlag{Name: "lib", Usage: "Display only the library projects."},
+						cli.StringFlag{Name: "lang", Usage: "Display only projects matching the language"},
 					},
 					Action: func(c *cli.Context) error {
 						manifests := GetAllManifests()
@@ -102,7 +106,26 @@ Continue?`
 								m.Readme = ""
 								m.ChangeLog = ""
 							}
-							if !c.Bool("active") || (c.Bool("active") && m.Active) {
+
+							if c.Bool("active") && !m.Active {
+								continue
+							}
+
+							if c.Bool("service") && !IsType(m, "service") {
+								continue
+							}
+
+							if c.Bool("lib") && !IsType(m, "library") {
+								continue
+							}
+
+							if c.String("lang") != "" && m.Language != c.String("lang") {
+								continue
+							}
+
+							if c.Bool("name") {
+								fmt.Println(m.Name)
+							} else {
 								yml, _ := yaml.Marshal(m)
 								fmt.Println(string(yml))
 							}

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"log"
+	"sort"
 )
 
 var manifestsTable = aws.String("manifests")
@@ -16,7 +17,7 @@ func getDynamoSvc() *dynamodb.DynamoDB {
 }
 
 func GetAllActiveManifests() []Manifest {
-	ms := []Manifest{}
+	ms := Manifests{}
 	for _, m := range GetAllManifests() {
 		if m.Active {
 			ms = append(ms, m)
@@ -27,7 +28,7 @@ func GetAllActiveManifests() []Manifest {
 
 func GetAllManifests() []Manifest {
 	log.Println("Fetching all manifests.")
-	manifests := []Manifest{}
+	manifests := Manifests{}
 	params := &dynamodb.ScanInput{TableName: manifestsTable}
 	result, err := getDynamoSvc().Scan(params)
 
@@ -36,6 +37,7 @@ func GetAllManifests() []Manifest {
 	}
 
 	dynamodbattribute.UnmarshalListOfMaps(result.Items, &manifests)
+	sort.Sort(manifests)
 	return manifests
 }
 

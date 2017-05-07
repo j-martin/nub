@@ -98,7 +98,7 @@ func BuildJob(cfg Configuration, m Manifest) {
 	}
 
 	job.InvokeSimple(nil)
-	log.Printf("job triggered: %v, wating for the job to start.", jobName)
+	log.Printf("job triggered: %v/job/%v, wating for the job to start.", cfg.Jenkins.Server, jobName)
 	for {
 		newBuild, err := GetJob(cfg, m).GetLastBuild()
 		if err != nil {

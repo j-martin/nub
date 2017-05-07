@@ -38,6 +38,20 @@ type Protocol struct {
 	Path string
 }
 
+type Manifests []Manifest
+
+func (e Manifests) Len() int {
+	return len(e)
+}
+
+func (e Manifests) Less(i, j int) bool {
+	return e[i].Name < e[j].Name
+}
+
+func (e Manifests) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
+
 func LoadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
@@ -46,6 +60,9 @@ func LoadManifest(version string) (Manifest, error) {
 	}
 
 	data, err := ioutil.ReadFile(manifestFile)
+	if err != nil {
+		data, err = ioutil.ReadFile("manifest.yml")
+	}
 	err = yaml.Unmarshal(data, &m)
 
 	m.LastUpdate = time.Now().Unix()
@@ -53,10 +70,10 @@ func LoadManifest(version string) (Manifest, error) {
 	m.Branch = GetCurrentBranch()
 	m.Version = version
 
-	readme, err := ioutil.ReadFile("README.md")
+	readme, _ := ioutil.ReadFile("README.md")
 	m.Readme = string(readme)
 
-	changelog, err := ioutil.ReadFile("CHANGELOG.md")
+	changelog, _ := ioutil.ReadFile("CHANGELOG.md")
 	m.ChangeLog = string(changelog)
 
 	return m, err
@@ -106,3 +123,13 @@ page: pageID from confluence, not the name.
 	editFile(manifestFile)
 	log.Println("Done. Don't forget to add and commit the file.")
 }
+
+func IsType(m Manifest, manifestType string) bool {
+	for _, i :=range m.Types {
+		if i == manifestType {
+			return true
+		}
+	}
+	return false
+}
+
