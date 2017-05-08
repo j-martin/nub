@@ -29,9 +29,21 @@ Install prereqs below.
 
     $ make install
 
+## Setup
+
+To setup bub, you need to have AWS credentials. Run:
+
+    $ bub setup
+
+First you'll be pompted to enter your AWS credentials in the
+`~/.aws/credentials`. Then bub will create the `~/.config/bub/config.yml`. You
+don't have to edit it unless you want to add some credentials to get more
+features. Adding your Jenkins credentials makes bub super userful.
+
 ## Usage
 
-To be expanded
+To be expanded, when in doubt, `-h` with any action/sub-actions should give you
+an idea of what you can do.
 
     # from any directory
     $ bub # or with --help
