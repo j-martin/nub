@@ -144,12 +144,37 @@ func DescribeEnvironment(region string, environment string, all bool) {
 }
 
 func DeployVersion(region string, environment string, version string) {
-	params := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
-
 	svc := getBeanstalkSvc(region)
 	versionAlreadyDeployed(svc, region, environment, version)
 
-	resp, err := svc.UpdateEnvironment(params)
+	params := &elasticbeanstalk.DescribeEnvironmentsInput{EnvironmentNames: []*string{&environment}}
+	retries := 20
+	for {
+		resp, err := svc.DescribeEnvironments(params)
+		if err != nil {
+			log.Fatalf("could not describe the environment: %v", err)
+		}
+
+		if len(resp.Environments) != 1 {
+			log.Fatal("none or more than one environment was found. cannot continue.")
+		}
+
+		description := resp.Environments[0]
+		if *description.Status == elasticbeanstalk.EnvironmentStatusReady {
+			break
+		}
+
+		retries -= 1
+		if retries < 0 {
+			log.Fatal("no more retries left.")
+		}
+
+		log.Print("waiting for the environment to ready.")
+		time.Sleep(30 * time.Second)
+	}
+
+	updateParams := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
+	resp, err := svc.UpdateEnvironment(updateParams)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
