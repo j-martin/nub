@@ -145,8 +145,6 @@ func DescribeEnvironment(region string, environment string, all bool) {
 
 func DeployVersion(region string, environment string, version string) {
 	svc := getBeanstalkSvc(region)
-	versionAlreadyDeployed(svc, region, environment, version)
-
 	params := &elasticbeanstalk.DescribeEnvironmentsInput{EnvironmentNames: []*string{&environment}}
 	retries := 50
 	for {
@@ -173,6 +171,7 @@ func DeployVersion(region string, environment string, version string) {
 		time.Sleep(30 * time.Second)
 	}
 
+	versionAlreadyDeployed(svc, region, environment, version)
 	updateParams := &elasticbeanstalk.UpdateEnvironmentInput{EnvironmentName: &environment, VersionLabel: &version}
 	resp, err := svc.UpdateEnvironment(updateParams)
 	if err != nil {
