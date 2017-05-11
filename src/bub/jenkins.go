@@ -89,7 +89,7 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 	}
 }
 
-func BuildJob(cfg Configuration, m Manifest, noWait bool) {
+func BuildJob(cfg Configuration, m Manifest, noWait bool, force bool) {
 	jobName := GetJobName(m)
 	job := GetJob(cfg, m)
 	lastBuild, err := job.GetLastBuild()
@@ -97,8 +97,14 @@ func BuildJob(cfg Configuration, m Manifest, noWait bool) {
 		log.Fatalf("failed to get job status: %v", err)
 	}
 
+	build, err := job.GetLastBuild()
+
+	if build.IsRunning() && !force {
+		log.Fatal("a build for this job is already running pass '--force' to trigger the build.")
+	}
+
 	job.InvokeSimple(nil)
-	log.Printf("job triggered: %v/job/%v, wating for the job to start.", cfg.Jenkins.Server, jobName)
+	log.Printf("build triggered: %v/job/%v wating for the job to start.", cfg.Jenkins.Server, jobName)
 
 	if noWait {
 		return

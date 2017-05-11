@@ -448,10 +448,11 @@ Continue?`
 					Aliases: []string{"b"},
 					Flags: []cli.Flag{
 						cli.BoolFlag{Name: "no-wait", Usage: "Do not wait for the job to be completed."},
+						cli.BoolFlag{Name: "force", Usage: "Trigger job regardless if a build running."},
 					},
 					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						BuildJob(cfg, manifest, c.Bool("no-wait"))
+						BuildJob(cfg, manifest, c.Bool("no-wait"), c.Bool("force"))
 						return nil
 					},
 				},
