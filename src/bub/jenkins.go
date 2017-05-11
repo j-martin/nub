@@ -89,7 +89,7 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 	}
 }
 
-func BuildJob(cfg Configuration, m Manifest) {
+func BuildJob(cfg Configuration, m Manifest, noWait bool) {
 	jobName := GetJobName(m)
 	job := GetJob(cfg, m)
 	lastBuild, err := job.GetLastBuild()
@@ -99,6 +99,11 @@ func BuildJob(cfg Configuration, m Manifest) {
 
 	job.InvokeSimple(nil)
 	log.Printf("job triggered: %v/job/%v, wating for the job to start.", cfg.Jenkins.Server, jobName)
+
+	if noWait {
+		return
+	}
+
 	for {
 		newBuild, err := GetJob(cfg, m).GetLastBuild()
 		if err != nil {

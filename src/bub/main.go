@@ -32,7 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.15.2"
+	app.Version = "0.15.3"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -446,9 +446,12 @@ Continue?`
 				{
 					Name:    "build",
 					Aliases: []string{"b"},
-					Usage:   "Trigger build of the current branch.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "no-wait", Usage: "Do not wait for the job to be completed."},
+					},
+					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						BuildJob(cfg, manifest)
+						BuildJob(cfg, manifest, c.Bool("no-wait"))
 						return nil
 					},
 				},
