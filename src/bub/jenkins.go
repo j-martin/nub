@@ -5,10 +5,10 @@ import (
 	"github.com/bndr/gojenkins"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"strings"
 	"time"
-	"os"
 )
 
 func GetJobName(m Manifest) string {

@@ -23,6 +23,7 @@ type ConnectionParams struct {
 	Filter        string
 	Output        bool
 	All           bool
+	UseJumpHost   bool
 	Args          []string
 }
 
@@ -117,7 +118,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
 	baseArgs := []string{}
 
-	if hostname == "" {
+	if hostname == "" || params.UseJumpHost {
 		hostname = *i.PrivateDnsName
 		jumpHost := getJumpHost(getInstanceName(i), params.Configuration)
 		log.Printf("no public DNS name found, using jump host: %v", jumpHost)

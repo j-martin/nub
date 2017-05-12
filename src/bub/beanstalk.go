@@ -132,7 +132,7 @@ func DescribeEnvironment(region string, environment string, all bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(table, "Option\tValue")
 	for _, s := range resp.ConfigurationSettings {
-		for _, o :=range s.OptionSettings {
+		for _, o := range s.OptionSettings {
 			if o.Value != nil {
 				if all || *o.Namespace == "aws:elasticbeanstalk:application:environment" {
 					fmt.Fprintln(table, strings.Join([]string{*o.OptionName, *o.Value}, "\t"))

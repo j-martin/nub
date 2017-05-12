@@ -125,11 +125,10 @@ page: pageID from confluence, not the name.
 }
 
 func IsType(m Manifest, manifestType string) bool {
-	for _, i :=range m.Types {
+	for _, i := range m.Types {
 		if i == manifestType {
 			return true
 		}
 	}
 	return false
 }
-

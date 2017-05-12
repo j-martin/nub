@@ -32,7 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.15.3"
+	app.Version = "0.15.4"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -185,7 +185,8 @@ Continue?`
 			ArgsUsage: "[INSTANCE_NAME] [COMMAND ...]",
 			Aliases:   []string{"e"},
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "all", Usage: "Execute the command on all the instance matchrd."},
+				cli.BoolFlag{Name: "jump", Usage: "Use the environment jump host."},
+				cli.BoolFlag{Name: "all", Usage: "Execute the command on all the instance matched."},
 				cli.BoolFlag{Name: "output", Usage: "Saves the stdout of the command to a file."},
 			},
 			Action: func(c *cli.Context) error {
@@ -205,7 +206,7 @@ Continue?`
 					args = c.Args()[1:]
 				}
 
-				ConnectToInstance(ConnectionParams{cfg, name, c.Bool("output"), c.Bool("all"), args})
+				ConnectToInstance(ConnectionParams{cfg, name, c.Bool("output"), c.Bool("all"), c.Bool("jump"), args})
 				return nil
 			},
 		},
