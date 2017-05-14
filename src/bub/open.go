@@ -4,13 +4,20 @@ import (
 	"log"
 	"net/url"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
 func OpenURI(uriSegments ...string) {
 	uri := strings.Join(uriSegments, "/")
 	log.Printf("Opening: %v", uri)
-	exec.Command("open", uri).Run()
+	if runtime.GOOS == "darwin" {
+		exec.Command("open", uri).Run()
+	} else if runtime.GOOS == "linux" {
+		exec.Command("xdg-open", uri).Run()
+	} else {
+		log.Fatal("Could not open the link automatically.")
+	}
 }
 
 func OpenGH(m Manifest, p string) {
