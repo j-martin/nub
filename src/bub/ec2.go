@@ -183,6 +183,8 @@ func prepareArgs(params ConnectionParams) []string {
 			cmd = append(append(baseArgs, "/opt/bench/jstack"), cmd[1:]...)
 		case "jmap":
 			cmd = append(append(baseArgs, "/opt/bench/jmap"), cmd[1:]...)
+		case "logs":
+			cmd = append(append(baseArgs, "/opt/bench/logs"), cmd[1:]...)
 		default:
 			cmd = append(baseArgs, cmd...)
 		}
