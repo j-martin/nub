@@ -6,7 +6,7 @@ commonNode {
   ]
   withEnv(env) {
     stage("Build") {
-    sh "make deps release"
+    sh "make clean deps release"
     sh "cp -f bin/bub-linux-amd64 /opt/bub/bub"
     }
   }

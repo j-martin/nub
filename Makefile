@@ -3,7 +3,7 @@ ARCH		= amd64
 
 .PHONY: build deps test clean release fmt
 
-build: clean test
+build: test
 	GOOS=darwin GOARCH=$(ARCH) gb build
 	GOOS=linux GOARCH=$(ARCH) gb build
 
