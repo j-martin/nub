@@ -18,6 +18,7 @@ type Manifest struct {
 	Repository   string
 	LastUpdate   int64
 	Language     string
+	Languages    []string
 	Types        []string
 	Dependencies []Dependency
 	Protocols    []Protocol
@@ -65,6 +66,14 @@ func LoadManifest(version string) (Manifest, error) {
 	}
 	err = yaml.Unmarshal(data, &m)
 
+	if len(m.Languages) == 0 && m.Language != "" {
+		m.Languages = []string{m.Language}
+	}
+
+	if m.Language == "" && len(m.Languages) > 0 {
+		m.Language = m.Languages[0]
+	}
+
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
 	m.Branch = GetCurrentBranch()
@@ -87,7 +96,8 @@ func CreateManifest() {
 	manifestString := `---
 name: {{.Name}}
 active: true
-language: scala
+languages:
+  - scala
 types:
   - service
 dependencies:
