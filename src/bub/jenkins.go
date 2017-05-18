@@ -69,10 +69,12 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 	var lastChar int
 	for {
 		build, err := GetJob(cfg, m).GetLastBuild()
+		if lastChar == 0 {
+			log.Print(build.GetUrl())
+		}
 		if err != nil {
 			log.Fatalf("could not find the last build. make sure it was triggered at least once", err)
 		}
-		log.Print(build.GetUrl())
 		consoleOutput := build.GetConsoleOutput()
 		for i, char := range consoleOutput {
 			if i > lastChar {
