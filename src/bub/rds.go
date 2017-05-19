@@ -184,14 +184,24 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configura
 		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
 		fmt.Sprintf("LC_ALL=%s", getEnvWithDefault("LC_ALL", "en_US.UTF-8")),
 		fmt.Sprintf("LANG=%s", getEnvWithDefault("LANG", "en_US.UTF-8")),
+		// sets environment variables for the pg, mysql clients and other scripts.
 		"PGHOST=127.0.0.1",
 		fmt.Sprintf("PGPORT=%v", port),
 		"PGDATABASE=" + rdsConfig.Database,
 		"PGUSER=" + rdsConfig.User,
 		"PGPASSWORD=" + rdsConfig.Password,
+		// used in some scripts.
+		"DB_HOST=127.0.0.1",
+		fmt.Sprintf("DB_PORT=%v", port),
+		"DB_NAME=" + rdsConfig.Database,
+		"DB_USER=" + rdsConfig.User,
+		"DB_PASS=" + rdsConfig.Password,
+		"DB_PASSWORD=" + rdsConfig.Password,
 		"MYSQL_HOST=127.0.0.1",
 		fmt.Sprintf("MYSQL_TCP_PORT=%v", port),
+		// not directly supported by mysql client.
 		"MYSQL_USER=" + rdsConfig.User,
+		// not directly supported by mysql client.
 		"MYSQL_DATABASE=" + rdsConfig.Database,
 		"MYSQL_PWD=" + rdsConfig.Password}
 
