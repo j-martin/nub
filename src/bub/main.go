@@ -367,12 +367,7 @@ Continue?`
 						region := getRegion(environment, cfg, c)
 
 						if c.NArg() < 2 {
-							application := ""
-							result := strings.Split(environment, "-")
-							if len(result) > 1 {
-								application = result[1]
-							}
-							ListApplicationVersions(region, application)
+							ListApplicationVersions(region, GetApplication(environment))
 							log.Println("Version required. Specify one of the application versions above.")
 							os.Exit(2)
 						}

@@ -65,6 +65,11 @@ func getBeanstalkSvc(region string) *elasticbeanstalk.ElasticBeanstalk {
 	return elasticbeanstalk.New(sess)
 }
 
+func GetApplication(environment string) string {
+	result := strings.Split(environment, "-")
+	return strings.Join(result[1:], "-")
+}
+
 func EnvironmentIsReady(region string, environment string, failOnError bool) {
 	svc := getBeanstalkSvc(region)
 	lastEvent := time.Now().In(time.UTC)
@@ -277,7 +282,7 @@ func ListEvents(region string, environment string, startTime time.Time, reverse 
 	if len(events) > 0 {
 		if reverse {
 			sort.Sort(sort.Reverse(events))
-			lastEvent = *events[len(events)-1].EventDate
+			lastEvent = *events[len(events) - 1].EventDate
 		} else {
 			sort.Sort(events)
 			lastEvent = *events[0].EventDate
@@ -291,7 +296,7 @@ func ListEvents(region string, environment string, startTime time.Time, reverse 
 		var message = *e.Message
 		const limit = 200
 		if len(message) < limit {
-			message = message[0 : len(message)-1]
+			message = message[0 : len(message) - 1]
 		} else {
 			message = message[0:limit] + "..."
 		}
