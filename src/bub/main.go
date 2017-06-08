@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 func getRegion(environment string, cfg Configuration, c *cli.Context) string {
@@ -32,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.16.0"
+	app.Version = "0.16.1"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -41,6 +42,23 @@ func main() {
 			Action: func(c *cli.Context) error {
 				Setup()
 				return nil
+			},
+		},
+		{
+			Name:  "update",
+			Usage: "Update the bub command to the latest release",
+			Action: func(c *cli.Context) error {
+				path := S3path{
+					Region: cfg.Updates.Region,
+					Bucket: cfg.Updates.Bucket,
+					Path:   cfg.Updates.Prefix,
+				}
+				obj, err := latestRelease(path)
+				if err != nil {
+					return err
+				}
+				path.Path = *obj.Key
+				return updateBub(path)
 			},
 		},
 		{
