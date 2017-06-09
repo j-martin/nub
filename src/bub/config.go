@@ -82,9 +82,9 @@ circle:
   token: <optional-change-me>
 
 updates:
-	region: us-east-1
-	bucket: s3bucket
-	prefix: contrib/bub
+  region: us-east-1
+  bucket: s3bucket
+  prefix: contrib/bub
 `
 
 func LoadConfiguration() Configuration {
