@@ -1,12 +1,13 @@
 package main
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path"
+
+	"gopkg.in/yaml.v2"
 )
 
 type RDSConfiguration struct {
@@ -33,6 +34,9 @@ type Configuration struct {
 	}
 	Circle struct {
 		Token string
+	}
+	Updates struct {
+		Region, Bucket, Prefix string
 	}
 }
 
@@ -76,6 +80,11 @@ confluence:
 
 circle:
   token: <optional-change-me>
+
+updates:
+  region: us-east-1
+  bucket: s3bucket
+  prefix: contrib/bub
 `
 
 func LoadConfiguration() Configuration {
