@@ -10,5 +10,5 @@ commonNode {
     sh "cp -f bin/bub-linux-amd64 /opt/bub/bub"
     }
   }
-  tagRepository()
+  tagRepository.pushAll()
 }
