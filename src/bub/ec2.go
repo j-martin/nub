@@ -127,7 +127,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + hostname
-		args := append(baseArgs, "-i", key, host, "-o", "ConnectTimeout=3")
+		args := append(baseArgs, "-i", key, host, "-o", "ConnectTimeout=10")
 		args = append(args, params.Args...)
 
 		cmd := exec.Command("ssh", args...)
