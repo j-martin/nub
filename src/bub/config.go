@@ -38,6 +38,9 @@ type Configuration struct {
 	Updates struct {
 		Region, Bucket, Prefix string
 	}
+	Ssh struct {
+		ConnectTimeout uint `yaml:"connect_timeout"`
+	}
 }
 
 var config string = `---
@@ -85,6 +88,9 @@ updates:
   region: us-east-1
   bucket: s3bucket
   prefix: contrib/bub
+
+ssh:
+  connect_timeout: 3
 `
 
 func LoadConfiguration() Configuration {
@@ -168,5 +174,4 @@ func createDir(directory string, filename string, content string) {
 
 	log.Printf("Editing %s.", filename)
 	editFile(filePath)
-
 }
