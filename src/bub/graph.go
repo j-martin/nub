@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/paetzke/godot/godot"
 	"log"
 	"os"
-	"github.com/paetzke/godot/godot"
 	"strings"
 )
 

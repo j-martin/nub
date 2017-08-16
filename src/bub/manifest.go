@@ -18,6 +18,7 @@ type Manifest struct {
 	Repository   string
 	LastUpdate   int64
 	Platform     string // what is it running on
+	Platforms    []string
 	Language     string
 	Languages    []string
 	Types        []string
@@ -93,6 +94,14 @@ func LoadManifest(version string) (Manifest, error) {
 		m.Language = m.Languages[0]
 	}
 
+	if len(m.Platforms) == 0 && m.Platform != "" {
+		m.Platforms = []string{m.Platform}
+	}
+
+	if m.Platform == "" && len(m.Platforms) > 0 {
+		m.Platform = m.Platforms[0]
+	}
+
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
 	m.Branch = GetCurrentBranch()
@@ -161,4 +170,3 @@ func IsType(m Manifest, manifestType string) bool {
 	}
 	return false
 }
-
