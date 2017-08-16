@@ -49,7 +49,7 @@ type Dependency struct {
 	// e.g. most services don't communicate directly with a service.
 	// like the service relies on it on putting a message/event in the broadcast queue
 	Implicit bool
-	// to (default), from, both
+	// out (default), in (as in inbound network requests), both
 	Direction string
 }
 
