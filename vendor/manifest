@@ -149,6 +149,13 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/paetzke/godot/godot",
+			"repository": "https://github.com/paetzke/godot",
+			"revision": "d6291c463cf5c9b21dab4a66e12d693c2bb9f202",
+			"branch": "master",
+			"path": "/godot"
+		},
+		{
 			"importpath": "github.com/russross/blackfriday",
 			"repository": "https://github.com/russross/blackfriday",
 			"revision": "5f33e7b7878355cd2b7e6b8eefc48a5472c69f70",
