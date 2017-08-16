@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.16.2"
+	app.Version = "0.17.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -157,6 +157,15 @@ Continue?`
 					Usage:   "Creates a base manifest.",
 					Action: func(c *cli.Context) error {
 						CreateManifest()
+						return nil
+					},
+				},
+				{
+					Name:    "graph",
+					Aliases: []string{"g"},
+					Usage:   "Creates dependency graph from manifests.",
+					Action: func(c *cli.Context) error {
+						GenerateGraphs()
 						return nil
 					},
 				},

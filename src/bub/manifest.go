@@ -17,6 +17,7 @@ type Manifest struct {
 	Active       bool
 	Repository   string
 	LastUpdate   int64
+	Platform     string // what is it running on
 	Language     string
 	Languages    []string
 	Types        []string
@@ -30,8 +31,26 @@ type Manifest struct {
 }
 
 type Dependency struct {
-	Name    string
+	// name of the dependency
+	Name string
+	// optional, explicit name of the dependency.
+	// if not defined the name will be <service>-<dependencyName> e.g. mainapp-mysql
+	UniqueName string
+	// e.g. postgres 9.6
 	Version string
+	// e.g. why it depends on it
+	Description string
+	// service, database, front-end
+	Type string
+	// not managed / controlled by us on AWS
+	Dedicated bool
+	// not managed / controlled by us on AWS
+	External bool
+	// e.g. most services don't communicate directly with a service.
+	// like the service relies on it on putting a message/event in the broadcast queue
+	Implicit bool
+	// to (default), from, both
+	Direction string
 }
 
 type Protocol struct {
@@ -102,12 +121,12 @@ types:
   - service
 dependencies:
   - name: activemq
-	version: 5.13
+    direction: both
   - name: postgres
-	version: 9.4
+    version: 9.6
 protocols:
   - type: raml
-	path: client/src/main/raml
+    path: client/src/main/raml
 page: pageID from confluence, not the name.
 `
 	manifestTemplate, err := template.New("manifest").Parse(manifestString)
@@ -142,3 +161,4 @@ func IsType(m Manifest, manifestType string) bool {
 	}
 	return false
 }
+
