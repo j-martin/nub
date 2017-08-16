@@ -60,6 +60,7 @@ an idea of what you can do.
     # macOS to use the open commands (you can symlink xdg-open to open on Linux)
     $ brew install golang # tested with 1.8.1 must fix version in future.
     $ go get github.com/constabulary/gb/... # fix version when required.
+    $ brew install graphviz
 
 ## Build
 
