@@ -55,8 +55,8 @@ func createPage(m Manifest) []byte {
 	yml, _ := shortManifest(m)
 	t, err := template.New("readme").Parse(
 		"[Repository](https://github.com/BenchLabs/{{.Repository}}) | Diffs " +
-			"[Production / Master](https://github.com/BenchLabs/{{.Repository}}/compare/production...master) - " +
-			"[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/staging...production) - " +
+			"[Production / Master](https://github.com/BenchLabs/{{.Repository}}/compare/production...master) / " +
+			"[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/production...staging) / " +
 			"[Previous / Current Production](https://github.com/BenchLabs/{{.Repository}}/compare/production-rollback...production) | " +
 			"[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) | " +
 			"[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3Dpro-{{.Name}}-hec&display.page.search.mode=smart)\n\n" +
