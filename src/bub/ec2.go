@@ -179,6 +179,10 @@ func prepareArgs(params ConnectionParams) []string {
 	if len(cmd) > 0 {
 		baseArgs := []string{"-tC"}
 		switch cmd[0] {
+		case "tmux":
+			usr, _ := user.Current()
+			tmuxCmd := fmt.Sprintf("tmux attach -t %v || tmux new -s %v", usr.Username, usr.Username)
+			cmd = append(append(baseArgs, tmuxCmd), cmd[1:]...)
 		case "bash":
 			cmd = append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
 		case "exec":
