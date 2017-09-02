@@ -180,9 +180,16 @@ func prepareArgs(params ConnectionParams) []string {
 		baseArgs := []string{"-tC"}
 		switch cmd[0] {
 		case "tmux":
+			arg := ""
 			usr, _ := user.Current()
-			tmuxCmd := fmt.Sprintf("tmux attach -t %v || tmux new -s %v", usr.Username, usr.Username)
-			cmd = append(append(baseArgs, tmuxCmd), cmd[1:]...)
+			if os.Getenv("TERM_PROGRAM") == "iTerm.app" {
+				arg = "-CC"
+			}
+			tmuxCmd := []string{
+				"tmux", arg, "attach", "-t", usr.Username, "||",
+				"tmux", arg, "new", "-s", usr.Username,
+			}
+			cmd = append(append(baseArgs, strings.Join(tmuxCmd, " ")), cmd[1:]...)
 		case "bash":
 			cmd = append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
 		case "exec":
