@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -57,7 +56,10 @@ func latestRelease(base S3path) (obj *s3.Object, err error) {
 }
 
 func updateBub(path S3path) error {
-	exe := filepath.Clean(os.Args[0])
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Could not get bub's path: %s", err)
+	}
 	log.Printf("Downloading s3://%s/%s to %s", path.Bucket, path.Path, exe)
 	s3cfg := getAwsConfig(path.Region)
 	sess, err := session.NewSession(&s3cfg)
