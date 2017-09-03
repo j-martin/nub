@@ -39,7 +39,7 @@ type Configuration struct {
 		Region, Bucket, Prefix string
 	}
 	Ssh struct {
-		ConnectTimeout uint `yaml:"connect_timeout"`
+		ConnectTimeout uint `yaml:"connectTimeout"`
 	}
 }
 
@@ -90,7 +90,7 @@ updates:
   prefix: contrib/bub
 
 ssh:
-  connect_timeout: 3
+  connectTimeout: 3
 `
 
 func LoadConfiguration() Configuration {
