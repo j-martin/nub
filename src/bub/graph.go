@@ -24,7 +24,7 @@ func GenerateGraphs() {
 			generateGraph(filter, manifests, outputType, false)
 		}
 	}
-	log.Printf("graphs generated in %v done.", outputPath)
+	log.Printf("Graphs generated in %v done.", outputPath)
 }
 
 func generateGraph(typeFilters []string, manifests Manifests, outputType godot.OutputType, requestFlow bool) {
@@ -40,7 +40,7 @@ func generateGraph(typeFilters []string, manifests Manifests, outputType godot.O
 	defer dotter.Close()
 
 	if err != nil {
-		log.Fatalf("failed to access graphviz, make sure it's installed. error: %v", err)
+		log.Fatalf("Failed to access graphviz, make sure it's installed. error: %v", err)
 	}
 
 	manifestsRegistered := make(map[string]bool)

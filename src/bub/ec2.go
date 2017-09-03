@@ -30,7 +30,7 @@ type ConnectionParams struct {
 func FetchInstances(done chan []*ec2.Instance, region string, filter string) {
 	sess, err := session.NewSession()
 	if err != nil {
-		log.Fatalf("failed to create session %v\n", err)
+		log.Fatalf("Failed to create session %v\n", err)
 	}
 
 	config := getAwsConfig(region)
@@ -53,7 +53,7 @@ func FetchInstances(done chan []*ec2.Instance, region string, filter string) {
 	}
 	resp, err := svc.DescribeInstances(params)
 	if err != nil {
-		log.Fatalf("there was an error listing instances: %v", err.Error())
+		log.Fatalf("There was an error listing instances: %v", err.Error())
 	}
 	var instances []*ec2.Instance
 	for _, r := range resp.Reservations {
@@ -105,7 +105,7 @@ func getJumpHost(name string, cfg Configuration) string {
 			return i.Jumphost
 		}
 	}
-	log.Fatal("could not find jump host in configuration.")
+	log.Fatal("Could not find jump host in configuration.")
 	return ""
 }
 
@@ -121,7 +121,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	if hostname == "" || params.UseJumpHost {
 		hostname = *i.PrivateDnsName
 		jumpHost := getJumpHost(getInstanceName(i), params.Configuration)
-		log.Printf("no public DNS name found, using jump host: %v", jumpHost)
+		log.Printf("No public DNS name found, using jump host: %v", jumpHost)
 		baseArgs = []string{"-A", "-J", jumpHost}
 	}
 
@@ -138,7 +138,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 		cmd.Stdin = os.Stdin
 		cmd.Stderr = os.Stderr
 
-		log.Printf("connecting %v\n", strings.Join(args, " "))
+		log.Printf("Connecting %v\n", strings.Join(args, " "))
 
 		var err error
 		if params.Output {
@@ -169,7 +169,7 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 		log.Fatal(err)
 	}
 	f.Close()
-	log.Printf("saved output to: %v", outputPath)
+	log.Printf("Saved output to: %v", outputPath)
 
 	return err
 }
@@ -213,7 +213,7 @@ func ConnectToInstance(params ConnectionParams) {
 
 	channel := make(chan []*ec2.Instance)
 	regions := params.Configuration.AWS.Regions
-	log.Printf("fetching instances with tag '%v'", params.Filter)
+	log.Printf("Fetching instances with tag '%v'", params.Filter)
 
 	for _, region := range regions {
 		go FetchInstances(channel, region, params.Filter)
@@ -224,7 +224,7 @@ func ConnectToInstance(params ConnectionParams) {
 	close(channel)
 
 	if len(instances) == 0 {
-		log.Fatal("no instances found.")
+		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
 		connect(instances[0], params)
 	} else if params.Output || params.All {

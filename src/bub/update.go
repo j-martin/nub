@@ -2,9 +2,9 @@ package main
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -58,7 +58,7 @@ func latestRelease(base S3path) (obj *s3.Object, err error) {
 
 func updateBub(path S3path) error {
 	exe := filepath.Clean(os.Args[0])
-	fmt.Println("Downloading s3://"+path.Bucket+"/"+path.Path, "to", exe)
+	log.Printf("Downloading s3://%s/%s to %s", path.Bucket, path.Path, exe)
 	s3cfg := getAwsConfig(path.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
