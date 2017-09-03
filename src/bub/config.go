@@ -45,52 +45,52 @@ type Configuration struct {
 
 var config string = `---
 aws:
-  regions:
-    - us-east-1
-    - us-west-2
+	regions:
+		- us-east-1
+		- us-west-2
 
-  rds:
-    # The first prefix match will be used.
-    # The database name, unless specified, will be infered from the host name.
-    - prefix: staging
-      database: <optional>
-      user: <optional>
-      password: <optional>
+	rds:
+		# The first prefix match will be used.
+		# The database name, unless specified, will be infered from the host name.
+		- prefix: staging
+			database: <optional>
+			user: <optional>
+			password: <optional>
 
-  environments:
-    - prefix: staging2
-      jumphost: jump.staging2.example.com
-      region: us-west-2
-    - prefix: staging
-      jumphost: jump.example.com
-      region: us-west-2
-    # if not prefix, act as a catch all.
-    - jumphost: jump.example.com
-      region: us-east-1
+	environments:
+		- prefix: staging2
+			jumphost: jump.staging2.example.com
+			region: us-west-2
+		- prefix: staging
+			jumphost: jump.example.com
+			region: us-west-2
+		# if not prefix, act as a catch all.
+		- jumphost: jump.example.com
+			region: us-east-1
 
 github:
-  organization: benchlabs
+	organization: benchlabs
 
 jenkins:
-  server: "https://jenkins.example.com"
-  username: <optional-change-me>
-  password: <optional-change-me>
+	server: "https://jenkins.example.com"
+	username: <optional-change-me>
+	password: <optional-api-token-also-works>
 
 confluence:
-  server: "https://example.atlassian.net/wiki"
-  username: <optional-change-me>
-  password: <optional-change-me>
+	server: "https://example.atlassian.net/wiki"
+	username: <optional-change-me>
+	password: <optional-change-me>
 
 circle:
-  token: <optional-change-me>
+	token: <optional-change-me>
 
 updates:
-  region: us-east-1
-  bucket: s3bucket
-  prefix: contrib/bub
+	region: us-east-1
+	bucket: s3bucket
+	prefix: contrib/bub
 
 ssh:
-  connectTimeout: 3
+	connectTimeout: 3
 `
 
 func LoadConfiguration() Configuration {
