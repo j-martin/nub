@@ -84,7 +84,7 @@ func updateBub(path S3path) error {
 	}
 
 	// uncompress to second tempfile
-	_, err = fgz.Seek(0, os.SEEK_SET)
+	_, err = fgz.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}
@@ -108,5 +108,9 @@ func updateBub(path S3path) error {
 		return err
 	}
 
-	return os.Rename(f.Name(), exe)
+	if os.Rename(f.Name(), exe) != nil {
+		return err
+	}
+	log.Printf("Update complete. Run 'bub --version' to be sure.")
+	return nil
 }
