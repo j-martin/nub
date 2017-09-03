@@ -21,7 +21,7 @@ type S3path struct {
 }
 
 func latestRelease(base S3path) (obj *s3.Object, err error) {
-	s3cfg := getAwsConfig(base.Region)
+	s3cfg := getAWSConfig(base.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func updateBub(path S3path) error {
 		log.Fatalf("Could not get bub's path: %s", err)
 	}
 	log.Printf("Downloading s3://%s/%s to %s", path.Bucket, path.Path, exe)
-	s3cfg := getAwsConfig(path.Region)
+	s3cfg := getAWSConfig(path.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
 		return err

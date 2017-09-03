@@ -73,10 +73,10 @@ func (e Manifests) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func LoadManifest(version string) (Manifest, error) {
+func loadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
-	if !IsInRepository() {
+	if !inRepository() {
 		return Manifest{}, errors.New("must be executed in a repository.")
 	}
 
@@ -116,7 +116,7 @@ func LoadManifest(version string) (Manifest, error) {
 	return m, err
 }
 
-func CreateManifest() {
+func createManifest() {
 
 	manifest := Manifest{
 		Name: GetCurrentRepositoryName(),
@@ -162,7 +162,7 @@ page: pageID from confluence, not the name.
 	log.Println("Done. Don't forget to add and commit the file.")
 }
 
-func IsType(m Manifest, manifestType string) bool {
+func isSameType(m Manifest, manifestType string) bool {
 	for _, i := range m.Types {
 		if i == manifestType {
 			return true

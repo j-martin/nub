@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-func GetJobName(m Manifest) string {
+func getJobName(m Manifest) string {
 	return strings.Join([]string{"BenchLabs", "job", m.Repository, "job", m.Branch}, "/")
 }
 
-func GetClient(cfg Configuration) *gojenkins.Jenkins {
+func getClient(cfg Configuration) *gojenkins.Jenkins {
 	if cfg.Jenkins.Server == "" {
 		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
 	}
@@ -30,9 +30,9 @@ func GetClient(cfg Configuration) *gojenkins.Jenkins {
 	return client
 }
 
-func GetJob(cfg Configuration, m Manifest) *gojenkins.Job {
-	client := GetClient(cfg)
-	uri := GetJobName(m)
+func getJob(cfg Configuration, m Manifest) *gojenkins.Job {
+	client := getClient(cfg)
+	uri := getJobName(m)
 	job, err := client.GetJob(uri)
 	if err != nil {
 		log.Fatalf("Failed to fetch job details. error: %s", err)
@@ -40,9 +40,9 @@ func GetJob(cfg Configuration, m Manifest) *gojenkins.Job {
 	return job
 }
 
-func GetLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
+func getLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
 	log.Printf("Fetching last build for '%v' '%v'.", m.Repository, m.Branch)
-	lastBuild, err := GetJob(cfg, m).GetLastBuild()
+	lastBuild, err := getJob(cfg, m).GetLastBuild()
 	if err != nil {
 		log.Fatalf("Failed to fetch build details. error: %s", err)
 	}
@@ -50,9 +50,9 @@ func GetLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
 	return lastBuild
 }
 
-func GetArtifacts(cfg Configuration, m Manifest) {
+func getArtifacts(cfg Configuration, m Manifest) {
 	log.Print("Fetching artifacts.")
-	artifacts := GetLastBuild(cfg, m).GetArtifacts()
+	artifacts := getLastBuild(cfg, m).GetArtifacts()
 	dir, _ := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
 	for _, artifact := range artifacts {
 		if !strings.Contains(artifact.FileName, ".png") {
@@ -65,10 +65,10 @@ func GetArtifacts(cfg Configuration, m Manifest) {
 	}
 }
 
-func ShowConsoleOutput(cfg Configuration, m Manifest) {
+func showConsoleOutput(cfg Configuration, m Manifest) {
 	var lastChar int
 	for {
-		build, err := GetJob(cfg, m).GetLastBuild()
+		build, err := getJob(cfg, m).GetLastBuild()
 		if lastChar == 0 {
 			log.Print(build.GetUrl())
 		}
@@ -92,9 +92,9 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 	}
 }
 
-func BuildJob(cfg Configuration, m Manifest, async bool, force bool) {
-	jobName := GetJobName(m)
-	job := GetJob(cfg, m)
+func buildJob(cfg Configuration, m Manifest, async bool, force bool) {
+	jobName := getJobName(m)
+	job := getJob(cfg, m)
 	lastBuild, err := job.GetLastBuild()
 	if err == nil && lastBuild.IsRunning() && !force {
 		log.Fatal("A build for this job is already running pass '--force' to trigger the build.")
@@ -110,7 +110,7 @@ func BuildJob(cfg Configuration, m Manifest, async bool, force bool) {
 	}
 
 	for {
-		newBuild, err := GetJob(cfg, m).GetLastBuild()
+		newBuild, err := getJob(cfg, m).GetLastBuild()
 		if err == nil && (lastBuild == nil || (lastBuild.GetUrl() != newBuild.GetUrl())) {
 			os.Stderr.WriteString("\n")
 			break
@@ -120,5 +120,5 @@ func BuildJob(cfg Configuration, m Manifest, async bool, force bool) {
 		os.Stderr.WriteString(".")
 		time.Sleep(2 * time.Second)
 	}
-	ShowConsoleOutput(cfg, m)
+	showConsoleOutput(cfg, m)
 }

@@ -57,7 +57,7 @@ func (e Versions) Swap(i, j int) {
 }
 
 func getBeanstalkSvc(region string) *elasticbeanstalk.ElasticBeanstalk {
-	config := getAwsConfig(region)
+	config := getAWSConfig(region)
 	sess, err := session.NewSession(&config)
 	if err != nil {
 		log.Fatal("Failed to create session,", err)

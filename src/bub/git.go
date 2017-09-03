@@ -32,7 +32,7 @@ func GetCurrentBranch() string {
 	return strings.Trim(string(result), "\n ")
 }
 
-func IsInRepository() bool {
+func inRepository() bool {
 	result, err := pathExists(".git")
 	if err != nil {
 		return false

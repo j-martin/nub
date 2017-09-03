@@ -4,6 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-func getAwsConfig(region string) aws.Config {
+func getAWSConfig(region string) aws.Config {
 	return aws.Config{Region: aws.String(region)}
 }

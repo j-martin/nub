@@ -33,7 +33,7 @@ func FetchInstances(done chan []*ec2.Instance, region string, filter string) {
 		log.Fatalf("Failed to create session %v\n", err)
 	}
 
-	config := getAwsConfig(region)
+	config := getAWSConfig(region)
 	svc := ec2.New(sess, &config)
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{

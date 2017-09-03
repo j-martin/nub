@@ -93,7 +93,7 @@ ssh:
 	connectTimeout: 3
 `
 
-func LoadConfiguration() Configuration {
+func loadConfiguration() Configuration {
 	cfg := Configuration{}
 
 	usr, err := user.Current()
@@ -123,7 +123,7 @@ func LoadConfiguration() Configuration {
 	return cfg
 }
 
-func EditConfig() {
+func editConfiguration() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -132,7 +132,7 @@ func EditConfig() {
 	editFile(configPath)
 }
 
-func Setup() {
+func setup() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)

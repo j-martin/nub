@@ -93,7 +93,7 @@ func createPage(m Manifest) []byte {
 	return blackfriday.MarkdownOptions(markdown, renderer, opts)
 }
 
-func UpdateDocumentation(cfg Configuration, m Manifest) {
+func updateDocumentation(cfg Configuration, m Manifest) {
 
 	if m.Page == "" {
 		log.Print("Page: No confluence page defined in manifest. Moving on.")

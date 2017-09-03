@@ -41,7 +41,7 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 	regions := cfg.AWS.Regions
 	for _, region := range regions {
 		go func(region string) {
-			config := getAwsConfig(region)
+			config := getAWSConfig(region)
 			svc := rds.New(session.New(&config))
 			resp, err := svc.DescribeDBInstances(&rds.DescribeDBInstancesInput{})
 			if err != nil {

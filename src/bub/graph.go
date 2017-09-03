@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GenerateGraphs() {
+func generateGraphs() {
 	outputPath := "output"
 	dirExist, err := pathExists(outputPath)
 	if err != nil {

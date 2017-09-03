@@ -27,20 +27,20 @@ func getRegion(environment string, cfg Configuration, c *cli.Context) string {
 }
 
 func main() {
-	cfg := LoadConfiguration()
-	manifest, manifestErr := LoadManifest("")
+	cfg := loadConfiguration()
+	manifest, manifestErr := loadManifest("")
 
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.18.3"
+	app.Version = "0.18.4"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
 			Name:  "setup",
 			Usage: "Setup bub on your machine.",
 			Action: func(c *cli.Context) error {
-				Setup()
+				setup()
 				return nil
 			},
 		},
@@ -71,7 +71,7 @@ func main() {
 				if c.Bool("show-default") {
 					print(config)
 				} else {
-					EditConfig()
+					editConfiguration()
 				}
 				return nil
 			},
@@ -129,11 +129,11 @@ Continue?`
 								continue
 							}
 
-							if c.Bool("service") && !IsType(m, "service") {
+							if c.Bool("service") && !isSameType(m, "service") {
 								continue
 							}
 
-							if c.Bool("lib") && !IsType(m, "library") {
+							if c.Bool("lib") && !isSameType(m, "library") {
 								continue
 							}
 
@@ -156,7 +156,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Creates a base manifest.",
 					Action: func(c *cli.Context) error {
-						CreateManifest()
+						createManifest()
 						return nil
 					},
 				},
@@ -165,7 +165,7 @@ Continue?`
 					Aliases: []string{"g"},
 					Usage:   "Creates dependency graph from manifests.",
 					Action: func(c *cli.Context) error {
-						GenerateGraphs()
+						generateGraphs()
 						return nil
 					},
 				},
@@ -183,7 +183,7 @@ Continue?`
 						}
 						manifest.Version = c.String("artifact-version")
 						StoreManifest(manifest)
-						UpdateDocumentation(cfg, manifest)
+						updateDocumentation(cfg, manifest)
 						return nil
 					},
 				},
@@ -397,7 +397,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(manifest, "")
+						openGH(manifest, "")
 						return nil
 					},
 				},
@@ -406,7 +406,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(manifest, "issues")
+						openGH(manifest, "issues")
 						return nil
 					},
 				},
@@ -415,7 +415,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(manifest, "branches")
+						openGH(manifest, "branches")
 						return nil
 					},
 				},
@@ -424,7 +424,7 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						OpenGH(manifest, "pulls")
+						openGH(manifest, "pulls")
 						return nil
 					},
 				},
@@ -435,7 +435,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
-				OpenJenkins(manifest, "")
+				openJenkins(manifest, "")
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -444,7 +444,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						OpenJenkins(manifest, "lastBuild/consoleFull")
+						openJenkins(manifest, "lastBuild/consoleFull")
 						return nil
 					},
 				},
@@ -453,7 +453,7 @@ Continue?`
 					Aliases: []string{"j"},
 					Usage:   "Shows the console output of the last build.",
 					Action: func(c *cli.Context) error {
-						ShowConsoleOutput(cfg, manifest)
+						showConsoleOutput(cfg, manifest)
 						return nil
 					},
 				},
@@ -462,7 +462,7 @@ Continue?`
 					Aliases: []string{"a"},
 					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						GetArtifacts(cfg, manifest)
+						getArtifacts(cfg, manifest)
 						return nil
 					},
 				},
@@ -475,7 +475,7 @@ Continue?`
 					},
 					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						BuildJob(cfg, manifest, c.Bool("no-wait"), c.Bool("force"))
+						buildJob(cfg, manifest, c.Bool("no-wait"), c.Bool("force"))
 						return nil
 					},
 				},
@@ -486,7 +486,7 @@ Continue?`
 			Usage:   "Open the service production logs.",
 			Aliases: []string{"s"},
 			Action: func(c *cli.Context) error {
-				OpenSplunk(manifest, false)
+				openSplunk(manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -495,7 +495,7 @@ Continue?`
 					Aliases: []string{"s"},
 					Usage:   "Open the service staging logs.",
 					Action: func(c *cli.Context) error {
-						OpenSplunk(manifest, true)
+						openSplunk(manifest, true)
 						return nil
 					},
 				},
@@ -507,7 +507,7 @@ Continue?`
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
 				base := "https://example.atlassian.net/wiki/display/dev/"
-				OpenURI(base + manifest.Name)
+				openURI(base + manifest.Name)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -517,7 +517,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Action: func(c *cli.Context) error {
 						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						OpenURI(base + manifest.Name + ".raml")
+						openURI(base + manifest.Name + ".raml")
 						return nil
 					},
 				},
@@ -528,7 +528,7 @@ Continue?`
 			Usage:   "CircleCI related actions",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
-				OpenCircle(manifest, false)
+				openCircle(manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -537,7 +537,7 @@ Continue?`
 					Usage:   "Trigger the current branch of the current repo and wait for success.",
 					Aliases: []string{"t"},
 					Action: func(c *cli.Context) error {
-						TriggerAndWaitForSuccess(cfg, manifest)
+						triggerAndWaitForSuccess(cfg, manifest)
 						return nil
 					},
 				},
@@ -546,7 +546,7 @@ Continue?`
 					Usage:   "Opens the result for the current branch.",
 					Aliases: []string{"b"},
 					Action: func(c *cli.Context) error {
-						OpenCircle(manifest, true)
+						openCircle(manifest, true)
 						return nil
 					},
 				},
