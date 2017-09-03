@@ -27,7 +27,7 @@ func OpenGH(m Manifest, p string) {
 
 func OpenJenkins(m Manifest, p string) {
 	base := "https://jenkins.example.com/job/BenchLabs/job"
-	OpenURI(base, m.Repository, p)
+	OpenURI(base, m.Repository, "job", m.Branch, p)
 }
 
 func OpenSplunk(m Manifest, isStaging bool) {

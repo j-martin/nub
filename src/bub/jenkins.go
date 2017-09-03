@@ -92,37 +92,32 @@ func ShowConsoleOutput(cfg Configuration, m Manifest) {
 	}
 }
 
-func BuildJob(cfg Configuration, m Manifest, noWait bool, force bool) {
+func BuildJob(cfg Configuration, m Manifest, async bool, force bool) {
 	jobName := GetJobName(m)
 	job := GetJob(cfg, m)
 	lastBuild, err := job.GetLastBuild()
-	if err != nil {
-		log.Fatalf("failed to get job status: %v", err)
-	}
-
-	build, err := job.GetLastBuild()
-
-	if build.IsRunning() && !force {
+	if err == nil && lastBuild.IsRunning() && !force {
 		log.Fatal("a build for this job is already running pass '--force' to trigger the build.")
+	} else if err != nil && err.Error() != "404" {
+		log.Fatalf("failed to get last build status: %v", err)
 	}
 
 	job.InvokeSimple(nil)
 	log.Printf("build triggered: %v/job/%v wating for the job to start.", cfg.Jenkins.Server, jobName)
 
-	if noWait {
+	if async {
 		return
 	}
 
 	for {
 		newBuild, err := GetJob(cfg, m).GetLastBuild()
-		if err != nil {
-			log.Fatalf("failed to get job status: %v", err)
-		}
-		os.Stderr.WriteString(".")
-		if lastBuild.GetUrl() != newBuild.GetUrl() {
+		if err == nil && (lastBuild == nil || (lastBuild.GetUrl() != newBuild.GetUrl())) {
 			os.Stderr.WriteString("\n")
 			break
+		} else if err != nil && err.Error() != "404" {
+			log.Fatalf("failed to get build status: %v", err)
 		}
+		os.Stderr.WriteString(".")
 		time.Sleep(2 * time.Second)
 	}
 	ShowConsoleOutput(cfg, m)

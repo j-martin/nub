@@ -444,7 +444,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						OpenJenkins(manifest, "job/master/lastBuild/consoleFull")
+						OpenJenkins(manifest, "lastBuild/consoleFull")
 						return nil
 					},
 				},
