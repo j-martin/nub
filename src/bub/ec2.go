@@ -182,7 +182,7 @@ func prepareArgs(params ConnectionParams) []string {
 		case "tmux":
 			arg := ""
 			usr, _ := user.Current()
-			if os.Getenv("TERM_PROGRAM") == "iTerm.app" {
+			if os.Getenv("TERM_PROGRAM") == "iTerm.app" && os.Getenv("TMUX") == "" {
 				arg = "-CC"
 			}
 			tmuxCmd := []string{
