@@ -1,3 +1,5 @@
+library 'bench-pipeline'
+
 commonNode {
   checkout scm
   def env = [
