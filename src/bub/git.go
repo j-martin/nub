@@ -102,7 +102,7 @@ func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, curre
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
 		re = regexp.MustCompile("(Merge pull request #)(\\d+)")
 		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/pull/$2|PR#$2>")
-		re = regexp.MustCompile("(?m:^)([a-z0-9]{10,})")
+		re = regexp.MustCompile("(?m:^)([a-z0-9]{6,})")
 		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/commit/$1|$1>")
 	}
 	fmt.Fprintln(table, output)
