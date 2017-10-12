@@ -94,10 +94,10 @@ func runCmdWithOutput(cmd string, args ...string) string {
 	return string(output)
 }
 
-func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, slackFormat bool) {
+func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t%ar\t%an\t%s", previousVersion+"..."+currentVersion)
-	if slackFormat {
+	if formatForSlack {
 		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
 		re = regexp.MustCompile("(Merge pull request #)(\\d+)")
@@ -108,9 +108,9 @@ func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, curre
 	fmt.Fprintln(table, output)
 	table.Flush()
 	committerSlackArr := committerSlackReference(cfg, previousVersion, currentVersion)
-	if slackFormat {
+	if formatForSlack {
 		fmt.Print("\n" +
-			strings.Join(committerSlackArr, ", ") + " are theses changes ready to deploy?\n" +
+			strings.Join(committerSlackArr, ", ") + " are theses changes ready to deploy?\n\n" +
 			"_Add a :heavy_check_mark: reaction to this message if it's ready to deploy._\n" +
 			"_You should be available for an hour following this deployment._")
 	}
