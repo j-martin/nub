@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
+	"text/tabwriter"
 )
 
 func GetCurrentRepositoryName() string {
@@ -79,4 +82,65 @@ func runCmd(cmd string, args ...string) {
 	if err != nil {
 		log.Fatalf("Command failed: %v", err)
 	}
+}
+
+func runCmdWithOutput(cmd string, args ...string) string {
+	command := exec.Command(cmd, args...)
+	command.Stderr = os.Stderr
+	output, err := command.Output()
+	if err != nil {
+		log.Fatalf("Command failed: %v", err)
+	}
+	return string(output)
+}
+
+func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, slackFormat bool) {
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t%ar\t%an\t%s", previousVersion+"..."+currentVersion)
+	if slackFormat {
+		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
+		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
+		re = regexp.MustCompile("(Merge pull request #)(\\d+)")
+		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/pull/$2|PR#$2>")
+		re = regexp.MustCompile("(?m:^)([a-z0-9]{10,})")
+		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/commit/$1|$1>")
+	}
+	fmt.Fprintln(table, output)
+	table.Flush()
+	committerSlackArr := committerSlackReference(cfg, previousVersion, currentVersion)
+	if slackFormat {
+		fmt.Print("\n" +
+			strings.Join(committerSlackArr, ", ") + " are theses changes ready to deploy?\n" +
+			"_Add a :heavy_check_mark: reaction to this message if it's ready to deploy._\n" +
+			"_You should be available for an hour following this deployment._")
+	}
+}
+
+func FetchTags() {
+	runCmd("git", "fetch", "--tags")
+}
+
+func committerSlackReference(cfg Configuration, previousVersion string, currentVersion string) []string {
+	committerMapping := make(map[string]string)
+	for _, i := range cfg.Users {
+		committerMapping[i.Name] = i.Slack
+	}
+
+	committersStdout := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%an", previousVersion+"..."+currentVersion)
+	committersSlackMapping := make(map[string]string)
+	for _, commiterName := range strings.Split(committersStdout, "\n") {
+		slackUserName := committerMapping[commiterName]
+		if slackUserName == "" {
+			slackUserName = commiterName
+		} else {
+			slackUserName = "@" + slackUserName
+		}
+		committersSlackMapping[commiterName] = slackUserName
+	}
+
+	var committerSlackArr []string
+	for _, v := range committersSlackMapping {
+		committerSlackArr = append(committerSlackArr, v)
+	}
+	return committerSlackArr
 }

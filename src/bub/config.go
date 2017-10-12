@@ -17,6 +17,11 @@ type RDSConfiguration struct {
 type Environment struct {
 	Prefix, Jumphost, Region string
 }
+
+type User struct {
+	Name, Slack string
+}
+
 type Configuration struct {
 	AWS struct {
 		Regions      []string
@@ -25,6 +30,10 @@ type Configuration struct {
 	}
 	Github struct {
 		Organization string
+	}
+	Users []User
+	JIRA struct {
+		Server string
 	}
 	Jenkins struct {
 		Server, Username, Password string

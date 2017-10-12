@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.18.6"
+	app.Version = "0.19.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -77,13 +77,15 @@ func main() {
 			},
 		},
 		{
-			Name:  "repository",
-			Usage: "Synchronize the all the active repositories.",
-			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "force", Usage: "Skips the confirmation prompt."},
-			},
-			Action: func(c *cli.Context) error {
-				message := `
+			Name:    "repository",
+			Usage:   "Repository related actions",
+			Aliases: []string{"r"},
+			Subcommands: []cli.Command{
+				{
+					Name:  "synchronize",
+					Usage: "Synchronize the all the active repositories.",
+					Action: func(c *cli.Context) error {
+						message := `
 
 STOP!
 
@@ -92,12 +94,38 @@ Existing work will be stashed and pull the master branch. Your work won't be los
 Please make sure you are in the directory where you store your repos and not a specific repo.
 
 Continue?`
-				if c.Bool("force") || askForConfirmation(message) {
-					SyncRepositories()
-				} else {
-					os.Exit(1)
-				}
-				return nil
+						if c.Bool("force") || askForConfirmation(message) {
+							SyncRepositories()
+						} else {
+							os.Exit(1)
+						}
+						return nil
+					},
+				},
+				{
+					Name:    "pending",
+					Aliases: []string{"p"},
+					Usage:   "List diff between the previous version and the next one.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "slack", Usage: "Format the result for slack"},
+						cli.BoolFlag{Name: "no-fetch", Usage: "Do not fetch tags."},
+					},
+					Action: func(c *cli.Context) error {
+						if !c.Bool("no-fetch") {
+							FetchTags()
+						}
+						previousVersion := "production"
+						if len(c.Args()) > 0 {
+							previousVersion = c.Args().Get(0)
+						}
+						nextVersion := "HEAD"
+						if len(c.Args()) > 1 {
+							nextVersion = c.Args().Get(1)
+						}
+						PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack"))
+						return nil
+					},
+				},
 			},
 		},
 		{
