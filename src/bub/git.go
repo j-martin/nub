@@ -109,10 +109,7 @@ func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, curre
 	table.Flush()
 	committerSlackArr := committerSlackReference(cfg, previousVersion, currentVersion)
 	if formatForSlack {
-		fmt.Print("\n" +
-			strings.Join(committerSlackArr, ", ") + " are theses changes ready to deploy?\n\n" +
-			"_Add a :heavy_check_mark: reaction to this message if it's ready to deploy._\n" +
-			"_You should be available for an hour following this deployment._")
+		fmt.Print("\n" + strings.Join(committerSlackArr, ", "))
 	}
 }
 
