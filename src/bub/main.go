@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.19.4"
+	app.Version = "0.19.5"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -122,7 +122,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"))
+						PendingChanges(cfg, previousVersion, nextVersion, c.Bool("slack-format"))
 						return nil
 					},
 				},
