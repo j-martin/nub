@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.19.5"
+	app.Version = "0.19.6"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -107,7 +107,8 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "List diff between the previous version and the next one.",
 					Flags: []cli.Flag{
-						cli.BoolFlag{Name: "slack-format", Usage: "Format the result for slack"},
+						cli.BoolFlag{Name: "slack-format", Usage: "Format the result for slack."},
+						cli.BoolFlag{Name: "slack-no-at", Usage: "Do not add @person at the end."},
 						cli.BoolFlag{Name: "no-fetch", Usage: "Do not fetch tags."},
 					},
 					Action: func(c *cli.Context) error {
@@ -122,7 +123,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						PendingChanges(cfg, previousVersion, nextVersion, c.Bool("slack-format"))
+						PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
 						return nil
 					},
 				},

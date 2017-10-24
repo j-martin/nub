@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 )
@@ -85,6 +86,7 @@ func runCmd(cmd string, args ...string) {
 
 func runCmdWithOutput(cmd string, args ...string) string {
 	command := exec.Command(cmd, args...)
+	command.Stderr = os.Stderr
 	output, err := command.Output()
 	if err != nil {
 		log.Fatalf("Command failed: %v", err)
@@ -92,15 +94,24 @@ func runCmdWithOutput(cmd string, args ...string) string {
 	return string(output)
 }
 
-func PendingChanges(cfg Configuration, previousVersion, currentVersion string, formatForSlack bool) {
-	if !formatForSlack {
-		table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t%ar\t%an\t%s", previousVersion+"..."+currentVersion)
-		fmt.Fprintln(table, output)
-		table.Flush()
-	} else {
+func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t%ar\t%an\t%s", previousVersion+"..."+currentVersion)
+	if formatForSlack {
+		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
+		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
+		re = regexp.MustCompile("(Merge pull request #)(\\d+)")
+		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/pull/$2|PR#$2>")
+		re = regexp.MustCompile("(?m:^)([a-z0-9]{6,})")
+		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.Github.Organization+"/"+manifest.Repository+"/commit/$1|$1>")
+	}
+	fmt.Fprintln(table, output)
+	table.Flush()
+	if !noAt {
 		committerSlackArr := committerSlackReference(cfg, previousVersion, currentVersion)
-		fmt.Print("\n" + strings.Join(committerSlackArr, ", "))
+		if formatForSlack {
+			fmt.Print("\n" + strings.Join(committerSlackArr, ", "))
+		}
 	}
 }
 
