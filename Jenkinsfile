@@ -8,8 +8,8 @@ commonNode {
   ]
   withEnv(env) {
     commonStage("Build") {
-    sh "make clean deps release"
-    sh "cp -f bin/bub-linux-amd64 /opt/bub/bub"
+      sh "make clean deps release"
+      sh "cp -f bin/bub-linux-amd64 /opt/bub/bub"
     }
   }
   tagRepository.pushAll()
