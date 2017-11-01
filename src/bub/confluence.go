@@ -59,7 +59,7 @@ func createPage(m Manifest) []byte {
 			"[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/production...staging) / " +
 			"[Previous / Current Production](https://github.com/BenchLabs/{{.Repository}}/compare/production-rollback...production) | " +
 			"[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) | " +
-			"[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3Dpro-{{.Name}}-hec&display.page.search.mode=smart)\n\n" +
+			"[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3Dpro-{{.Name}}*&display.page.search.mode=smart)\n\n" +
 			"This page is automatically generated. Any changes will be lost.\n" +
 			"```\n{{.Manifest}}\n```\n")
 

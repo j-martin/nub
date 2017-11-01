@@ -32,12 +32,14 @@ func openJenkins(m Manifest, p string) {
 
 func openSplunk(m Manifest, isStaging bool) {
 	base := "https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
-	var sourceType []string
+	var sourceType string
 	if isStaging {
-		sourceType = append(sourceType, "staging")
+		sourceType = "staging"
+	} else {
+		sourceType = "pro"
 	}
-	sourceType = append(sourceType, m.Name, "hec")
-	openURI(base + strings.Join(sourceType, "-"))
+	sourceType = sourceType + "-" + m.Name + "*"
+	openURI(base + sourceType)
 }
 
 func openCircle(m Manifest, getBranch bool) {

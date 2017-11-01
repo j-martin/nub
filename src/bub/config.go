@@ -32,7 +32,7 @@ type Configuration struct {
 		Organization string
 	}
 	Users []User
-	JIRA struct {
+	JIRA  struct {
 		Server string
 	}
 	Jenkins struct {

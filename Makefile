@@ -5,6 +5,8 @@ ARCH		= amd64
 
 build: test
 	GOOS=darwin GOARCH=$(ARCH) gb build
+
+build-linux:
 	GOOS=linux GOARCH=$(ARCH) gb build
 
 deps:
@@ -16,7 +18,7 @@ test:
 clean:
 	rm -rf bin
 
-release: build
+release: build build-linux
 	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | sed 's/ version /-/g'))
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
