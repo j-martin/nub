@@ -96,7 +96,7 @@ func runCmdWithOutput(cmd string, args ...string) string {
 
 func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t%ar\t%an\t%s", previousVersion+"..."+currentVersion)
+	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
 		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
