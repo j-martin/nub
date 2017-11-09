@@ -143,7 +143,7 @@ func getEngineConfiguration(engine string) EngineConfiguration {
 
 // Escape codes for iTerm2
 func setBackground(endpoint string) {
-	if strings.HasPrefix(endpoint, "prod") {
+	if strings.HasPrefix(endpoint, "pro") {
 		// red for production
 		print("\033]Ph501010\033\\")
 	} else {

@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.19.8"
+	app.Version = "0.19.9"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -313,7 +313,7 @@ Continue?`
 						if c.NArg() > 0 {
 							environment = c.Args().Get(0)
 						} else if manifestErr == nil {
-							environment = "prod-" + manifest.Name
+							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
 						ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
@@ -333,7 +333,7 @@ Continue?`
 						if c.NArg() > 0 {
 							environment = c.Args().Get(0)
 						} else if manifestErr == nil {
-							environment = "prod-" + manifest.Name
+							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
 						EnvironmentIsReady(getRegion(environment, cfg, c), environment, true)
@@ -354,7 +354,7 @@ Continue?`
 						if c.NArg() > 0 {
 							environment = c.Args().Get(0)
 						} else if manifestErr == nil {
-							environment = "prod-" + manifest.Name
+							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
 						DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool("all"))
@@ -395,7 +395,7 @@ Continue?`
 						if c.NArg() > 0 {
 							environment = c.Args().Get(0)
 						} else if manifestErr == nil {
-							environment = "prod-" + manifest.Name
+							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						} else {
 							log.Fatal("Environment required. Stopping.")
