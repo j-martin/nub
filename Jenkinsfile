@@ -8,10 +8,11 @@ commonNode {
   ]
   withEnv(env) {
     commonStage("Build") {
+      def workDir = 'src/bub'
       sh 'git clean -fdx'
-      sh 'mkdir src'
-      sh 'ln -f -s "$PWD" "$PWD/src/bub"'
-      dir('src/bub') {
+      sh "mkdir -p ${workDir}"
+      sh 'find . -mindepth 1 -maxdepth 1 -not -name src -exec cp -r "{}" ${workDir} \;'
+      dir(workDir) {
         sh 'make release'
         sh 'cp -f bin/bub-linux-amd64 /opt/bub/bub'
       }
