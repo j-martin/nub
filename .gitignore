@@ -1,6 +1,7 @@
 *.iml
 .dep
 /bin
+/pkg
 /vendor
 /.idea
 /.vscode
