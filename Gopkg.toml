@@ -1,0 +1,63 @@
+[[constraint]]
+  name = "github.com/BurntSushi/toml"
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+
+[[constraint]]
+  name = "github.com/aws/aws-sdk-go"
+  revision = "4b24694fc54751608cb6bd35b1025137a0e243d2"
+
+[[constraint]]
+  name = "github.com/bndr/gojenkins"
+  revision = "fb64d609b014879a799204f02b50db404fc6d995"
+
+[[constraint]]
+  name = "github.com/bndr/gopencils"
+  revision = "22e283ad76118c1e1f3812b4a3553809cd434e6a"
+
+[[constraint]]
+  name = "github.com/go-ini/ini"
+  revision = "6e4869b434bd001f6983749881c7ead3545887d8"
+
+[[constraint]]
+  name = "github.com/jmespath/go-jmespath"
+  revision = "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
+
+[[constraint]]
+  name = "github.com/jszwedko/go-circleci"
+  revision = "820efab65ef1993416cd18434ea18fe09b185627"
+
+[[constraint]]
+  name = "github.com/mcuadros/go-version"
+  revision = "257f7b9a7d87427c8d7f89469a5958d57f8abd7c"
+
+[[constraint]]
+  name = "github.com/paetzke/godot"
+  revision = "d6291c463cf5c9b21dab4a66e12d693c2bb9f202"
+
+[[constraint]]
+  name = "github.com/russross/blackfriday"
+  revision = "5f33e7b7878355cd2b7e6b8eefc48a5472c69f70"
+
+[[constraint]]
+  name = "github.com/shurcooL/sanitized_anchor_name"
+  revision = "1dba4b3954bc059efc3991ec364f9f9a35f597d2"
+
+[[constraint]]
+  name = "github.com/urfave/cli"
+  revision = "88ae7af8d41d3842891a319ca21e867c490bcb0b"
+
+[[constraint]]
+  name = "golang.org/x/net"
+  revision = "5bc3a08dc8042ac11f2752c257a2367c02ba32e8"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"
+  revision = "d5040cddfc0da40b408c9a1da4728662435176a9"
+
+[[constraint]]
+  name = "gopkg.in/urfave/cli.v1"
+  revision = "a14d7d367bc02b1f57d88de97926727f2d936387"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  revision = "a5b47d31c556af34a302ce5d659e6fea44d90de0"

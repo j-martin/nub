@@ -1,24 +1,35 @@
 PLATFORM	= $(shell uname | tr 'A-Z' 'a-z')
 ARCH		= amd64
+DEP		= ./.dep
+DEP_VERSION	= 0.3.2
+SRC		= ./bub
+OUTPUT		= bin/bub
 
 .PHONY: build deps test clean release fmt
 
-build: test
-	GOOS=darwin GOARCH=$(ARCH) gb build
+build: deps test build-darwin build-linux
+
+build-darwin:
+	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
 
 build-linux:
-	GOOS=linux GOARCH=$(ARCH) gb build
+	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)" "$(SRC)"
 
-deps:
-	gb vendor restore
+$(DEP):
+	curl --silent "https://s3.amazonaws.com/s3bucket/libs/golang/dep-$(PLATFORM)-amd64-$(DEP_VERSION).gz" \
+		| gzip -d > "$(DEP)"
+	chmod +x "$(DEP)"
+
+deps: $(DEP)
+	$(DEP) ensure --vendor-only
 
 test:
-	gb test
+	go test "$(SRC)"
 
 clean:
 	rm -rf bin
 
-release: build build-linux
+release: build
 	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | sed 's/ version /-/g'))
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
@@ -32,4 +43,4 @@ install: build
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
 
 fmt:
-	(cd src/bub && go fmt)
+	go fmt "$(SRC)"
