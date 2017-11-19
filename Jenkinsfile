@@ -9,6 +9,7 @@ commonNode {
   withEnv(env) {
     commonStage("Build") {
       sh 'git clean -fdx'
+      sh 'mkdir src'
       sh 'ln -f -s "$PWD" "$PWD/src/bub"'
       dir('src/bub') {
         sh 'make release'
