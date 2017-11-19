@@ -2,7 +2,7 @@ PLATFORM	= $(shell uname | tr 'A-Z' 'a-z')
 ARCH		= amd64
 DEP		= ./.dep
 DEP_VERSION	= 0.3.2
-SRC		= ./bub
+SRC		= ./cmd
 OUTPUT		= bin/bub
 
 .PHONY: build deps test clean release fmt
