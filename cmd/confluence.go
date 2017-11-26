@@ -11,6 +11,8 @@ import (
 	"github.com/bndr/gopencils"
 	"github.com/russross/blackfriday"
 	"gopkg.in/yaml.v2"
+	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -36,12 +38,6 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-type PageParams struct {
-	Manifest   string
-	Repository string
-	Name       string
-}
-
 func shortManifest(m Manifest) ([]byte, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
@@ -51,24 +47,106 @@ func shortManifest(m Manifest) ([]byte, error) {
 	return yaml.Marshal(m)
 }
 
-func createPage(m Manifest) []byte {
-	yml, _ := shortManifest(m)
-	t, err := template.New("readme").Parse(
-		"[Repository](https://github.com/BenchLabs/{{.Repository}}) | Diffs " +
-			"[Production / Master](https://github.com/BenchLabs/{{.Repository}}/compare/production...master) / " +
-			"[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/production...staging) / " +
-			"[Previous / Current Production](https://github.com/BenchLabs/{{.Repository}}/compare/production-rollback...production) | " +
-			"[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) | " +
-			"[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3Dpro-{{.Name}}*&display.page.search.mode=smart)\n\n" +
-			"This page is automatically generated. Any changes will be lost.\n" +
-			"```\n{{.Manifest}}\n```\n")
+func findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []string, err error) {
+	err = filepath.Walk(".", func(filePath string, f os.FileInfo, err error) error {
+		ignoredRootDir := append(ignoreDirs,
+			".github",
+			"bower_components/",
+			"node_modules/",
+			"pkg/",
+			".repositories/",
+			"vendor/",
+			"PULL_REQUEST_TEMPLATE.md",
+		)
 
+		for _, dir := range ignoredRootDir {
+			if strings.HasPrefix(filePath, dir) {
+				return nil
+			}
+		}
+		commonIgnoredDirs := []string{
+			"bower_components/",
+			"node_modules/",
+		}
+		for _, dir := range commonIgnoredDirs {
+			if strings.Contains(filePath, dir) {
+				return nil
+			}
+		}
+
+		if ignoreCommonFiles {
+			ignoredFiles := []string{
+				"README.md",
+			}
+			for _, ignoredFile := range ignoredFiles {
+				if filePath == ignoredFile {
+					return nil
+				}
+			}
+
+		}
+		if path.Ext(filePath) == ".md" {
+			fileList = append(fileList, filePath)
+		}
+		return nil
+	})
+	return fileList, err
+}
+
+func joinMarkdownFiles(m Manifest) (content []byte, err error) {
+	files, err := findMarkdownFiles(m.Documentation.IgnoredDirs, true)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
+	}
+	for _, filePath := range files {
+		fileContent, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return nil, err
+		}
+		url := generateGitHubLink(filePath, m)
+		content = append(content, []byte("\n\n\n---\n#### From "+url+"\n")...)
+		content = append(content, fileContent...)
+	}
+	return content, err
+}
+func generateGitHubLink(filePath string, m Manifest) string {
+	return "[" + filePath + "](https://github.com/BenchLabs/" + path.Join(m.Repository, "blob/master", filePath) + ")"
+}
+
+func createPage(m Manifest) ([]byte, error) {
+	t, err := template.New("readme").Parse(`
+[Repository](https://github.com/BenchLabs/{{.Repository}}) | **Diffs**
+[Production / Master](https://github.com/BenchLabs/{{.Repository}}/compare/production...master) /
+[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/production...staging) /
+[Previous / Current Production](https://github.com/BenchLabs/{{.Repository}}/compare/production-rollback...production) |
+[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) |
+[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D{{.Deploy.Environment}}-{{.Name}}*&display.page.search.mode=smart)
+
+
+`)
+	renderedBody := []byte(`
+<ac:structured-macro ac:name="info" ac:schema-version="1" ac:macro-id="9289e233-4abf-4957-8884-bef7be9ead8e"><ac:rich-text-body>
+<p>This page is automatically generated. Any changes will be lost.</p>
+</ac:rich-text-body></ac:structured-macro>
+`)
+	manifestHeader := []byte(`
+<ac:structured-macro ac:name="expand" ac:schema-version="1" ac:macro-id="856ee728-b2f6-4c39-b63d-e1e4a2b9a6ed"><ac:parameter ac:name="title">See manifest...</ac:parameter><ac:rich-text-body>
+<ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="9d13770a-90d2-4283-93fc-3faf24eef746"><ac:plain-text-body><![CDATA[
+`)
+	manifestFooter := []byte(`
+]]></ac:plain-text-body></ac:structured-macro>
+</ac:rich-text-body></ac:structured-macro> `)
+
+	manifestBytes, _ := shortManifest(m)
+	renderedBody = append(renderedBody, manifestHeader...)
+	renderedBody = append(renderedBody, manifestBytes...)
+	renderedBody = append(renderedBody, manifestFooter...)
+	if err != nil {
+		return nil, err
 	}
 	var templated bytes.Buffer
 	writer := bufio.NewWriter(&templated)
-	err = t.Execute(writer, PageParams{string(yml), m.Repository, m.Name})
+	err = t.Execute(writer, m)
 	writer.Flush()
 
 	if err != nil {
@@ -76,7 +154,11 @@ func createPage(m Manifest) []byte {
 	}
 
 	markdown := append(templated.Bytes(), m.Readme+"\n"...)
-	markdown = append(markdown, m.ChangeLog+"\n"...)
+	otherDocs, err := joinMarkdownFiles(m)
+	if err != nil {
+		return nil, err
+	}
+	markdown = append(markdown, otherDocs...)
 
 	htmlFlags := blackfriday.HTML_USE_XHTML
 	renderer := blackfriday.HtmlRenderer(htmlFlags, "", "")
@@ -90,17 +172,21 @@ func createPage(m Manifest) []byte {
 		blackfriday.EXTENSION_DEFINITION_LISTS
 
 	opts := blackfriday.Options{Extensions: extensions}
-	return blackfriday.MarkdownOptions(markdown, renderer, opts)
+	renderedBody = append(renderedBody, blackfriday.MarkdownOptions(markdown, renderer, opts)...)
+	return renderedBody, nil
 }
 
 func updateDocumentation(cfg Configuration, m Manifest) {
 
-	if m.Page == "" {
-		log.Print("Page: No confluence page defined in manifest. Moving on.")
+	if m.Documentation.PageId == "" {
+		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
 		return
 	}
 
-	htmlData := createPage(m)
+	htmlData, err := createPage(m)
+	if err != nil {
+		log.Fatalf("Failed to generate page. %v", err)
+	}
 	newContent := string(htmlData[:])
 
 	username := os.Getenv("CONFLUENCE_USER")
@@ -118,19 +204,19 @@ func updateDocumentation(cfg Configuration, m Manifest) {
 		&gopencils.BasicAuth{Username: username, Password: password},
 	)
 
-	pageInfo, err := getPageInfo(api, m.Page)
+	pageInfo, err := getPageInfo(api, m.Documentation.PageId)
 	pageInfo.Title = strings.Title(m.Name) + " - Readme"
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	currentBody := pageInfo.Body.Storage.Value
-	if strings.Contains(newContent, currentBody) {
+	if newContent == currentBody {
 		log.Print("No update needed. Skipping.")
 		return
 	}
 
-	err = updatePage(api, m.Page, pageInfo, htmlData)
+	err = updatePage(api, m.Documentation.PageId, pageInfo, htmlData)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,7 +232,7 @@ func updatePage(
 
 	if len(pageInfo.Ancestors) == 0 {
 		return fmt.Errorf(
-			"Page '%s' info does not contain any information about parents",
+			"page '%s' info does not contain any information about parents",
 			pageID,
 		)
 	}
@@ -184,8 +270,9 @@ func updatePage(
 		output, _ := ioutil.ReadAll(request.Raw.Body)
 		defer request.Raw.Body.Close()
 
+		log.Printf(string(newContent))
 		return fmt.Errorf(
-			"Confluence REST API returns unexpected HTTP status: %s, "+
+			"confluence REST API returns unexpected HTTP status: %s, "+
 				"output: %s",
 			request.Raw.Status, output,
 		)
@@ -218,7 +305,7 @@ func getPageInfo(
 
 	if request.Raw.StatusCode != 200 {
 		return PageInfo{}, fmt.Errorf(
-			"Confluence REST API returns unexpected HTTP status: %s",
+			"confluence REST API returns unexpected HTTP status: %s",
 			request.Raw.Status,
 		)
 	}

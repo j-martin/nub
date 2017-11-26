@@ -26,6 +26,8 @@ type Manifest struct {
 	Protocols    []Protocol
 	Version      string
 	Branch       string
+	Deploy       Deploy
+	Documentation Documentation
 	Readme       string
 	ChangeLog    string
 	Page         string
@@ -52,6 +54,16 @@ type Dependency struct {
 	Implicit bool
 	// out (default), in (as in inbound network requests), both
 	Direction string
+}
+
+type Deploy struct {
+	Environment string
+}
+
+
+type Documentation struct {
+	PageId string `yaml:"pageId"`
+	IgnoredDirs []string `yaml:"ignoredDirs"`
 }
 
 type Protocol struct {
@@ -102,6 +114,14 @@ func loadManifest(version string) (Manifest, error) {
 		m.Platform = m.Platforms[0]
 	}
 
+	if m.Deploy.Environment == "" {
+		m.Deploy.Environment = "pro"
+	}
+
+	if m.Page != "" {
+		m.Documentation.PageId = m.Page
+	}
+
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = GetCurrentRepositoryName()
 	m.Branch = GetCurrentBranch()
@@ -136,7 +156,10 @@ dependencies:
 protocols:
   - type: raml
     path: client/src/main/raml
-page: pageID from confluence, not the name.
+documentation:
+  pageId: pageID from confluence, not the name.
+  ignoredDirs:
+    - optional/dir/to/be/ignored/from/the/docs
 `
 	manifestTemplate, err := template.New("manifest").Parse(manifestString)
 	if err != nil {

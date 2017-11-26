@@ -5,14 +5,14 @@ DEP_VERSION	= 0.3.2
 SRC		= ./cmd
 OUTPUT		= bin/bub
 
-.PHONY: build deps test clean release fmt
+.PHONY: all deps test clean release fmt
 
-build: deps test build-darwin build-linux
+all: deps test darwin linux
 
-build-darwin:
+darwin:
 	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
 
-build-linux:
+linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)" "$(SRC)"
 
 $(DEP):
@@ -29,7 +29,7 @@ test:
 clean:
 	rm -rf bin
 
-release: build
+release: all
 	$(eval version := $(shell bin/bub-$(PLATFORM)-$(ARCH) --version | sed 's/ version /-/g'))
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
@@ -38,7 +38,7 @@ release: build
 		| xargs -n2 aws s3 cp
 	find bin -type f -name *.gz -exec shasum -a 256 {} \;
 
-install: build
+install: all
 	rm -f /usr/local/bin/bub
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
 
