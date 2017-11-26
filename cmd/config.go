@@ -28,7 +28,7 @@ type Configuration struct {
 		RDS          []RDSConfiguration
 		Environments []Environment
 	}
-	Github struct {
+	GitHub struct {
 		Organization string
 	}
 	Users []User
@@ -37,6 +37,9 @@ type Configuration struct {
 	}
 	Jenkins struct {
 		Server, Username, Password string
+	}
+	Splunk struct {
+		Server string
 	}
 	Confluence struct {
 		Server, Username, Password string
@@ -89,6 +92,9 @@ confluence:
 	server: "https://example.atlassian.net/wiki"
 	username: <optional-change-me>
 	password: <optional-change-me>
+
+splunk:
+	server: "https://splunk.example.com"
 
 circle:
 	token: <optional-change-me>

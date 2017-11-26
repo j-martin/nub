@@ -38,13 +38,14 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-func shortManifest(m Manifest) ([]byte, error) {
+func marshallManifest(m Manifest) (string, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
 	m.Branch = ""
 	m.LastUpdate = 0
 	m.Version = ""
-	return yaml.Marshal(m)
+	i, err := yaml.Marshal(m)
+	return string(i), err
 }
 
 func findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []string, err error) {
@@ -93,7 +94,7 @@ func findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []
 	return fileList, err
 }
 
-func joinMarkdownFiles(m Manifest) (content []byte, err error) {
+func joinMarkdownFiles(cfg Configuration, m Manifest) (content []byte, err error) {
 	files, err := findMarkdownFiles(m.Documentation.IgnoredDirs, true)
 	if err != nil {
 		return nil, err
@@ -103,62 +104,74 @@ func joinMarkdownFiles(m Manifest) (content []byte, err error) {
 		if err != nil {
 			return nil, err
 		}
-		url := generateGitHubLink(filePath, m)
+		url := generateGitHubLink(filePath, cfg, m)
 		content = append(content, []byte("\n\n\n---\n#### From "+url+"\n")...)
 		content = append(content, fileContent...)
 	}
 	return content, err
 }
-func generateGitHubLink(filePath string, m Manifest) string {
-	return "[" + filePath + "](https://github.com/BenchLabs/" + path.Join(m.Repository, "blob/master", filePath) + ")"
+
+func generateGitHubLink(filePath string, cfg Configuration, m Manifest) string {
+	return "[" + filePath + "](https://github.com/" + path.Join(cfg.GitHub.Organization, m.Repository, "blob/master", filePath) + ")"
 }
 
-func createPage(m Manifest) ([]byte, error) {
-	t, err := template.New("readme").Parse(`
-[Repository](https://github.com/BenchLabs/{{.Repository}}) | **Diffs**
-[Production / Master](https://github.com/BenchLabs/{{.Repository}}/compare/production...master) /
-[Staging / Production](https://github.com/BenchLabs/{{.Repository}}/compare/production...staging) /
-[Previous / Current Production](https://github.com/BenchLabs/{{.Repository}}/compare/production-rollback...production) |
-[Jenkins](https://jenkins.example.com/job/BenchLabs/job/{{.Repository}}) |
-[Splunk](https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D{{.Deploy.Environment}}-{{.Name}}*&display.page.search.mode=smart)
-
-
-`)
-	renderedBody := []byte(`
-<ac:structured-macro ac:name="info" ac:schema-version="1" ac:macro-id="9289e233-4abf-4957-8884-bef7be9ead8e"><ac:rich-text-body>
-<p>This page is automatically generated. Any changes will be lost.</p>
-</ac:rich-text-body></ac:structured-macro>
-`)
-	manifestHeader := []byte(`
-<ac:structured-macro ac:name="expand" ac:schema-version="1" ac:macro-id="856ee728-b2f6-4c39-b63d-e1e4a2b9a6ed"><ac:parameter ac:name="title">See manifest...</ac:parameter><ac:rich-text-body>
-<ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="9d13770a-90d2-4283-93fc-3faf24eef746"><ac:plain-text-body><![CDATA[
-`)
-	manifestFooter := []byte(`
-]]></ac:plain-text-body></ac:structured-macro>
-</ac:rich-text-body></ac:structured-macro> `)
-
-	manifestBytes, _ := shortManifest(m)
-	renderedBody = append(renderedBody, manifestHeader...)
-	renderedBody = append(renderedBody, manifestBytes...)
-	renderedBody = append(renderedBody, manifestFooter...)
+func createPage(cfg Configuration, m Manifest) ([]byte, error) {
+	yaml, err := marshallManifest(m)
 	if err != nil {
 		return nil, err
 	}
-	var templated bytes.Buffer
-	writer := bufio.NewWriter(&templated)
-	err = t.Execute(writer, m)
+
+	t, err := template.New("readme").Parse(`
+<ac:structured-macro ac:name="info" ac:schema-version="1" ac:macro-id="9289e233-4abf-4957-8884-bef7be9ead8e"><ac:rich-text-body>
+<p>This page is automatically generated. Any changes will be lost.
+	Edit the actual <a href="https://github.com/{{ .Config.GitHub.Organization }}/{{ .Manifest.Repository }}">README</a> instead.</p>
+</ac:rich-text-body></ac:structured-macro>
+
+<p>
+	<a href="https://github.com/{{ .Config.GitHub.Organization }}/{{ .Manifest.Repository }}">Repository</a> |
+	<strong>Diffs</strong>
+		<a href="https://github.com/{{ .Config.GitHub.Organization }}/{{ .Manifest.Repository }}/compare/production...master" title="Pending changes from master to Production">Production / Master</a> /
+		<a href="https://github.com/{{ .Config.GitHub.Organization }}/{{ .Manifest.Repository }}/compare/production...staging" title="Pending changes from Staging to Production">Staging / Production</a> /
+		<a href="https://github.com/{{ .Config.GitHub.Organization }}/{{ .Manifest.Repository }}/compare/production-rollback...production" title="Changes in the previous deployment.">Previous / Current Production</a> |
+	<a href="{{ .Config.Jenkins.Server }}/job/{{ .Config.GitHub.Organization }}/job/{{ .Manifest.Repository }}">Jenkins</a> |
+	<a href="{{ .Config.Splunk.Server }}/en-US/app/search/search/?dispatch.sample_ratio=1&amp;earliest=rt-1h&amp;latest=rtnow&amp;q=search%20sourcetype%3D{{ .Manifest.Deploy.Environment }}-{{ .Manifest.Name }}*&amp;display.page.search.mode=smart">Splunk</a>
+</p>
+
+<p>
+	<ac:structured-macro ac:name="expand" ac:schema-version="1" ac:macro-id="856ee728-b2f6-4c39-b63d-e1e4a2b9a6ed">
+		<ac:parameter ac:name="title">See manifest...</ac:parameter><ac:rich-text-body>
+		<ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="9d13770a-90d2-4283-93fc-3faf24eef746"><ac:plain-text-body>
+			<![CDATA[{{ .YAML }}]]>
+		</ac:plain-text-body></ac:structured-macro>
+	</ac:rich-text-body></ac:structured-macro>
+</p>
+`)
+
+	if err != nil {
+		return nil, err
+	}
+	var header bytes.Buffer
+	writer := bufio.NewWriter(&header)
+	err = t.Execute(writer, struct {
+		Config   Configuration
+		Manifest Manifest
+		YAML     string
+	}{
+		Manifest: m,
+		Config:   cfg,
+		YAML:     yaml,
+	})
 	writer.Flush()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	markdown := append(templated.Bytes(), m.Readme+"\n"...)
-	otherDocs, err := joinMarkdownFiles(m)
+	otherMarkdown, err := joinMarkdownFiles(cfg, m)
 	if err != nil {
 		return nil, err
 	}
-	markdown = append(markdown, otherDocs...)
+	markdown := append([]byte(m.Readme), otherMarkdown...)
 
 	htmlFlags := blackfriday.HTML_USE_XHTML
 	renderer := blackfriday.HtmlRenderer(htmlFlags, "", "")
@@ -172,8 +185,8 @@ func createPage(m Manifest) ([]byte, error) {
 		blackfriday.EXTENSION_DEFINITION_LISTS
 
 	opts := blackfriday.Options{Extensions: extensions}
-	renderedBody = append(renderedBody, blackfriday.MarkdownOptions(markdown, renderer, opts)...)
-	return renderedBody, nil
+	renderedMarkdown := blackfriday.MarkdownOptions(markdown, renderer, opts)
+	return append(header.Bytes(), renderedMarkdown...), nil
 }
 
 func updateDocumentation(cfg Configuration, m Manifest) {
@@ -183,7 +196,7 @@ func updateDocumentation(cfg Configuration, m Manifest) {
 		return
 	}
 
-	htmlData, err := createPage(m)
+	htmlData, err := createPage(cfg, m)
 	if err != nil {
 		log.Fatalf("Failed to generate page. %v", err)
 	}

@@ -20,18 +20,17 @@ func openURI(uriSegments ...string) {
 	}
 }
 
-func openGH(m Manifest, p string) {
-	base := "https://github.com/BenchLabs"
-	openURI(base, m.Repository, p)
+func openGH(cfg Configuration, m Manifest, p string) {
+	openURI("https://github.com/", cfg.GitHub.Organization, m.Repository, p)
 }
 
-func openJenkins(m Manifest, p string) {
-	base := "https://jenkins.example.com/job/BenchLabs/job"
-	openURI(base, m.Repository, "job", m.Branch, p)
+func openJenkins(cfg Configuration, m Manifest, p string) {
+	openURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
 }
 
-func openSplunk(m Manifest, isStaging bool) {
-	base := "https://splunk.example.com/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
+func openSplunk(cfg Configuration, m Manifest, isStaging bool) {
+	base := cfg.Splunk.Server +
+		"/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
 	var sourceType string
 	if isStaging {
 		sourceType = "staging"
@@ -42,8 +41,8 @@ func openSplunk(m Manifest, isStaging bool) {
 	openURI(base + sourceType)
 }
 
-func openCircle(m Manifest, getBranch bool) {
-	base := "https://circleci.com/gh/BenchLabs"
+func openCircle(cfg Configuration, m Manifest, getBranch bool) {
+	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
 		currentBranch := url.QueryEscape(GetCurrentBranch())
 		openURI(base, m.Repository, "tree", currentBranch)

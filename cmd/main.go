@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.20.0"
+	app.Version = "0.20.1"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -426,7 +426,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(manifest, "")
+						openGH(cfg, manifest, "")
 						return nil
 					},
 				},
@@ -435,7 +435,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(manifest, "issues")
+						openGH(cfg, manifest, "issues")
 						return nil
 					},
 				},
@@ -444,7 +444,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(manifest, "branches")
+						openGH(cfg, manifest, "branches")
 						return nil
 					},
 				},
@@ -453,7 +453,7 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(manifest, "pulls")
+						openGH(cfg, manifest, "pulls")
 						return nil
 					},
 				},
@@ -464,7 +464,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
-				openJenkins(manifest, "")
+				openJenkins(cfg, manifest, "")
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -473,7 +473,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						openJenkins(manifest, "lastBuild/consoleFull")
+						openJenkins(cfg, manifest, "lastBuild/consoleFull")
 						return nil
 					},
 				},
@@ -515,7 +515,7 @@ Continue?`
 			Usage:   "Open the service production logs.",
 			Aliases: []string{"s"},
 			Action: func(c *cli.Context) error {
-				openSplunk(manifest, false)
+				openSplunk(cfg, manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -524,7 +524,7 @@ Continue?`
 					Aliases: []string{"s"},
 					Usage:   "Open the service staging logs.",
 					Action: func(c *cli.Context) error {
-						openSplunk(manifest, true)
+						openSplunk(cfg, manifest, true)
 						return nil
 					},
 				},
@@ -557,7 +557,7 @@ Continue?`
 			Usage:   "CircleCI related actions",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
-				openCircle(manifest, false)
+				openCircle(cfg, manifest, false)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -575,7 +575,7 @@ Continue?`
 					Usage:   "Opens the result for the current branch.",
 					Aliases: []string{"b"},
 					Action: func(c *cli.Context) error {
-						openCircle(manifest, true)
+						openCircle(cfg, manifest, true)
 						return nil
 					},
 				},
