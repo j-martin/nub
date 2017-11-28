@@ -11,7 +11,7 @@ commonNode {
       def workDir = 'src/bub'
       sh 'git clean -fdx'
       sh "mkdir -p '${workDir}'"
-      sh "find . -mindepth 1 -maxdepth 1 -not -name src -exec cp -r '{}' '${workDir}' \\;"
+      sh "find . -mindepth 1 -maxdepth 1 -not -name src -o -not -name '.git' -exec cp -r '{}' '${workDir}' \\;"
       dir(workDir) {
         sh 'make release'
         sh 'cp -f bin/bub-linux-amd64 /opt/bub/bub'
