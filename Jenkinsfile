@@ -1,8 +1,7 @@
 library 'bench-pipeline'
 
 commonNode {
-  deleteDir()
-  checkout scm
+  checkoutRepository()
   def env = [
     "GOPATH=${env.WORKSPACE}",
     "PATH=${env.PATH}:/usr/local/go/bin:/${env.HOME}/.go/bin"
