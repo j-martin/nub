@@ -111,6 +111,6 @@ func updateBub(path S3path) error {
 	if os.Rename(f.Name(), exe) != nil {
 		return err
 	}
-	log.Printf("Update complete. Run 'bub --version' to be confirm.")
+	log.Printf("Update complete. %v", runCmdWithOutput("bub", "--version"))
 	return nil
 }
