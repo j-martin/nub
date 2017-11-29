@@ -224,7 +224,7 @@ func updateDocumentation(cfg Configuration, m Manifest) {
 	}
 
 	currentBody := pageInfo.Body.Storage.Value
-	if newContent == currentBody {
+	if sanitizeBody(newContent) == sanitizeBody(currentBody) {
 		log.Print("No update needed. Skipping.")
 		return
 	}
@@ -235,6 +235,11 @@ func updateDocumentation(cfg Configuration, m Manifest) {
 	}
 
 	log.Println("Page successfully updated.")
+}
+
+func sanitizeBody(body string) string {
+	r := strings.NewReplacer(" ", "", "\n", "", "\t", "")
+	return r.Replace(body)
 }
 
 func updatePage(
