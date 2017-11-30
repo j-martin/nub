@@ -221,8 +221,8 @@ func ConnectToInstance(params ConnectionParams) {
 		// with the instance name tag to make it easier to template.
 		// The alternative was to define a new struct.
 		templates := &promptui.SelectTemplates{
-			Label:    "{{ . }}",
-			Active:   "> {{ .InstanceId }}	{{ .Architecture }}",
+			Label: "{{ . }}:",
+			Active: "> {{ .InstanceId }}	{{ .Architecture }}",
 			Inactive: "  {{ .InstanceId }}	{{ .Architecture }}",
 			Selected: "= {{ .InstanceId }}	{{ .Architecture }}",
 			Details: `
@@ -253,7 +253,7 @@ func ConnectToInstance(params ConnectionParams) {
 
 		prompt := promptui.Select{
 			Size:      20,
-			Label:     "Select Instance",
+			Label:     "Select an EC2 Instance",
 			Items:     instances,
 			Templates: templates,
 			Searcher:  searcher,

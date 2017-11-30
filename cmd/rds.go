@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/manifoldco/promptui"
 	"log"
 	"math/rand"
 	"net"
@@ -12,7 +13,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"github.com/manifoldco/promptui"
 )
 
 type DBInstances []*rds.DBInstance
@@ -77,16 +77,13 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 			name := strings.Split(*instance.Endpoint.Address, ".")[0]
 			rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})
 		}
-		// The Architecture field is being overwritten
-		// with the instance name tag to make it easier to template.
-		// The alternative was to define a new struct.
+
 		templates := &promptui.SelectTemplates{
-			Label:    "{{ . }}",
-			Active:   "> {{ .Name }}	{{ .Address }} {{ .Engine }}",
-			Inactive: "  {{ .Name }}	{{ .Address }} {{ .Engine }}",
-			Selected: "= {{ .Name }}	{{ .Address }} {{ .Engine }}",
+			Label:    "{{ . }}:",
+			Active:   "> {{ .Name }}",
+			Inactive: "  {{ .Name }}",
 			Details: `
---------- Instance ----------
+--------- RDS Instance ----------
 {{ "Name:" | faint }}	{{ .Name }}
 {{ "Address:" | faint }}	{{ .Address }}
 {{ "Engine:" | faint }}	{{ .Engine }}
@@ -103,7 +100,7 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 
 		prompt := promptui.Select{
 			Size:      20,
-			Label:     "Select Instance",
+			Label:     "Select a RDS Instance",
 			Items:     rdsInstances,
 			Templates: templates,
 			Searcher:  searcher,
