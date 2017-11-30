@@ -1,21 +1,19 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path"
-	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/manifoldco/promptui"
 )
 
 type ConnectionParams struct {
@@ -73,20 +71,6 @@ func getInstanceName(i *ec2.Instance) string {
 		}
 	}
 	return name
-}
-
-func listInstances(instances []*ec2.Instance) {
-	table := tabwriter.NewWriter(os.Stderr, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(table, "#\tName\tId\tPublicName\tPrivateName\tType")
-	for c, i := range instances {
-		instances = append(instances, i)
-
-		idx := strconv.FormatInt(int64(c), 10)
-
-		row := []string{idx, getInstanceName(i), *i.InstanceId, *i.PublicDnsName, *i.PrivateDnsName, *i.InstanceType}
-		fmt.Fprintln(table, strings.Join(row, "\t"))
-	}
-	table.Flush()
 }
 
 func getUsers(i *ec2.Instance) []string {
@@ -232,19 +216,53 @@ func ConnectToInstance(params ConnectionParams) {
 			connect(i, params)
 		}
 	} else {
-		listInstances(instances)
-		reader := bufio.NewReader(os.Stdin)
-		for {
-			fmt.Fprint(os.Stderr, "enter a valid instance number: ")
-			result, err := reader.ReadString('\n')
-			if err != nil {
-				log.Fatal(err)
-			}
-			i, err := strconv.Atoi(strings.Trim(result, "\n"))
-			if err == nil && len(instances) > i {
-				connect(instances[i], params)
-				break
-			}
+
+		// The Architecture field is being overwritten
+		// with the instance name tag to make it easier to template.
+		// The alternative was to define a new struct.
+		templates := &promptui.SelectTemplates{
+			Label:    "{{ . }}",
+			Active:   "> {{ .InstanceId }}	{{ .Architecture }}",
+			Inactive: "  {{ .InstanceId }}	{{ .Architecture }}",
+			Selected: "= {{ .InstanceId }}	{{ .Architecture }}",
+			Details: `
+--------- Instance ----------
+{{ "Id:" | faint }}	{{ .InstanceId }}
+{{ "Name:" | faint }}	{{ .Architecture }}
+{{ "LaunchTime:" | faint }}	{{ .LaunchTime }}
+{{ "PublicDnsName:" | faint }}	{{ .PublicDnsName }}
+{{ "PrivateDnsName:" | faint }}	{{ .PrivateDnsName }}
+{{ "InstanceType:" | faint }}	{{ .InstanceType }}
+{{ "PublicIpAddress:" | faint }}	{{ .PublicIpAddress }}
+{{ "PrivateIpAddress:" | faint }}	{{ .PrivateIpAddress }}
+`,
 		}
+
+		searcher := func(input string, index int) bool {
+			i := instances[index]
+			name := strings.Replace(strings.ToLower(*i.Architecture), " ", "", -1)
+			input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+			return strings.Contains(name, input)
+		}
+
+		for i := range instances {
+			name := getInstanceName(instances[i])
+			instances[i].Architecture = &name
+		}
+
+		prompt := promptui.Select{
+			Size:      20,
+			Label:     "Select Instance",
+			Items:     instances,
+			Templates: templates,
+			Searcher:  searcher,
+		}
+
+		i, _, err := prompt.Run()
+		if err != nil {
+			log.Fatalf("Failed to pick instance: %v", err)
+		}
+		connect(instances[i], params)
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -11,10 +10,9 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
+	"github.com/manifoldco/promptui"
 )
 
 type DBInstances []*rds.DBInstance
@@ -65,33 +63,56 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 
 	sort.Sort(instances)
 
+	type rdsInstance struct {
+		Name, Address, Engine string
+	}
+
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
 		connectToRDSInstance(instances[0], args, cfg)
 	} else {
-		table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(table, "#\tName\tEndpoint\tEngine")
-		for i, instance := range instances {
+		rdsInstances := []rdsInstance{}
+		for _, instance := range instances {
 			name := strings.Split(*instance.Endpoint.Address, ".")[0]
-			row := []string{strconv.Itoa(i), name, *instance.Endpoint.Address, *instance.Engine}
-			fmt.Fprintln(table, strings.Join(row, "\t"))
+			rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})
 		}
-		table.Flush()
+		// The Architecture field is being overwritten
+		// with the instance name tag to make it easier to template.
+		// The alternative was to define a new struct.
+		templates := &promptui.SelectTemplates{
+			Label:    "{{ . }}",
+			Active:   "> {{ .Name }}	{{ .Address }} {{ .Engine }}",
+			Inactive: "  {{ .Name }}	{{ .Address }} {{ .Engine }}",
+			Selected: "= {{ .Name }}	{{ .Address }} {{ .Engine }}",
+			Details: `
+--------- Instance ----------
+{{ "Name:" | faint }}	{{ .Name }}
+{{ "Address:" | faint }}	{{ .Address }}
+{{ "Engine:" | faint }}	{{ .Engine }}
+`,
+		}
 
-		reader := bufio.NewReader(os.Stdin)
-		for {
-			fmt.Fprint(os.Stderr, "Enter a valid instance number: ")
-			result, err := reader.ReadString('\n')
-			if err != nil {
-				log.Fatal(err)
-			}
-			i, err := strconv.Atoi(strings.Trim(result, "\n"))
-			if err == nil && len(instances) > i {
-				connectToRDSInstance(instances[i], args, cfg)
-				break
-			}
+		searcher := func(input string, index int) bool {
+			i := instances[index]
+			name := strings.Replace(strings.ToLower(strings.Split(*i.Endpoint.Address, ".")[0]), " ", "", -1)
+			input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+			return strings.Contains(name, input)
 		}
+
+		prompt := promptui.Select{
+			Size:      20,
+			Label:     "Select Instance",
+			Items:     rdsInstances,
+			Templates: templates,
+			Searcher:  searcher,
+		}
+		i, _, err := prompt.Run()
+		if err != nil {
+			log.Fatalf("Failed to pick instance: %v", err)
+		}
+		connectToRDSInstance(instances[i], args, cfg)
 	}
 }
 
