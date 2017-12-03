@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.21.1"
+	app.Version = "0.22.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -69,7 +69,7 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				if c.Bool("show-default") {
-					print(config)
+					print(GetConfigString())
 				} else {
 					editConfiguration()
 				}
@@ -460,9 +460,51 @@ Continue?`
 			},
 		},
 		{
+			Name:    "jira",
+			Usage:   "JIRA related actions",
+			Aliases: []string{"j"},
+			Subcommands: []cli.Command{
+				{
+					Name:    "open",
+					Aliases: []string{"o"},
+					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
+					Action: func(c *cli.Context) error {
+						return OpenJIRAIssue(cfg)
+					},
+				},
+			},
+		},
+		{
+			Name:    "git",
+			Usage:   "Git related actions.",
+			Aliases: []string{"g"},
+			Subcommands: []cli.Command{
+				{
+					Name:    "new-branch",
+					Aliases: []string{"n", "new"},
+					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
+					Action: func(c *cli.Context) error {
+						return MustInitJIRA(cfg).CreateBranchFromAssignedIssues()
+					},
+				},
+				{
+					Name:    "commit",
+					Aliases: []string{"c"},
+					Usage:   "Commit",
+					Action: func(c *cli.Context) error {
+						if len(c.Args()) < 1 {
+							log.Fatal("Must pass commit message.")
+						}
+						CommitWithIssueKey(c.Args().Get(0), c.Args().Tail())
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "jenkins",
 			Usage:   "Jenkins related actions.",
-			Aliases: []string{"j"},
+			Aliases: []string{"jk"},
 			Action: func(c *cli.Context) error {
 				openJenkins(cfg, manifest, "")
 				return nil

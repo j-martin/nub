@@ -3,6 +3,10 @@
   revision = "b26d9c308763d68093482582cea63d69be07a0f0"
 
 [[constraint]]
+  name = "github.com/andygrunwald/go-jira"
+  revision = "9f1498acb69b5284c3953bfb90c529939c4dcb35"
+
+[[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "1.12.37"
 
@@ -53,3 +57,7 @@
 [[constraint]]
   name = "github.com/manifoldco/promptui"
   version = "0.2.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  revision = "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f"

@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 type RDSConfiguration struct {
@@ -33,7 +34,7 @@ type Configuration struct {
 	}
 	Users []User
 	JIRA  struct {
-		Server string
+		Server, Username, Password string
 	}
 	Jenkins struct {
 		Server, Username, Password string
@@ -55,7 +56,7 @@ type Configuration struct {
 	}
 }
 
-var config string = `---
+var config = `---
 aws:
 	regions:
 		- us-east-1
@@ -93,6 +94,11 @@ confluence:
 	username: <optional-change-me>
 	password: <optional-change-me>
 
+jira:
+	server: "https://example.atlassian.net"
+	username: <optional-change-me>
+	password: <optional-change-me>
+
 splunk:
 	server: "https://splunk.example.com"
 
@@ -107,6 +113,10 @@ updates:
 ssh:
 	connectTimeout: 3
 `
+
+func GetConfigString() string {
+	return strings.Replace(config, "\t", "  ", -1)
+}
 
 func loadConfiguration() Configuration {
 	cfg := Configuration{}
@@ -144,7 +154,7 @@ func editConfiguration() {
 		log.Fatal(err)
 	}
 	configPath := path.Join(usr.HomeDir, ".config", "bub", "config.yml")
-	editFile(configPath)
+	createAndEdit(configPath, GetConfigString())
 }
 
 func setup() {
@@ -160,14 +170,15 @@ region=us-east-1
 aws_access_key_id = CHANGE_ME
 aws_secret_access_key = CHANGE_ME`
 
-	createDir(path.Join(usr.HomeDir, ".aws"), "credentials", awsCredentials)
-	createDir(path.Join(usr.HomeDir, ".config", "bub"), "config.yml", config)
+	createAndEdit(path.Join(usr.HomeDir, ".aws", "credentials"), awsCredentials)
+	createAndEdit(path.Join(usr.HomeDir, ".config", "bub", "config.yml"), GetConfigString())
 
 	log.Println("Done.")
 }
 
-func createDir(directory string, filename string, content string) {
-	filePath := path.Join(directory, filename)
+func createAndEdit(filePath string, content string) {
+	directory := path.Dir(filePath)
+	log.Print(directory)
 	dirExists, err := pathExists(directory)
 	if err != nil {
 		log.Fatal(err)
@@ -183,10 +194,10 @@ func createDir(directory string, filename string, content string) {
 	}
 
 	if !fileExists {
-		log.Printf("Creating %s file.", filename)
+		log.Printf("Creating %s file.", filePath)
 		ioutil.WriteFile(filePath, []byte(content), 0700)
 	}
 
-	log.Printf("Editing %s.", filename)
+	log.Printf("Editing %s.", filePath)
 	editFile(filePath)
 }

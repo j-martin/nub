@@ -45,16 +45,16 @@ func inRepository() bool {
 
 func CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
-	runCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
+	MustRunCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
 func UpdateRepository(repository string) {
 	log.Printf("Updating: %v", repository)
 	dir, _ := os.Getwd()
 	os.Chdir(path.Join(dir, repository))
-	runCmd("git", "stash")
-	runCmd("git", "checkout", "master")
-	runCmd("git", "pull")
+	MustRunCmd("git", "stash")
+	MustRunCmd("git", "checkout", "master")
+	MustRunCmd("git", "pull")
 	os.Chdir(dir)
 }
 
@@ -74,7 +74,7 @@ func syncRepository(m Manifest) {
 	}
 }
 
-func runCmd(cmd string, args ...string) {
+func MustRunCmd(cmd string, args ...string) {
 	command := exec.Command(cmd, args...)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
@@ -84,7 +84,7 @@ func runCmd(cmd string, args ...string) {
 	}
 }
 
-func runCmdWithOutput(cmd string, args ...string) string {
+func MustRunCmdWithOutput(cmd string, args ...string) string {
 	command := exec.Command(cmd, args...)
 	command.Stderr = os.Stderr
 	output, err := command.Output()
@@ -94,9 +94,14 @@ func runCmdWithOutput(cmd string, args ...string) string {
 	return string(output)
 }
 
+func RunCmdWithOutput(cmd string, args ...string) (string, error) {
+	command := exec.Command(cmd, args...)
+	output, err := command.Output()
+	return strings.Trim(string(output), "\n"), err
+}
 func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	output := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
+	output := MustRunCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
 		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
@@ -116,7 +121,38 @@ func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, curre
 }
 
 func FetchTags() {
-	runCmd("git", "fetch", "--tags")
+	MustRunCmd("git", "fetch", "--tags")
+}
+
+func sanitizeBranchName(name string) string {
+	r := regexp.MustCompile(" |#|:|,|\\.|\\+|\\^|&|\\*|\\(|\\)|`|\\[|\\]|@|\\$|%|/")
+	return r.ReplaceAllString(name, "-")
+}
+
+func GetIssueKeyFromBranch() string {
+	name, err := RunCmdWithOutput("git", "symbolic-ref", "--short", "-q", "HEAD")
+	if err != nil {
+		return ""
+	}
+	return extractIssueKeyFromName(name)
+}
+
+func CommitWithIssueKey(message string, extraArgs []string) {
+	issueKey := GetIssueKeyFromBranch()
+	args := []string{
+		"commit", "-m", issueKey + " " + strings.Trim(message, " "),
+	}
+	args = append(args, extraArgs...)
+	MustRunCmd("git", args...)
+}
+func extractIssueKeyFromName(name string) string {
+	r := regexp.MustCompile("^[A-Z]+-\\d+")
+	return r.FindString(name)
+}
+
+func CreateBranch(name string) {
+	name = sanitizeBranchName(name)
+	MustRunCmd("git", "checkout", "-b", name)
 }
 
 func committerSlackReference(cfg Configuration, previousVersion string, currentVersion string) []string {
@@ -125,7 +161,7 @@ func committerSlackReference(cfg Configuration, previousVersion string, currentV
 		committerMapping[i.Name] = i.Slack
 	}
 
-	committersStdout := runCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%an", previousVersion+"..."+currentVersion)
+	committersStdout := MustRunCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%an", previousVersion+"..."+currentVersion)
 	committersSlackMapping := make(map[string]string)
 	for _, commiterName := range strings.Split(committersStdout, "\n") {
 		slackUserName := committerMapping[commiterName]

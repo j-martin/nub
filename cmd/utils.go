@@ -49,12 +49,12 @@ func pathExists(path string) (bool, error) {
 	return true, err
 }
 
-func editFile(file string) {
+func editFile(filePath string) {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vim"
 	}
-	cmd := exec.Command(editor, file)
+	cmd := exec.Command(editor, filePath)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
@@ -65,7 +65,7 @@ func editFile(file string) {
 }
 
 func joinStringPointers(ptrs []*string, joinStr string) string {
-	arr := []string{}
+	var arr []string
 	for _, ref := range ptrs {
 		if ref == nil {
 			arr = append(arr, "")
