@@ -155,6 +155,28 @@ func CreateBranch(name string) {
 	MustRunCmd("git", "checkout", "-b", name)
 }
 
+func CheckoutBranch() error {
+	item, err := pickItem("Pick a branch", getBranches())
+	if err != nil {
+		return err
+	}
+	MustRunCmd("git", "checkout", item)
+	return nil
+}
+
+func getBranches() []string {
+	output := MustRunCmdWithOutput("git", "branch", "--all", "--sort=-committerdate")
+	var branches []string
+	for _, b := range strings.Split(output, "\n") {
+		b = strings.TrimPrefix(strings.Trim(b, " "), "* ")
+		if b == "" {
+			continue
+		}
+		branches = append(branches, b)
+	}
+	return branches
+}
+
 func committerSlackReference(cfg Configuration, previousVersion string, currentVersion string) []string {
 	committerMapping := make(map[string]string)
 	for _, i := range cfg.Users {

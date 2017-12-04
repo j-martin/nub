@@ -80,7 +80,8 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 
 		templates := &promptui.SelectTemplates{
 			Label:    "{{ . }}:",
-			Active:   "> {{ .Name }}",
+			Active:   "▶ {{ .Name }}",
+			Selected: "▶ {{ .Name }}",
 			Inactive: "  {{ .Name }}",
 			Details: `
 --------- RDS Instance ----------

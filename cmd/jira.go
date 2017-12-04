@@ -82,11 +82,11 @@ func OpenJIRAIssue(cfg Configuration) error {
 func pickIssue(issues []jira.Issue) (jira.Issue, error) {
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
-		Active: "> {{ .Key }}	{{ .Fields.Summary }}",
+		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Inactive: "  {{ .Key }}	{{ .Fields.Summary }}",
-		Selected: "= {{ .Key }}	{{ .Fields.Summary }}",
+		Selected: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Details: `
---------- Instance ----------
+--------- Issue ----------
 {{ "Key:" | faint }}	{{ .Key }}
 {{ "Summary:" | faint }}	{{ .Fields.Summary }}
 {{ "Description:" | faint }}	{{ .Fields.Description }}

@@ -488,6 +488,14 @@ Continue?`
 					},
 				},
 				{
+					Name:    "checkout-branch",
+					Aliases: []string{"ch", "b"},
+					Usage:   "Checkout an existing branch.",
+					Action: func(c *cli.Context) error {
+						return CheckoutBranch()
+					},
+				},
+				{
 					Name:    "commit",
 					Aliases: []string{"c"},
 					Usage:   "Commit",

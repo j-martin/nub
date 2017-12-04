@@ -25,6 +25,7 @@ deps: $(DEP)
 
 test:
 	go test "$(SRC)"
+	go vet "$(SRC)"
 
 clean:
 	rm -rf bin
@@ -38,7 +39,7 @@ release: all
 		| xargs -n2 aws s3 cp
 	find bin -type f -name *.gz -exec shasum -a 256 {} \;
 
-install: all
+install: deps $(PLATFORM)
 	rm -f /usr/local/bin/bub
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
 

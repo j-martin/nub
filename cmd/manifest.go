@@ -13,24 +13,24 @@ import (
 const manifestFile = ".bench.yml"
 
 type Manifest struct {
-	Name         string
-	Active       bool
-	Repository   string
-	LastUpdate   int64
-	Platform     string // what is it running on
-	Platforms    []string
-	Language     string
-	Languages    []string
-	Types        []string
-	Dependencies []Dependency
-	Protocols    []Protocol
-	Version      string
-	Branch       string
-	Deploy       Deploy
+	Name          string
+	Active        bool
+	Repository    string
+	LastUpdate    int64
+	Platform      string // what is it running on
+	Platforms     []string
+	Language      string
+	Languages     []string
+	Types         []string
+	Dependencies  []Dependency
+	Protocols     []Protocol
+	Version       string
+	Branch        string
+	Deploy        Deploy
 	Documentation Documentation
-	Readme       string
-	ChangeLog    string
-	Page         string
+	Readme        string
+	ChangeLog     string
+	Page          string
 }
 
 type Dependency struct {
@@ -60,9 +60,8 @@ type Deploy struct {
 	Environment string
 }
 
-
 type Documentation struct {
-	PageId string `yaml:"pageId"`
+	PageId      string   `yaml:"pageId"`
 	IgnoredDirs []string `yaml:"ignoredDirs"`
 }
 

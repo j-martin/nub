@@ -222,9 +222,9 @@ func ConnectToInstance(params ConnectionParams) {
 		// The alternative was to define a new struct.
 		templates := &promptui.SelectTemplates{
 			Label: "{{ . }}:",
-			Active: "> {{ .InstanceId }}	{{ .Architecture }}",
+			Active: "▶ {{ .InstanceId }}	{{ .Architecture }}",
 			Inactive: "  {{ .InstanceId }}	{{ .Architecture }}",
-			Selected: "= {{ .InstanceId }}	{{ .Architecture }}",
+			Selected: "▶ {{ .InstanceId }}	{{ .Architecture }}",
 			Details: `
 --------- Instance ----------
 {{ "Id:" | faint }}	{{ .InstanceId }}

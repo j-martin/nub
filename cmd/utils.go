@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"log"
 	"os"
 	"os/exec"
@@ -74,4 +75,30 @@ func joinStringPointers(ptrs []*string, joinStr string) string {
 		}
 	}
 	return strings.Join(arr, joinStr)
+}
+
+func pickItem(label string, items []string) (string, error) {
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .}}",
+		Inactive: "  {{ .}}",
+		Selected: "▶ {{ .}}",
+	}
+
+	searcher := func(input string, index int) bool {
+		i := items[index]
+		name := strings.Replace(strings.ToLower(i), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+		return strings.Contains(name, input)
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     label,
+		Items:     items,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	return items[i], err
 }
