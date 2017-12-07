@@ -457,6 +457,13 @@ Continue?`
 						return nil
 					},
 				},
+				{
+					Name:  "stale-branches",
+					Usage: "Open repo in your browser.",
+					Action: func(c *cli.Context) error {
+						return ListBranches(cfg)
+					},
+				},
 			},
 		},
 		{

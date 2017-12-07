@@ -64,6 +64,11 @@
   revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[projects]]
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  revision = "fbfee053c26dab3772adfc7799d995eed379133e"
+
+[[projects]]
   branch = "master"
   name = "github.com/google/go-querystring"
   packages = ["query"]
@@ -80,6 +85,12 @@
   name = "github.com/gucumber/gucumber"
   packages = [".","gherkin"]
   revision = "0d2e1ce2e4a01273005d4b5a12bd10cbe69503c7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/guelfey/go.dbus"
+  packages = ["."]
+  revision = "f6a3a2366cc39b8479cadc499d3c735fb10fbdda"
 
 [[projects]]
   name = "github.com/jmespath/go-jmespath"
@@ -184,6 +195,11 @@
   revision = "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f"
 
 [[projects]]
+  name = "github.com/tmc/keyring"
+  packages = ["."]
+  revision = "839169085ae146fc7a34bcb34dfd7ab216d23991"
+
+[[projects]]
   name = "github.com/trivago/tgo"
   packages = ["tcontainer","treflect"]
   revision = "e4d1ddd28c17dd89ed26327cf69fded22060671b"
@@ -247,6 +263,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a906d1ca324623f8f42260561954321efa19fd7896d502d31992285c40dd0417"
+  inputs-digest = "4af7536511d7fd95e8a30ad5652481eaebbe59abfab179c4529ea27025f8cd51"
   solver-name = "gps-cdcl"
   solver-version = 1

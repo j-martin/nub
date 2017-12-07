@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/tmc/keyring"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path"
-
-	"gopkg.in/yaml.v2"
 	"strings"
 )
 
@@ -30,7 +30,7 @@ type Configuration struct {
 		Environments []Environment
 	}
 	GitHub struct {
-		Organization string
+		Organization, Token string
 	}
 	Users []User
 	JIRA  struct {
@@ -83,6 +83,7 @@ aws:
 
 github:
 	organization: benchlabs
+	token: <optional-change-me>
 
 jenkins:
 	server: "https://jenkins.example.com"
