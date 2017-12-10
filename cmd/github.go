@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func ListBranches(cfg Configuration) error {
+func ListBranches(cfg Configuration, maxAge int) error {
 	type branch struct {
-		repository, branch, name, email string
-		age                             int
+		Repository, Branch, Name, Email, PRURL string
+		Age                                    int
 	}
 	authors := map[string][]branch{}
 	ctx := context.Background()
@@ -26,38 +26,54 @@ func ListBranches(cfg Configuration) error {
 	client := github.NewClient(tc)
 
 	orgOptions := github.RepositoryListByOrgOptions{ListOptions: github.ListOptions{PerPage: 250}}
-	repos, _, err := client.Repositories.ListByOrg(ctx, cfg.GitHub.Organization, &orgOptions)
+	org := cfg.GitHub.Organization
+	repos, _, err := client.Repositories.ListByOrg(ctx, org, &orgOptions)
 	if err != nil {
 		return err
 	}
-	log.Print(len(repos))
 	for _, r := range repos {
-		log.Printf("\n-------- %v --------", *r.Name)
-		branches, _, err := client.Repositories.ListBranches(ctx, cfg.GitHub.Organization, *r.Name, &github.ListOptions{PerPage: 250})
+		log.Print(*r.Name)
+		if *r.Fork {
+			continue
+		}
+		branches, _, err := client.Repositories.ListBranches(ctx, org, *r.Name, &github.ListOptions{PerPage: 250})
 		if err != nil {
 			return err
+		}
+		prs, _, err := client.PullRequests.List(ctx, org, *r.Name, &github.PullRequestListOptions{State: "open"})
+		if err != nil {
+			return err
+		}
+		pullRequests := map[string]*github.PullRequest{}
+		for _, pr := range prs {
+			pullRequests[*pr.Head.SHA] = pr
 		}
 		for _, b := range branches {
 			if *b.Name == "master" {
 				continue
 			}
-			b, _, err := client.Repositories.GetBranch(ctx, cfg.GitHub.Organization, *r.Name, url.PathEscape(*b.Name))
+			b, _, err := client.Repositories.GetBranch(ctx, org, *r.Name, url.PathEscape(*b.Name))
 			if err != nil {
 				return err
 			}
 			author := b.Commit.Commit.GetAuthor()
-			age := time.Since(*author.Date).Hours() / 24
-			if age > 60 {
-				br := branch{repository: *r.Name, branch: *b.Name, name: *author.Name, email: *author.Email, age: int(age)}
-				authors[br.name] = append(authors[br.name], br)
-				log.Printf("%v", br)
+			age := int(time.Since(*author.Date).Hours() / 24)
+			if age > maxAge {
+				sha := *b.Commit.SHA
+				pr := pullRequests[sha]
+				prURL := ""
+				if pr != nil {
+					prURL = *pr.HTMLURL
+				}
+				br := branch{Repository: *r.Name, Branch: *b.Name, Name: *author.Name, Email: *author.Email, Age: int(age), PRURL: prURL}
+				authors[br.Name] = append(authors[br.Name], br)
 			}
 		}
 	}
 	for author, branches := range authors {
 		fmt.Println("\n" + author)
 		for _, b := range branches {
-			fmt.Printf("https://github.com/%v/%v/branches/yours %v\n", cfg.GitHub.Organization, b.repository, b.branch)
+			fmt.Printf("https://github.com/%v/%v/branches/yours %v %v\n", org, b.Repository, b.Branch, b.PRURL)
 		}
 	}
 	return nil
