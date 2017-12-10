@@ -45,19 +45,26 @@ func getLastBuild(cfg Configuration, m Manifest) *gojenkins.Build {
 	return lastBuild
 }
 
-func getArtifacts(cfg Configuration, m Manifest) {
+func getArtifacts(cfg Configuration, m Manifest) error {
 	log.Print("Fetching artifacts.")
 	artifacts := getLastBuild(cfg, m).GetArtifacts()
-	dir, _ := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
+	dir, err := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
+	if err != nil {
+		return nil
+	}
 	for _, artifact := range artifacts {
 		if !strings.Contains(artifact.FileName, ".png") {
 			artifactPath := path.Join(dir, artifact.FileName)
 			log.Println(artifactPath)
-			artifact.Save(artifactPath)
+			_, err := artifact.Save(artifactPath)
+			if err != nil {
+				return err
+			}
 		} else {
 			log.Println(cfg.Jenkins.Server + artifact.Path)
 		}
 	}
+	return nil
 }
 
 func showConsoleOutput(cfg Configuration, m Manifest) {

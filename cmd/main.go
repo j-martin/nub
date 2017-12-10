@@ -426,8 +426,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(cfg, manifest, "")
-						return nil
+						return openGH(cfg, manifest, "")
 					},
 				},
 				{
@@ -435,8 +434,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(cfg, manifest, "issues")
-						return nil
+						return openGH(cfg, manifest, "issues")
 					},
 				},
 				{
@@ -444,8 +442,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(cfg, manifest, "branches")
-						return nil
+						return openGH(cfg, manifest, "branches")
 					},
 				},
 				{
@@ -453,15 +450,17 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						openGH(cfg, manifest, "pulls")
-						return nil
+						return openGH(cfg, manifest, "pulls")
 					},
 				},
 				{
 					Name:  "stale-branches",
 					Usage: "Open repo in your browser.",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "max-age", Value: "30"},
+					},
 					Action: func(c *cli.Context) error {
-						return ListBranches(cfg)
+						return ListBranches(cfg, c.Int("max-age"))
 					},
 				},
 			},
@@ -521,8 +520,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"jk"},
 			Action: func(c *cli.Context) error {
-				openJenkins(cfg, manifest, "")
-				return nil
+				return openJenkins(cfg, manifest, "")
 			},
 			Subcommands: []cli.Command{
 				{
@@ -530,8 +528,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						openJenkins(cfg, manifest, "lastBuild/consoleFull")
-						return nil
+						return openJenkins(cfg, manifest, "lastBuild/consoleFull")
 					},
 				},
 				{
@@ -548,8 +545,7 @@ Continue?`
 					Aliases: []string{"a"},
 					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						getArtifacts(cfg, manifest)
-						return nil
+						return getArtifacts(cfg, manifest)
 					},
 				},
 				{
@@ -572,8 +568,7 @@ Continue?`
 			Usage:   "Open the service production logs.",
 			Aliases: []string{"s"},
 			Action: func(c *cli.Context) error {
-				openSplunk(cfg, manifest, false)
-				return nil
+				return openSplunk(cfg, manifest, false)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -581,8 +576,7 @@ Continue?`
 					Aliases: []string{"s"},
 					Usage:   "Open the service staging logs.",
 					Action: func(c *cli.Context) error {
-						openSplunk(cfg, manifest, true)
-						return nil
+						return openSplunk(cfg, manifest, true)
 					},
 				},
 			},
@@ -593,8 +587,7 @@ Continue?`
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
 				base := "https://example.atlassian.net/wiki/display/dev/"
-				openURI(base + manifest.Name)
-				return nil
+				return openURI(base + manifest.Name)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -603,8 +596,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Action: func(c *cli.Context) error {
 						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						openURI(base + manifest.Name + ".raml")
-						return nil
+						return openURI(base + manifest.Name + ".raml")
 					},
 				},
 			},
@@ -614,8 +606,7 @@ Continue?`
 			Usage:   "CircleCI related actions",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
-				openCircle(cfg, manifest, false)
-				return nil
+				return openCircle(cfg, manifest, false)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -632,8 +623,7 @@ Continue?`
 					Usage:   "Opens the result for the current branch.",
 					Aliases: []string{"b"},
 					Action: func(c *cli.Context) error {
-						openCircle(cfg, manifest, true)
-						return nil
+						return openCircle(cfg, manifest, true)
 					},
 				},
 			},

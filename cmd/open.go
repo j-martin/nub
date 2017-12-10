@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pkg/errors"
 	"log"
 	"net/url"
 	"os/exec"
@@ -8,27 +9,26 @@ import (
 	"strings"
 )
 
-func openURI(uriSegments ...string) {
+func openURI(uriSegments ...string) error {
 	uri := strings.Join(uriSegments, "/")
 	log.Printf("Opening: %v", uri)
 	if runtime.GOOS == "darwin" {
-		exec.Command("open", uri).Run()
+		return exec.Command("open", uri).Run()
 	} else if runtime.GOOS == "linux" {
-		exec.Command("xdg-open", uri).Run()
-	} else {
-		log.Fatal("Could not open the link automatically.")
+		return exec.Command("xdg-open", uri).Run()
 	}
+	return errors.New("could not open the link automatically")
 }
 
-func openGH(cfg Configuration, m Manifest, p string) {
-	openURI("https://github.com/", cfg.GitHub.Organization, m.Repository, p)
+func openGH(cfg Configuration, m Manifest, p string) error {
+	return openURI("https://github.com/", cfg.GitHub.Organization, m.Repository, p)
 }
 
-func openJenkins(cfg Configuration, m Manifest, p string) {
-	openURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
+func openJenkins(cfg Configuration, m Manifest, p string) error {
+	return openURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
 }
 
-func openSplunk(cfg Configuration, m Manifest, isStaging bool) {
+func openSplunk(cfg Configuration, m Manifest, isStaging bool) error {
 	base := cfg.Splunk.Server +
 		"/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
 	var sourceType string
@@ -38,15 +38,14 @@ func openSplunk(cfg Configuration, m Manifest, isStaging bool) {
 		sourceType = "pro"
 	}
 	sourceType = sourceType + "-" + m.Name + "*"
-	openURI(base + sourceType)
+	return openURI(base + sourceType)
 }
 
-func openCircle(cfg Configuration, m Manifest, getBranch bool) {
+func openCircle(cfg Configuration, m Manifest, getBranch bool) error {
 	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
 		currentBranch := url.QueryEscape(GetCurrentBranch())
-		openURI(base, m.Repository, "tree", currentBranch)
-	} else {
-		openURI(base, m.Repository)
+		return openURI(base, m.Repository, "tree", currentBranch)
 	}
+	return openURI(base, m.Repository)
 }
