@@ -17,6 +17,7 @@ func ListBranches(cfg Configuration) error {
 	}
 	authors := map[string][]branch{}
 	ctx := context.Background()
+	loadKeyringItem("GitHub Token", &cfg.GitHub.Token)
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHub.Token},
 	)

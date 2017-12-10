@@ -16,13 +16,8 @@ func getJobName(m Manifest) string {
 }
 
 func getClient(cfg Configuration) *gojenkins.Jenkins {
-	if cfg.Jenkins.Server == "" {
-		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
-	}
-	if strings.HasPrefix(cfg.Jenkins.Username, "<") ||
-		cfg.Jenkins.Username == "" || cfg.Jenkins.Password == "" {
-		log.Fatal("Please set your jenkins credentials. run 'bub config'.")
-	}
+	checkServerConfig(cfg.Jenkins)
+	loadCredentials("Jenkins", &cfg.Jenkins)
 	client, err := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password).Init()
 	if err != nil {
 		log.Fatal(err)

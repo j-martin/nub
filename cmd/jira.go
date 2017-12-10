@@ -14,6 +14,7 @@ type JIRA struct {
 
 func MustInitJIRA(cfg Configuration) *JIRA {
 	j := JIRA{}
+	loadCredentials("JIRA", &cfg.JIRA)
 	if err := j.init(cfg); err != nil {
 		log.Fatalf("Failed to initiate JIRA client: %v", err)
 	}
@@ -21,9 +22,7 @@ func MustInitJIRA(cfg Configuration) *JIRA {
 }
 
 func (j *JIRA) init(cfg Configuration) error {
-	if cfg.JIRA.Server == "" || cfg.JIRA.Username == "" || cfg.JIRA.Password == "" {
-		log.Fatal("JIRA Server, Username and/or Password not set. Run 'bub config'.")
-	}
+	checkServerConfig(cfg.JIRA)
 	client, err := jira.NewClient(nil, cfg.JIRA.Server)
 	if err != nil {
 		return err

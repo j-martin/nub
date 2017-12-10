@@ -190,6 +190,7 @@ func createPage(cfg Configuration, m Manifest) ([]byte, error) {
 }
 
 func updateDocumentation(cfg Configuration, m Manifest) {
+	loadCredentials("Confluence", &cfg.Confluence)
 
 	if m.Documentation.PageId == "" {
 		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
@@ -202,19 +203,9 @@ func updateDocumentation(cfg Configuration, m Manifest) {
 	}
 	newContent := string(htmlData[:])
 
-	username := os.Getenv("CONFLUENCE_USER")
-	if username == "" {
-		username = cfg.Confluence.Username
-	}
-
-	password := os.Getenv("CONFLUENCE_PASSWORD")
-	if password == "" {
-		password = cfg.Confluence.Password
-	}
-
 	api := gopencils.Api(
 		cfg.Confluence.Server+"/rest/api",
-		&gopencils.BasicAuth{Username: username, Password: password},
+		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
 	)
 
 	pageInfo, err := getPageInfo(api, m.Documentation.PageId)

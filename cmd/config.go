@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/manifoldco/promptui"
 	"github.com/tmc/keyring"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -32,20 +33,14 @@ type Configuration struct {
 	GitHub struct {
 		Organization, Token string
 	}
-	Users []User
-	JIRA  struct {
-		Server, Username, Password string
-	}
-	Jenkins struct {
-		Server, Username, Password string
-	}
-	Splunk struct {
+	Users   []User
+	JIRA    ServiceConfiguration
+	Jenkins ServiceConfiguration
+	Splunk  struct {
 		Server string
 	}
-	Confluence struct {
-		Server, Username, Password string
-	}
-	Circle struct {
+	Confluence ServiceConfiguration
+	Circle     struct {
 		Token string
 	}
 	Updates struct {
@@ -56,6 +51,10 @@ type Configuration struct {
 	}
 }
 
+type ServiceConfiguration struct {
+	Server, Username, Password string
+}
+
 var config = `---
 aws:
 	regions:
@@ -64,7 +63,7 @@ aws:
 
 	rds:
 		# The first prefix match will be used.
-		# The database name, unless specified, will be infered from the host name.
+		# The database name, unless specified, will be inferred from the host name.
 		- prefix: staging
 			database: <optional>
 			user: <optional>
@@ -83,22 +82,15 @@ aws:
 
 github:
 	organization: benchlabs
-	token: <optional-change-me>
 
 jenkins:
 	server: "https://jenkins.example.com"
-	username: <optional-change-me>
-	password: <optional-api-token-also-works>
 
 confluence:
 	server: "https://example.atlassian.net/wiki"
-	username: <optional-change-me>
-	password: <optional-change-me>
 
 jira:
 	server: "https://example.atlassian.net"
-	username: <optional-change-me>
-	password: <optional-change-me>
 
 splunk:
 	server: "https://splunk.example.com"
@@ -201,4 +193,69 @@ func createAndEdit(filePath string, content string) {
 
 	log.Printf("Editing %s.", filePath)
 	editFile(filePath)
+}
+
+func checkServerConfig(cfg ServiceConfiguration) {
+	if cfg.Server == "" {
+		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
+	}
+}
+
+func loadCredentials(item string, cfg *ServiceConfiguration) (err error) {
+	if err = loadCredentialItem(item+" Username", &cfg.Username); err != nil {
+		return err
+	}
+	if err = loadCredentialItem(item+" Password", &cfg.Password); err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadCredentialItem(item string, ptr *string) (err error) {
+	if strings.ToLower(os.Getenv("BUB_RESET_PASSWORD")) == "true" {
+		return setKeyringItem(item, ptr)
+	}
+	// e.g. "Confluence Username" -> "CONFLUENCE_USERNAME"
+	envVar := os.Getenv(strings.Replace(strings.ToUpper(item), " ", "_", -1))
+	if envVar != "" {
+		*ptr = envVar
+		return
+	}
+
+	if *ptr != "" && !strings.HasPrefix(*ptr, "<optional-") {
+		return nil
+	}
+
+	return loadKeyringItem(item, ptr)
+}
+
+func loadKeyringItem(item string, ptr *string) (err error) {
+	service := "bub"
+	if pw, err := keyring.Get(service, item); err == nil {
+		*ptr = pw
+		return nil
+	} else if err == keyring.ErrNotFound {
+		return setKeyringItem(item, ptr)
+	} else {
+		return err
+	}
+}
+
+func setKeyringItem(item string, ptr *string) (err error) {
+	service := "bub"
+	prompt := promptui.Prompt{
+		Label: "Enter " + item,
+	}
+	if strings.HasSuffix(strings.ToLower(item), "password") {
+		prompt.Mask = '*'
+	}
+	result, err := prompt.Run()
+	if err != nil {
+		return err
+	}
+	err = keyring.Set(service, item, string(result))
+	if err != nil {
+		return err
+	}
+	return loadKeyringItem(item, ptr)
 }
