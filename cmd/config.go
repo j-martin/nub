@@ -111,7 +111,7 @@ func GetConfigString() string {
 	return strings.Replace(config, "\t", "  ", -1)
 }
 
-func loadConfiguration() Configuration {
+func loadConfiguration() *Configuration {
 	cfg := Configuration{}
 
 	usr, err := user.Current()
@@ -125,20 +125,20 @@ func loadConfiguration() Configuration {
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Print("No bub configuration found. Please run `bub setup`")
-		return cfg
+		return &cfg
 	}
 
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		log.Printf("Could not parse yaml file. %v", err)
-		return cfg
+		return &cfg
 	}
 
 	if len(cfg.AWS.Regions) == 0 {
 		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
 	}
 
-	return cfg
+	return &cfg
 }
 
 func editConfiguration() {

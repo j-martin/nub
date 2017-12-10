@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/bndr/gopencils"
+	"github.com/pkg/errors"
 	"github.com/russross/blackfriday"
 	"gopkg.in/yaml.v2"
 	"path"
@@ -16,6 +17,19 @@ import (
 	"strings"
 	"text/template"
 )
+
+type Confluence struct {
+	cfg    *Configuration
+	client *gopencils.Resource
+}
+
+func MustInitConfluence(cfg *Configuration) *Confluence {
+	api := gopencils.Api(
+		cfg.Confluence.Server+"/rest/api",
+		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
+	)
+	return &Confluence{client: api, cfg: cfg}
+}
 
 type PageInfo struct {
 	Title string   `json:"title"`
@@ -38,7 +52,7 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-func marshallManifest(m Manifest) (string, error) {
+func (c *Confluence) marshallManifest(m Manifest) (string, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
 	m.Branch = ""
@@ -48,7 +62,7 @@ func marshallManifest(m Manifest) (string, error) {
 	return string(i), err
 }
 
-func findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []string, err error) {
+func (c *Confluence) findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []string, err error) {
 	err = filepath.Walk(".", func(filePath string, f os.FileInfo, err error) error {
 		ignoredRootDir := append(ignoreDirs,
 			".github",
@@ -94,8 +108,8 @@ func findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bool) (fileList []
 	return fileList, err
 }
 
-func joinMarkdownFiles(cfg Configuration, m Manifest) (content []byte, err error) {
-	files, err := findMarkdownFiles(m.Documentation.IgnoredDirs, true)
+func (c *Confluence) joinMarkdownFiles(m Manifest) (content []byte, err error) {
+	files, err := c.findMarkdownFiles(m.Documentation.IgnoredDirs, true)
 	if err != nil {
 		return nil, err
 	}
@@ -104,19 +118,19 @@ func joinMarkdownFiles(cfg Configuration, m Manifest) (content []byte, err error
 		if err != nil {
 			return nil, err
 		}
-		url := generateGitHubLink(filePath, cfg, m)
+		url := c.generateGitHubLink(filePath, m)
 		content = append(content, []byte("\n\n\n---\n#### From "+url+"\n")...)
 		content = append(content, fileContent...)
 	}
 	return content, err
 }
 
-func generateGitHubLink(filePath string, cfg Configuration, m Manifest) string {
-	return "[" + filePath + "](https://github.com/" + path.Join(cfg.GitHub.Organization, m.Repository, "blob/master", filePath) + ")"
+func (c *Confluence) generateGitHubLink(filePath string, m Manifest) string {
+	return "[" + filePath + "](https://github.com/" + path.Join(c.cfg.GitHub.Organization, m.Repository, "blob/master", filePath) + ")"
 }
 
-func createPage(cfg Configuration, m Manifest) ([]byte, error) {
-	yaml, err := marshallManifest(m)
+func (c *Confluence) createPage(m Manifest) ([]byte, error) {
+	yaml, err := c.marshallManifest(m)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +172,7 @@ func createPage(cfg Configuration, m Manifest) ([]byte, error) {
 		YAML     string
 	}{
 		Manifest: m,
-		Config:   cfg,
+		Config:   *c.cfg,
 		YAML:     yaml,
 	})
 	writer.Flush()
@@ -167,7 +181,7 @@ func createPage(cfg Configuration, m Manifest) ([]byte, error) {
 		log.Fatal(err)
 	}
 
-	otherMarkdown, err := joinMarkdownFiles(cfg, m)
+	otherMarkdown, err := c.joinMarkdownFiles(m)
 	if err != nil {
 		return nil, err
 	}
@@ -189,43 +203,39 @@ func createPage(cfg Configuration, m Manifest) ([]byte, error) {
 	return append(header.Bytes(), renderedMarkdown...), nil
 }
 
-func updateDocumentation(cfg Configuration, m Manifest) {
-	loadCredentials("Confluence", &cfg.Confluence)
+func (c *Confluence) updateDocumentation(m Manifest) error {
+	loadCredentials("Confluence", &c.cfg.Confluence)
 
 	if m.Documentation.PageId == "" {
 		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
-		return
+		return nil
 	}
 
-	htmlData, err := createPage(cfg, m)
+	htmlData, err := c.createPage(m)
 	if err != nil {
-		log.Fatalf("Failed to generate page. %v", err)
+		return errors.Errorf("Failed to generate page. %v", err)
 	}
 	newContent := string(htmlData[:])
 
-	api := gopencils.Api(
-		cfg.Confluence.Server+"/rest/api",
-		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
-	)
-
-	pageInfo, err := getPageInfo(api, m.Documentation.PageId)
+	pageInfo, err := c.getPageInfo(m.Documentation.PageId)
 	pageInfo.Title = strings.Title(m.Name) + " - Readme"
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	currentBody := pageInfo.Body.Storage.Value
 	if sanitizeBody(newContent) == sanitizeBody(currentBody) {
 		log.Print("No update needed. Skipping.")
-		return
+		return nil
 	}
 
-	err = updatePage(api, m.Documentation.PageId, pageInfo, htmlData)
+	err = c.updatePage(m.Documentation.PageId, pageInfo, htmlData)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	log.Println("Page successfully updated.")
+	return nil
 }
 
 func sanitizeBody(body string) string {
@@ -233,10 +243,7 @@ func sanitizeBody(body string) string {
 	return r.Replace(body)
 }
 
-func updatePage(
-	api *gopencils.Resource, pageID string,
-	pageInfo PageInfo, newContent []byte,
-) error {
+func (c *Confluence) updatePage(pageID string, pageInfo PageInfo, newContent []byte) error {
 	nextPageVersion := pageInfo.Version.Number + 1
 
 	if len(pageInfo.Ancestors) == 0 {
@@ -268,7 +275,7 @@ func updatePage(
 		},
 	}
 
-	request, err := api.Res(
+	request, err := c.client.Res(
 		"content/"+pageID, &map[string]interface{}{},
 	).Put(payload)
 	if err != nil {
@@ -290,10 +297,8 @@ func updatePage(
 	return nil
 }
 
-func getPageInfo(
-	api *gopencils.Resource, pageID string,
-) (PageInfo, error) {
-	request, err := api.Res(
+func (c *Confluence) getPageInfo(pageID string) (PageInfo, error) {
+	request, err := c.client.Res(
 		"content/"+pageID, &PageInfo{},
 	).Get(map[string]string{"expand": "body.storage,ancestors,version"})
 

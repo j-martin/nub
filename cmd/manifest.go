@@ -88,7 +88,7 @@ func loadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
 	if !inRepository() {
-		return Manifest{}, errors.New("must be executed in a repository.")
+		return Manifest{}, errors.New("must be executed in a repository")
 	}
 
 	data, err := ioutil.ReadFile(manifestFile)

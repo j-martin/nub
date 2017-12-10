@@ -34,7 +34,7 @@ type EngineConfiguration struct {
 	Command, CommandAlt string
 }
 
-func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
+func ConnectToRDSInstance(cfg *Configuration, filter string, args []string) {
 	channel := make(chan []*rds.DBInstance)
 	regions := cfg.AWS.Regions
 	for _, region := range regions {
@@ -45,7 +45,7 @@ func ConnectToRDSInstance(cfg Configuration, filter string, args []string) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			rows := []*rds.DBInstance{}
+			var rows []*rds.DBInstance
 			for _, i := range resp.DBInstances {
 				if strings.Contains(*i.Endpoint.Address, filter) {
 					rows = append(rows, i)
@@ -176,7 +176,7 @@ func rdsCleanup(tunnel *exec.Cmd) {
 	print("\033]Ph103010\033\\")
 	tunnel.Process.Kill()
 }
-func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg Configuration) {
+func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg *Configuration) {
 	endpoint := *instance.Endpoint.Address
 	jump := getEnvironment(endpoint, cfg.AWS.Environments).Jumphost
 	rdsConfig := getRDSConfig(endpoint, cfg.AWS.RDS)

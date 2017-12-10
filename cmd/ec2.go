@@ -17,7 +17,7 @@ import (
 )
 
 type ConnectionParams struct {
-	Configuration Configuration
+	Configuration *Configuration
 	Filter        string
 	Output        bool
 	All           bool
@@ -74,7 +74,7 @@ func getInstanceName(i *ec2.Instance) string {
 }
 
 func getUsers(i *ec2.Instance) []string {
-	users := []string{}
+	var users []string
 	for _, t := range i.Tags {
 		if *t.Key == "elasticbeanstalk:environment-name" {
 			users = append(users, "ec2-user")
@@ -83,7 +83,7 @@ func getUsers(i *ec2.Instance) []string {
 	return append(users, "ubuntu")
 }
 
-func getJumpHost(name string, cfg Configuration) string {
+func getJumpHost(name string, cfg *Configuration) string {
 	for _, i := range cfg.AWS.Environments {
 		if strings.HasPrefix(name, i.Prefix) {
 			return i.Jumphost
@@ -100,7 +100,7 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	usr, _ := user.Current()
 	hostname := *i.PublicDnsName
 	key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
-	baseArgs := []string{}
+	var baseArgs []string
 
 	if hostname == "" || params.UseJumpHost {
 		hostname = *i.PrivateDnsName

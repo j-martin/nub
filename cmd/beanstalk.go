@@ -91,7 +91,7 @@ func EnvironmentIsReady(region string, environment string, failOnError bool) {
 			log.Fatal(err.Error())
 		}
 		if *resp.Status != previousStatus {
-			causes := []string{}
+			var causes []string
 			for _, cause := range resp.Causes {
 				causes = append(causes, *cause)
 			}
@@ -224,7 +224,7 @@ func ListApplicationVersions(region string, application string) {
 	table.Flush()
 }
 
-func ListEnvironments(cfg Configuration) {
+func ListEnvironments(cfg *Configuration) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(table, "Application\tEnvironment\tRegion\tStatus\tHealth\tHealthStatus\tVersionLabel\tCNAME")
 

@@ -9,10 +9,10 @@ import (
 
 type JIRA struct {
 	client *jira.Client
-	cfg    Configuration
+	cfg    *Configuration
 }
 
-func MustInitJIRA(cfg Configuration) *JIRA {
+func MustInitJIRA(cfg *Configuration) *JIRA {
 	j := JIRA{}
 	loadCredentials("JIRA", &cfg.JIRA)
 	if err := j.init(cfg); err != nil {
@@ -21,7 +21,7 @@ func MustInitJIRA(cfg Configuration) *JIRA {
 	return &j
 }
 
-func (j *JIRA) init(cfg Configuration) error {
+func (j *JIRA) init(cfg *Configuration) error {
 	checkServerConfig(cfg.JIRA)
 	client, err := jira.NewClient(nil, cfg.JIRA.Server)
 	if err != nil {
@@ -53,10 +53,10 @@ func (j *JIRA) CreateBranchFromAssignedIssues() error {
 	return nil
 }
 
-func OpenJIRAIssue(cfg Configuration) error {
+func (j *JIRA) OpenJIRAIssue() error {
 	key := GetIssueKeyFromBranch()
 	if key == "" {
-		is, err := MustInitJIRA(cfg).getAssignedIssues()
+		is, err := j.getAssignedIssues()
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func OpenJIRAIssue(cfg Configuration) error {
 		openURI("bee://item?id=" + key)
 		return nil
 	}
-	openURI(cfg.JIRA.Server, "browse", key)
+	openURI(j.cfg.JIRA.Server, "browse", key)
 	return nil
 }
 

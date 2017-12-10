@@ -99,7 +99,7 @@ func RunCmdWithOutput(cmd string, args ...string) (string, error) {
 	output, err := command.Output()
 	return strings.Trim(string(output), "\n"), err
 }
-func PendingChanges(cfg Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
+func PendingChanges(cfg *Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	output := MustRunCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
@@ -177,7 +177,7 @@ func getBranches() []string {
 	return branches
 }
 
-func committerSlackReference(cfg Configuration, previousVersion string, currentVersion string) []string {
+func committerSlackReference(cfg *Configuration, previousVersion string, currentVersion string) []string {
 	committerMapping := make(map[string]string)
 	for _, i := range cfg.Users {
 		committerMapping[i.Name] = i.Slack

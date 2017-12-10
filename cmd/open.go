@@ -20,15 +20,15 @@ func openURI(uriSegments ...string) error {
 	return errors.New("could not open the link automatically")
 }
 
-func openGH(cfg Configuration, m Manifest, p string) error {
+func openGH(cfg *Configuration, m Manifest, p string) error {
 	return openURI("https://github.com/", cfg.GitHub.Organization, m.Repository, p)
 }
 
-func openJenkins(cfg Configuration, m Manifest, p string) error {
+func openJenkins(cfg *Configuration, m Manifest, p string) error {
 	return openURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
 }
 
-func openSplunk(cfg Configuration, m Manifest, isStaging bool) error {
+func openSplunk(cfg *Configuration, m Manifest, isStaging bool) error {
 	base := cfg.Splunk.Server +
 		"/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
 	var sourceType string
@@ -41,7 +41,7 @@ func openSplunk(cfg Configuration, m Manifest, isStaging bool) error {
 	return openURI(base + sourceType)
 }
 
-func openCircle(cfg Configuration, m Manifest, getBranch bool) error {
+func openCircle(cfg *Configuration, m Manifest, getBranch bool) error {
 	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
 		currentBranch := url.QueryEscape(GetCurrentBranch())

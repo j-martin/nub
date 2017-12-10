@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func triggerAndWaitForSuccess(cfg Configuration, m Manifest) {
+func triggerAndWaitForSuccess(cfg *Configuration, m Manifest) {
 
 	token := os.Getenv("CIRCLE_TOKEN")
 

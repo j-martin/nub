@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func getRegion(environment string, cfg Configuration, c *cli.Context) string {
+func getRegion(environment string, cfg *Configuration, c *cli.Context) string {
 
 	region := c.String("region")
 	if region == "" {
@@ -212,8 +212,7 @@ Continue?`
 						}
 						manifest.Version = c.String("artifact-version")
 						StoreManifest(manifest)
-						updateDocumentation(cfg, manifest)
-						return nil
+						return MustInitConfluence(cfg).updateDocumentation(manifest)
 					},
 				},
 				{
@@ -460,7 +459,7 @@ Continue?`
 						cli.StringFlag{Name: "max-age", Value: "30"},
 					},
 					Action: func(c *cli.Context) error {
-						return ListBranches(cfg, c.Int("max-age"))
+						return MustInitGitHub(cfg).ListBranches(c.Int("max-age"))
 					},
 				},
 			},
@@ -475,7 +474,7 @@ Continue?`
 					Aliases: []string{"o"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
 					Action: func(c *cli.Context) error {
-						return OpenJIRAIssue(cfg)
+						return MustInitJIRA(cfg).OpenJIRAIssue()
 					},
 				},
 			},
@@ -536,7 +535,7 @@ Continue?`
 					Aliases: []string{"j"},
 					Usage:   "Shows the console output of the last build.",
 					Action: func(c *cli.Context) error {
-						showConsoleOutput(cfg, manifest)
+						MustInitJenkins(cfg).showConsoleOutput(manifest)
 						return nil
 					},
 				},
@@ -545,7 +544,7 @@ Continue?`
 					Aliases: []string{"a"},
 					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						return getArtifacts(cfg, manifest)
+						return MustInitJenkins(cfg).getArtifacts(manifest)
 					},
 				},
 				{
@@ -557,7 +556,7 @@ Continue?`
 					},
 					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						buildJob(cfg, manifest, c.Bool("no-wait"), c.Bool("force"))
+						MustInitJenkins(cfg).buildJob(manifest, c.Bool("no-wait"), c.Bool("force"))
 						return nil
 					},
 				},

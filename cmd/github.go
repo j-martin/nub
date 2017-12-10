@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-func ListBranches(cfg Configuration, maxAge int) error {
-	type branch struct {
-		Repository, Branch, Name, Email, PRURL string
-		Age                                    int
-	}
-	authors := map[string][]branch{}
+type GitHub struct {
+	cfg    *Configuration
+	client *github.Client
+}
+
+func MustInitGitHub(cfg *Configuration) *GitHub {
 	ctx := context.Background()
 	loadKeyringItem("GitHub Token", &cfg.GitHub.Token)
 	ts := oauth2.StaticTokenSource(
@@ -24,10 +24,20 @@ func ListBranches(cfg Configuration, maxAge int) error {
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
+	return &GitHub{cfg, client}
+}
+
+func (gh *GitHub) ListBranches(maxAge int) error {
+	type branch struct {
+		Repository, Branch, Name, Email, PRURL string
+		Age                                    int
+	}
+	ctx := context.Background()
+	authors := map[string][]branch{}
 
 	orgOptions := github.RepositoryListByOrgOptions{ListOptions: github.ListOptions{PerPage: 250}}
-	org := cfg.GitHub.Organization
-	repos, _, err := client.Repositories.ListByOrg(ctx, org, &orgOptions)
+	org := gh.cfg.GitHub.Organization
+	repos, _, err := gh.client.Repositories.ListByOrg(ctx, org, &orgOptions)
 	if err != nil {
 		return err
 	}
@@ -36,11 +46,11 @@ func ListBranches(cfg Configuration, maxAge int) error {
 		if *r.Fork {
 			continue
 		}
-		branches, _, err := client.Repositories.ListBranches(ctx, org, *r.Name, &github.ListOptions{PerPage: 250})
+		branches, _, err := gh.client.Repositories.ListBranches(ctx, org, *r.Name, &github.ListOptions{PerPage: 250})
 		if err != nil {
 			return err
 		}
-		prs, _, err := client.PullRequests.List(ctx, org, *r.Name, &github.PullRequestListOptions{State: "open"})
+		prs, _, err := gh.client.PullRequests.List(ctx, org, *r.Name, &github.PullRequestListOptions{State: "open"})
 		if err != nil {
 			return err
 		}
@@ -52,7 +62,7 @@ func ListBranches(cfg Configuration, maxAge int) error {
 			if *b.Name == "master" {
 				continue
 			}
-			b, _, err := client.Repositories.GetBranch(ctx, org, *r.Name, url.PathEscape(*b.Name))
+			b, _, err := gh.client.Repositories.GetBranch(ctx, org, *r.Name, url.PathEscape(*b.Name))
 			if err != nil {
 				return err
 			}
