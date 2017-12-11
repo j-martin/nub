@@ -101,12 +101,15 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 	hostname := *i.PublicDnsName
 	key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
 	var baseArgs []string
+	var scpArgs []string
 
 	if hostname == "" || params.UseJumpHost {
 		hostname = *i.PrivateDnsName
 		jumpHost := getJumpHost(getInstanceName(i), params.Configuration)
 		log.Printf("No public DNS name found, using jump host: %v", jumpHost)
 		baseArgs = []string{"-A", "-J", jumpHost}
+
+		scpArgs = []string{"-o", fmt.Sprintf("'ProxyCommand ssh %v nc %%h %%p'", jumpHost)}
 	}
 
 	for _, sshUser := range getUsers(i) {
@@ -116,13 +119,15 @@ func connect(i *ec2.Instance, params ConnectionParams) {
 			connectTimeout = 3
 		}
 		args := append(baseArgs, "-i", key, host, "-o", fmt.Sprintf("ConnectTimeout=%d", connectTimeout))
+		scpCmd := append(scpArgs, "-i", key, fmt.Sprintf("%v:<file>", host), ".")
 		args = append(args, params.Args...)
 
 		cmd := exec.Command("ssh", args...)
 		cmd.Stdin = os.Stdin
 		cmd.Stderr = os.Stderr
 
-		log.Printf("Connecting %v\n", strings.Join(args, " "))
+		log.Printf("ssh %v\n", strings.Join(args, " "))
+		log.Printf("scp %v\n", strings.Join(scpCmd, " "))
 
 		var err error
 		if params.Output {
