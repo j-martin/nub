@@ -72,7 +72,7 @@ func ConnectToRDSInstance(cfg *Configuration, filter string, args []string) {
 	} else if len(instances) == 1 {
 		connectToRDSInstance(instances[0], args, cfg)
 	} else {
-		rdsInstances := []rdsInstance{}
+		var rdsInstances []rdsInstance
 		for _, instance := range instances {
 			name := strings.Split(*instance.Endpoint.Address, ".")[0]
 			rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})

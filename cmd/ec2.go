@@ -93,53 +93,77 @@ func getJumpHost(name string, cfg *Configuration) string {
 	return ""
 }
 
-func connect(i *ec2.Instance, params ConnectionParams) {
+func connect(i *ec2.Instance, params ConnectionParams) error {
 	if !(params.Output || params.All) {
 		log.Println(*i)
 	}
 	usr, _ := user.Current()
 	hostname := *i.PublicDnsName
 	key := path.Join(usr.HomeDir, ".ssh", *i.KeyName+".pem")
-	var baseArgs []string
-	var scpArgs []string
+	var sshJumpHostArgs []string
+	var scpJumpHostArgs []string
 
 	if hostname == "" || params.UseJumpHost {
 		hostname = *i.PrivateDnsName
 		jumpHost := getJumpHost(getInstanceName(i), params.Configuration)
 		log.Printf("No public DNS name found, using jump host: %v", jumpHost)
-		baseArgs = []string{"-A", "-J", jumpHost}
 
-		scpArgs = []string{"-o", fmt.Sprintf("'ProxyCommand ssh %v nc %%h %%p'", jumpHost)}
+		sshJumpHostArgs = []string{"-A", "-J", jumpHost}
+		scpJumpHostArgs = []string{"-o", fmt.Sprintf("ProxyCommand ssh %v nc %%h %%p", jumpHost)}
 	}
 
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + hostname
-		connectTimeout := params.Configuration.Ssh.ConnectTimeout
-		if connectTimeout == 0 {
-			connectTimeout = 3
+		if isSCP(params) {
+			if runSCP(host, key, scpJumpHostArgs, params) == nil {
+				break
+			}
 		}
-		args := append(baseArgs, "-i", key, host, "-o", fmt.Sprintf("ConnectTimeout=%d", connectTimeout))
-		scpCmd := append(scpArgs, "-i", key, fmt.Sprintf("%v:<file>", host), ".")
-		args = append(args, params.Args...)
 
-		cmd := exec.Command("ssh", args...)
-		cmd.Stdin = os.Stdin
-		cmd.Stderr = os.Stderr
-
-		log.Printf("ssh %v\n", strings.Join(args, " "))
-		log.Printf("scp %v\n", strings.Join(scpCmd, " "))
-
-		var err error
-		if params.Output {
-			err = saveCommandOutput(i, cmd)
-		} else {
-			cmd.Stdout = os.Stdout
-			err = cmd.Run()
-		}
-		if err == nil {
+		if runSSH(i, host, key, sshJumpHostArgs, params) == nil {
 			break
 		}
 	}
+	return nil
+}
+
+func isSCP(params ConnectionParams) bool {
+	return len(params.Args) > 0 && params.Args[0] == "scp"
+}
+
+func runSSH(i *ec2.Instance, host string, key string, args []string, params ConnectionParams) error {
+	connectTimeout := params.Configuration.Ssh.ConnectTimeout
+	if connectTimeout == 0 {
+		connectTimeout = 3
+	}
+	args = append(args, "-i", key, host, "-o", fmt.Sprintf("ConnectTimeout=%d", connectTimeout))
+	args = append(args, prepareSSHArgs(params)...)
+
+	exe := "ssh"
+	cmd := exec.Command(exe, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+
+	log.Printf("%v %v\n", exe, strings.Join(args, " "))
+
+	if params.Output {
+		return saveCommandOutput(i, cmd)
+	} else {
+		cmd.Stdout = os.Stdout
+		return cmd.Run()
+	}
+}
+
+func runSCP(host string, key string, args []string, params ConnectionParams) error {
+	exe := "scp"
+	args = append(args, "-i", key)
+	args = append(args, prepareSCPArgs(params.Args[1:], host)...)
+	cmd := exec.Command(exe, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Printf("%v %v\n", exe, strings.Join(args, " "))
+	return cmd.Run()
 }
 
 func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
@@ -163,11 +187,11 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 	return err
 }
 
-func prepareArgs(params ConnectionParams) []string {
-	cmd := params.Args
-	if len(cmd) > 0 {
+func prepareSSHArgs(params ConnectionParams) []string {
+	args := params.Args
+	if len(args) > 0 {
 		baseArgs := []string{"-tC"}
-		switch cmd[0] {
+		switch args[0] {
 		case "tmux":
 			arg := ""
 			usr, _ := user.Current()
@@ -178,26 +202,37 @@ func prepareArgs(params ConnectionParams) []string {
 				"tmux", arg, "attach", "-t", usr.Username, "||",
 				"tmux", arg, "new", "-s", usr.Username,
 			}
-			cmd = append(append(baseArgs, strings.Join(tmuxCmd, " ")), cmd[1:]...)
+			args = append(append(baseArgs, strings.Join(tmuxCmd, " ")), args[1:]...)
 		case "bash":
-			cmd = append(append(baseArgs, "/opt/bench/exec bash"), cmd[1:]...)
+			args = append(append(baseArgs, "/opt/bench/exec bash"), args[1:]...)
 		case "exec":
-			cmd = append(append(baseArgs, "/opt/bench/exec"), cmd[1:]...)
+			args = append(append(baseArgs, "/opt/bench/exec"), args[1:]...)
 		case "jstack":
-			cmd = append(append(baseArgs, "/opt/bench/jstack"), cmd[1:]...)
+			args = append(append(baseArgs, "/opt/bench/jstack"), args[1:]...)
 		case "jmap":
-			cmd = append(append(baseArgs, "/opt/bench/jmap"), cmd[1:]...)
+			args = append(append(baseArgs, "/opt/bench/jmap"), args[1:]...)
 		case "logs":
-			cmd = append(append(baseArgs, "/opt/bench/logs"), cmd[1:]...)
+			args = append(append(baseArgs, "/opt/bench/logs"), args[1:]...)
 		default:
-			cmd = append(baseArgs, cmd...)
+			args = append(baseArgs, args...)
 		}
 	}
-	return cmd
+	return args
+}
+
+func prepareSCPArgs(args []string, host string) []string {
+	if len(args) < 1 {
+		log.Fatalf("More than one argument is required.")
+	}
+	for i, arg := range args {
+		if strings.Contains(arg, ":") {
+			args[i] = host + ":" + strings.Split(arg, ":")[1]
+		}
+	}
+	return args
 }
 
 func ConnectToInstance(params ConnectionParams) {
-	params.Args = prepareArgs(params)
 	var instances []*ec2.Instance
 
 	channel := make(chan []*ec2.Instance)
