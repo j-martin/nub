@@ -5,6 +5,7 @@ import "github.com/stretchr/testify/assert"
 
 func TestSanitizeBranchName(t *testing.T) {
 	t.Parallel()
+	assert.Equal(t, "55gf66-sf9-3", sanitizeBranchName("55gf66     sf9#3     "))
 	assert.Equal(t, "55gf66-sf9-3", sanitizeBranchName("55gf66 sf9#3"))
 }
 

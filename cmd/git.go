@@ -129,8 +129,9 @@ func FetchTags() {
 }
 
 func sanitizeBranchName(name string) string {
-	r := regexp.MustCompile(" |#|:|,|\\.|\\+|\\^|&|\\*|\\(|\\)|`|\\[|\\]|@|\\$|%|/")
-	return r.ReplaceAllString(name, "-")
+	r := regexp.MustCompile("[^a-zA-Z0-9]+")
+	r2 := regexp.MustCompile("-+")
+	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
 }
 
 func GetIssueKeyFromBranch() string {
