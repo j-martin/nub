@@ -45,7 +45,7 @@ func (j *JIRA) CreateBranchFromAssignedIssues() error {
 	if err != nil {
 		return err
 	}
-	issue, err := pickIssue(issues)
+	issue, err := j.pickIssue(issues)
 	if err != nil {
 		return err
 	}
@@ -53,18 +53,64 @@ func (j *JIRA) CreateBranchFromAssignedIssues() error {
 	return nil
 }
 
-func (j *JIRA) OpenJIRAIssue() error {
+func (j *JIRA) sanitizeTransitionName(tr string) string {
+	r := strings.NewReplacer("'", "", " ", "")
+	return r.Replace(strings.ToLower(tr))
+}
+
+func (j *JIRA) matchTransition(key, transitionName string) (jira.Transition, error) {
+	trs, _, err := j.client.Issue.GetTransitions(key)
+	if err != nil {
+		return jira.Transition{}, err
+	}
+	for _, tr := range trs {
+		if j.sanitizeTransitionName(tr.Name) == j.sanitizeTransitionName(transitionName) {
+			return tr, nil
+		}
+	}
+
+	return j.pickTransition(trs)
+}
+
+func (j *JIRA) TransitionIssue(transitionName string) error {
+	key, err := j.GetIssueKeyFromBranchOrAssigned()
+	if err != nil {
+		return err
+	}
+	transition, err := j.matchTransition(key, transitionName)
+	if err != nil {
+		return err
+	}
+	_, err = j.client.Issue.DoTransition(key, transition.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Issue %v transitoned to %v", key, transition.Name)
+	return nil
+}
+
+func (j *JIRA) GetIssueKeyFromBranchOrAssigned() (string, error) {
 	key := GetIssueKeyFromBranch()
 	if key == "" {
+		log.Print("No issue key found in ")
 		is, err := j.getAssignedIssues()
 		if err != nil {
-			return err
+			return "", err
 		}
-		i, err := pickIssue(is)
+		i, err := j.pickIssue(is)
 		if err != nil {
-			return err
+			return "", err
 		}
 		key = i.Key
+	}
+	return key, nil
+}
+
+func (j *JIRA) OpenIssue() error {
+	key, err := j.GetIssueKeyFromBranchOrAssigned()
+	if err != nil {
+		return nil
 	}
 	beeInstalled, err := pathExists("/Applications/Bee.app")
 	if err != nil {
@@ -78,10 +124,10 @@ func (j *JIRA) OpenJIRAIssue() error {
 	return nil
 }
 
-func pickIssue(issues []jira.Issue) (jira.Issue, error) {
+func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 	templates := &promptui.SelectTemplates{
-		Label: "{{ . }}:",
-		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Inactive: "  {{ .Key }}	{{ .Fields.Summary }}",
 		Selected: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Details: `
@@ -109,4 +155,31 @@ func pickIssue(issues []jira.Issue) (jira.Issue, error) {
 	}
 	i, _, err := prompt.Run()
 	return issues[i], err
+}
+
+func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, error) {
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Name }}	{{ .ID }}",
+		Inactive: "  {{ .Name }}	{{ .ID }}",
+		Selected: "▶ {{ .Name }}	{{ .ID }}",
+	}
+
+	searcher := func(input string, index int) bool {
+		i := transitions[index]
+		name := strings.Replace(strings.ToLower(i.Name), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+		return strings.Contains(name, input)
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     "Pick an transition",
+		Items:     transitions,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	return transitions[i], err
 }

@@ -474,7 +474,19 @@ Continue?`
 					Aliases: []string{"o"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
 					Action: func(c *cli.Context) error {
-						return MustInitJIRA(cfg).OpenJIRAIssue()
+						return MustInitJIRA(cfg).OpenIssue()
+					},
+				},
+				{
+					Name:    "transition",
+					Aliases: []string{"t"},
+					Usage:   "Transition issue based on current branch.",
+					Action: func(c *cli.Context) error {
+						var transition string
+						if len(c.Args()) == 0 {
+							transition = c.Args().Get(0)
+						}
+						return MustInitJIRA(cfg).TransitionIssue(transition)
 					},
 				},
 			},
