@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -25,6 +26,45 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 
 	client := github.NewClient(tc)
 	return &GitHub{cfg, client}
+}
+
+func (gh *GitHub) CreatePR(title, body string) error {
+	GitPush()
+	branch := GetCurrentBranch()
+	base := "master"
+	if title == "" {
+		title = strings.Replace(branch, "-", " ", -1)
+	}
+
+	ctx := context.Background()
+	org := gh.cfg.GitHub.Organization
+	repo := GetCurrentRepositoryName()
+
+	prListOptions := github.PullRequestListOptions{Head: branch, Base: base}
+	existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
+	if len(existingPRs) > 0 {
+		log.Print("Existing PR found.")
+		return openURI(*existingPRs[0].HTMLURL)
+	}
+
+	request := github.NewPullRequest{Head: &branch, Base: &base, Title: &title, Body: &body}
+	pr, _, err := gh.client.PullRequests.Create(ctx, org, repo, &request)
+
+	if err != nil {
+		return err
+	}
+
+	reviewers := gh.cfg.GitHub.Reviewers
+	if len(reviewers) > 0 {
+		reviewersRequest := github.ReviewersRequest{Reviewers: reviewers}
+		pr, _, err = gh.client.PullRequests.RequestReviewers(ctx, org, repo, *pr.Number, reviewersRequest)
+
+		if err != nil {
+			return err
+		}
+
+	}
+	return openURI(*pr.HTMLURL)
 }
 
 func (gh *GitHub) ListBranches(maxAge int) error {

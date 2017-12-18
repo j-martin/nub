@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.23.1"
+	app.Version = "0.24.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -467,7 +467,7 @@ Continue?`
 		{
 			Name:    "jira",
 			Usage:   "JIRA related actions",
-			Aliases: []string{"j"},
+			Aliases: []string{"ji"},
 			Subcommands: []cli.Command{
 				{
 					Name:    "open",
@@ -480,9 +480,9 @@ Continue?`
 			},
 		},
 		{
-			Name:    "git",
-			Usage:   "Git related actions.",
-			Aliases: []string{"g"},
+			Name:    "workflow",
+			Usage:   "Git/GitHub/JIRA workflow actions.",
+			Aliases: []string{"w"},
 			Subcommands: []cli.Command{
 				{
 					Name:    "new-branch",
@@ -512,12 +512,27 @@ Continue?`
 						return nil
 					},
 				},
+				{
+					Name:    "pull-request",
+					Aliases: []string{"pr"},
+					Usage:   "Creates a PR for the current branch.",
+					Action: func(c *cli.Context) error {
+						var title, body string
+						if len(c.Args()) > 0 {
+							title = c.Args().Get(0)
+						}
+						if len(c.Args()) > 1 {
+							body = c.Args().Get(1)
+						}
+						return MustInitGitHub(cfg).CreatePR(title, body)
+					},
+				},
 			},
 		},
 		{
 			Name:    "jenkins",
 			Usage:   "Jenkins related actions.",
-			Aliases: []string{"jk"},
+			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
 				return openJenkins(cfg, manifest, "")
 			},
