@@ -32,7 +32,7 @@ type Configuration struct {
 	}
 	GitHub struct {
 		Organization, Token string
-		Reviewers []string
+		Reviewers           []string
 	}
 	Users   []User
 	JIRA    ServiceConfiguration
@@ -84,7 +84,7 @@ aws:
 github:
 	organization: benchlabs
 	reviewers:
-		# - default reviewers, must be there GitHub username.
+		# - reviewers (GitHub username) that will be applied to the PRs by default.
 
 jenkins:
 	server: "https://jenkins.example.com"
