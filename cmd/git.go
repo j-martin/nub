@@ -48,6 +48,10 @@ func CloneRepository(repository string) {
 	MustRunCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
+func GitPush() {
+	MustRunCmd("git", "push", "--no-verify", "--set-upstream", "origin", GetCurrentBranch())
+}
+
 func UpdateRepository(repository string) {
 	log.Printf("Updating: %v", repository)
 	dir, _ := os.Getwd()
