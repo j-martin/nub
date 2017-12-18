@@ -34,8 +34,11 @@ type Configuration struct {
 		Organization, Token string
 		Reviewers           []string
 	}
-	Users   []User
-	JIRA    ServiceConfiguration
+	Users []User
+	JIRA  struct {
+		Server, Username, Password string
+		Project, Board             string
+	}
 	Jenkins ServiceConfiguration
 	Splunk  struct {
 		Server string
@@ -94,6 +97,8 @@ confluence:
 
 jira:
 	server: "https://example.atlassian.net"
+	project: # default project to use when creating issues.
+	board: id of the board when creating issues in the current sprint.
 
 splunk:
 	server: "https://splunk.example.com"
@@ -198,17 +203,17 @@ func createAndEdit(filePath string, content string) {
 	editFile(filePath)
 }
 
-func checkServerConfig(cfg ServiceConfiguration) {
-	if cfg.Server == "" {
+func checkServerConfig(server string) {
+	if server == "" {
 		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
 	}
 }
 
-func loadCredentials(item string, cfg *ServiceConfiguration) (err error) {
-	if err = loadCredentialItem(item+" Username", &cfg.Username); err != nil {
+func loadCredentials(item string, username, password *string) (err error) {
+	if err = loadCredentialItem(item+" Username", username); err != nil {
 		return err
 	}
-	if err = loadCredentialItem(item+" Password", &cfg.Password); err != nil {
+	if err = loadCredentialItem(item+" Password", password); err != nil {
 		return err
 	}
 	return nil

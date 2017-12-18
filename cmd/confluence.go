@@ -24,6 +24,7 @@ type Confluence struct {
 }
 
 func MustInitConfluence(cfg *Configuration) *Confluence {
+	loadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
 	api := gopencils.Api(
 		cfg.Confluence.Server+"/rest/api",
 		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
@@ -204,8 +205,6 @@ func (c *Confluence) createPage(m Manifest) ([]byte, error) {
 }
 
 func (c *Confluence) updateDocumentation(m Manifest) error {
-	loadCredentials("Confluence", &c.cfg.Confluence)
-
 	if m.Documentation.PageId == "" {
 		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
 		return nil

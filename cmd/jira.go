@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/andygrunwald/go-jira"
 	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
+	"io/ioutil"
 	"log"
 	"strings"
 )
@@ -14,7 +16,7 @@ type JIRA struct {
 
 func MustInitJIRA(cfg *Configuration) *JIRA {
 	j := JIRA{}
-	loadCredentials("JIRA", &cfg.JIRA)
+	loadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
 	if err := j.init(cfg); err != nil {
 		log.Fatalf("Failed to initiate JIRA client: %v", err)
 	}
@@ -22,7 +24,7 @@ func MustInitJIRA(cfg *Configuration) *JIRA {
 }
 
 func (j *JIRA) init(cfg *Configuration) error {
-	checkServerConfig(cfg.JIRA)
+	checkServerConfig(cfg.JIRA.Server)
 	client, err := jira.NewClient(nil, cfg.JIRA.Server)
 	if err != nil {
 		return err
@@ -72,10 +74,12 @@ func (j *JIRA) matchTransition(key, transitionName string) (jira.Transition, err
 	return j.pickTransition(trs)
 }
 
-func (j *JIRA) TransitionIssue(transitionName string) error {
-	key, err := j.GetIssueKeyFromBranchOrAssigned()
-	if err != nil {
-		return err
+func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
+	if key == "" {
+		key, err = j.getIssueKeyFromBranchOrAssigned()
+		if err != nil {
+			return err
+		}
 	}
 	transition, err := j.matchTransition(key, transitionName)
 	if err != nil {
@@ -86,11 +90,11 @@ func (j *JIRA) TransitionIssue(transitionName string) error {
 		return err
 	}
 
-	log.Printf("Issue %v transitoned to %v", key, transition.Name)
+	log.Printf("%v transitoned to %v", key, transition.Name)
 	return nil
 }
 
-func (j *JIRA) GetIssueKeyFromBranchOrAssigned() (string, error) {
+func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
 	key := GetIssueKeyFromBranch()
 	if key == "" {
 		log.Print("No issue key found in ")
@@ -107,8 +111,68 @@ func (j *JIRA) GetIssueKeyFromBranchOrAssigned() (string, error) {
 	return key, nil
 }
 
+func (j JIRA) CreateIssue(project, summary, description, transition string, reactive bool) error {
+	if project == "" && j.cfg.JIRA.Project != "" {
+		project = j.cfg.JIRA.Project
+	} else if project == "" {
+		return errors.New("the project must be defined (in the argument or the config)")
+	}
+	fields := jira.IssueFields{
+		Summary:     summary,
+		Description: description,
+		Project:     jira.Project{Key: project},
+		Type: jira.IssueType{
+			Name: "Task",
+		},
+	}
+
+	if reactive {
+		fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
+	}
+
+	i, res, err := j.client.Issue.Create(&jira.Issue{Fields: &fields})
+	if err != nil {
+		b, _ := ioutil.ReadAll(res.Body)
+		log.Print(string(b))
+		return err
+	}
+	log.Printf("%v created.", i.Key)
+	if transition != "" {
+		if err = j.TransitionIssue(i.Key, transition); err != nil {
+			return err
+		}
+	}
+	if reactive {
+		sp, err := j.getActiveSprint()
+		if err != nil {
+			return err
+		}
+		j.client.Sprint.MoveIssuesToSprint(sp.ID, []string{i.Key})
+		log.Printf("%v moved to the active sprint.", i.Key)
+	}
+	return nil
+}
+
+func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
+	empty := jira.Sprint{}
+	if j.cfg.JIRA.Board == "" {
+		return empty, errors.New("the board id must be defined in the config")
+	}
+	sps, _, err := j.client.Board.GetAllSprints(j.cfg.JIRA.Board)
+	if err != nil {
+		return empty, err
+	}
+	for _, sp := range sps {
+		if sp.State == "active" {
+			return sp, nil
+		}
+	}
+
+	return empty, errors.New("no active sprint found")
+}
+
 func (j *JIRA) OpenIssue() error {
-	key, err := j.GetIssueKeyFromBranchOrAssigned()
+	key, err := j.getIssueKeyFromBranchOrAssigned()
 	if err != nil {
 		return nil
 	}
@@ -126,8 +190,8 @@ func (j *JIRA) OpenIssue() error {
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}:",
-		Active:   "▶ {{ .Key }}	{{ .Fields.Summary }}",
+		Label: "{{ . }}:",
+		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Inactive: "  {{ .Key }}	{{ .Fields.Summary }}",
 		Selected: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Details: `
@@ -159,8 +223,8 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 
 func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, error) {
 	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}:",
-		Active:   "▶ {{ .Name }}	{{ .ID }}",
+		Label: "{{ . }}:",
+		Active: "▶ {{ .Name }}	{{ .ID }}",
 		Inactive: "  {{ .Name }}	{{ .ID }}",
 		Selected: "▶ {{ .Name }}	{{ .ID }}",
 	}

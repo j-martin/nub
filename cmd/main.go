@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.24.0"
+	app.Version = "0.26.0"
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		{
@@ -470,6 +470,25 @@ Continue?`
 			Aliases: []string{"ji"},
 			Subcommands: []cli.Command{
 				{
+					Name:      "create",
+					Aliases:   []string{"c"},
+					Usage:     "Creates a JIRA issue.",
+					ArgsUsage: "SUMMARY DESCRIPTION ... [ARGS]",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "reactive", Usage: "The issue will be added to the current sprint."},
+						cli.StringFlag{Name: "project", Usage: "Sets project, uses the default project is not set."},
+						cli.StringFlag{Name: "transition", Usage: "Set the issue transition. e.g. Done."},
+					},
+					Action: func(c *cli.Context) error {
+						if len(c.Args()) < 2 {
+							log.Fatal("The summary (title) and description must be passed.")
+						}
+						summary := c.Args().Get(0)
+						desc := c.Args().Get(1)
+						return MustInitJIRA(cfg).CreateIssue(c.String("project"), summary, desc, c.String("transition"), c.Bool("reactive"))
+					},
+				},
+				{
 					Name:    "open",
 					Aliases: []string{"o"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
@@ -486,7 +505,7 @@ Continue?`
 						if len(c.Args()) == 0 {
 							transition = c.Args().Get(0)
 						}
-						return MustInitJIRA(cfg).TransitionIssue(transition)
+						return MustInitJIRA(cfg).TransitionIssue("", transition)
 					},
 				},
 			},

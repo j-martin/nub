@@ -21,8 +21,8 @@ func (j *Jenkins) getJobName(m Manifest) string {
 }
 
 func MustInitJenkins(cfg *Configuration) *Jenkins {
-	checkServerConfig(cfg.Jenkins)
-	loadCredentials("Jenkins", &cfg.Jenkins)
+	checkServerConfig(cfg.Jenkins.Server)
+	loadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
 	jenkins := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password)
 	client, err := jenkins.Init()
 	if err != nil {
