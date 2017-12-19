@@ -29,28 +29,27 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 }
 
 func (gh *GitHub) CreatePR(title, body string) error {
-	GitPush()
+	GitPush(gh.cfg)
 	branch := GetCurrentBranch()
 	base := "master"
 	if title == "" {
-		title = strings.Replace(branch, "-", " ", -1)
+		title = strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
 	}
 
 	ctx := context.Background()
 	org := gh.cfg.GitHub.Organization
 	repo := GetCurrentRepositoryName()
 
-	prListOptions := github.PullRequestListOptions{Head: branch, Base: base}
-	existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
-	if len(existingPRs) > 0 {
-		log.Print("Existing PR found.")
-		return openURI(*existingPRs[0].HTMLURL)
-	}
-
 	request := github.NewPullRequest{Head: &branch, Base: &base, Title: &title, Body: &body}
 	pr, _, err := gh.client.PullRequests.Create(ctx, org, repo, &request)
 
 	if err != nil {
+		prListOptions := github.PullRequestListOptions{Head: branch, Base: base}
+		existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
+		if len(existingPRs) > 0 {
+			log.Print("Existing PR found.")
+			return openURI(*existingPRs[0].HTMLURL)
+		}
 		return err
 	}
 

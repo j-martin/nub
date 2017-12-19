@@ -48,8 +48,12 @@ func CloneRepository(repository string) {
 	MustRunCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
-func GitPush() {
-	MustRunCmd("git", "push", "--no-verify", "--set-upstream", "origin", GetCurrentBranch())
+func GitPush(cfg *Configuration) {
+	args := []string{"push", "--no-verify", "--set-upstream", "origin", GetCurrentBranch()}
+	if cfg.Git.NoVerify {
+		args = append(args, "--no-verify")
+	}
+	MustRunCmd("git", args...)
 }
 
 func UpdateRepository(repository string) {
@@ -142,10 +146,13 @@ func GetIssueKeyFromBranch() string {
 	return extractIssueKeyFromName(name)
 }
 
-func CommitWithIssueKey(message string, extraArgs []string) {
+func CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) {
 	issueKey := GetIssueKeyFromBranch()
 	args := []string{
 		"commit", "-m", issueKey + " " + strings.Trim(message, " "),
+	}
+	if cfg.Git.NoVerify {
+		args = append(args, "--no-verify")
 	}
 	args = append(args, extraArgs...)
 	MustRunCmd("git", args...)

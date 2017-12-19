@@ -539,7 +539,7 @@ Continue?`
 						if len(c.Args()) < 1 {
 							log.Fatal("Must pass commit message.")
 						}
-						CommitWithIssueKey(c.Args().Get(0), c.Args().Tail())
+						CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
 						return nil
 					},
 				},

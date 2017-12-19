@@ -30,6 +30,9 @@ type Configuration struct {
 		RDS          []RDSConfiguration
 		Environments []Environment
 	}
+	Git struct {
+		NoVerify bool `yaml:"noVerify"`
+	}
 	GitHub struct {
 		Organization, Token string
 		Reviewers           []string
