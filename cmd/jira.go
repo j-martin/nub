@@ -189,6 +189,9 @@ func (j *JIRA) OpenIssue() error {
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
+	if len(issues) == 1 {
+		return issues[0], nil
+	}
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
 		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
@@ -222,6 +225,9 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 }
 
 func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, error) {
+	if len(transitions) == 1 {
+		return transitions[0], nil
+	}
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
 		Active: "▶ {{ .Name }}	{{ .ID }}",
