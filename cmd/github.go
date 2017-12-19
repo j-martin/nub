@@ -33,7 +33,16 @@ func (gh *GitHub) CreatePR(title, body string) error {
 	branch := GetCurrentBranch()
 	base := "master"
 	if title == "" {
-		title = strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
+		subjects := LogNotInMasterSubjects()
+		if len(subjects) == 1 {
+			title = subjects[0]
+		} else {
+			title = strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
+		}
+	}
+
+	if body == "" {
+		body = LogNotInMasterBody()
 	}
 
 	ctx := context.Background()

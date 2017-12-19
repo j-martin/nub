@@ -138,6 +138,14 @@ func sanitizeBranchName(name string) string {
 	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
 }
 
+func LogNotInMasterSubjects() []string {
+	return strings.Split(MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:'%s'"), "\n")
+}
+
+func LogNotInMasterBody() string {
+	return MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:'-> %B'")
+}
+
 func GetIssueKeyFromBranch() string {
 	name, err := RunCmdWithOutput("git", "symbolic-ref", "--short", "-q", "HEAD")
 	if err != nil {
