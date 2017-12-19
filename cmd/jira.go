@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/andygrunwald/go-jira"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -40,6 +41,31 @@ func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
 	jql := "resolution = null AND assignee=currentUser() ORDER BY Rank"
 	issues, _, err := j.client.Issue.Search(jql, &jira.SearchOptions{MaxResults: 50})
 	return issues, err
+}
+
+func (j *JIRA) getUnassignedIssuesInSprint() ([]jira.Issue, error) {
+	jql := fmt.Sprintf("project = %v AND sprint IN openSprints() AND assignee = null AND resolution = null ORDER BY Rank", j.cfg.JIRA.Project)
+	issues, _, err := j.client.Issue.Search(jql, &jira.SearchOptions{MaxResults: 50})
+	return issues, err
+}
+
+func (j *JIRA) ClaimIssueInActiveSprint() error {
+	is, err := j.getUnassignedIssuesInSprint()
+	if err != nil {
+		return err
+	}
+	i, err := j.pickIssue(is)
+	if err != nil {
+		return err
+	}
+	i.Fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
+	j.client.Issue.Update(&i)
+	err = j.TransitionIssue(i.Key, "inprogress")
+	if err != nil {
+		return err
+	}
+	log.Printf("%v claimed.", i.Key)
+	return nil
 }
 
 func (j *JIRA) CreateBranchFromAssignedIssues() error {

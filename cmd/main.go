@@ -516,6 +516,14 @@ Continue?`
 			Aliases: []string{"w"},
 			Subcommands: []cli.Command{
 				{
+					Name:    "claim",
+					Aliases: []string{"cl"},
+					Usage:   "Claim unassigned issue in the current sprint.",
+					Action: func(c *cli.Context) error {
+						return MustInitJIRA(cfg).ClaimIssueInActiveSprint()
+					},
+				},
+				{
 					Name:    "new-branch",
 					Aliases: []string{"n", "new"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
