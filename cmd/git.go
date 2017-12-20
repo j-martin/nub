@@ -139,11 +139,11 @@ func sanitizeBranchName(name string) string {
 }
 
 func LogNotInMasterSubjects() []string {
-	return strings.Split(MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:'%s'"), "\n")
+	return strings.Split(MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:%s"), "\n")
 }
 
 func LogNotInMasterBody() string {
-	return MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:'-> %B'")
+	return MustRunCmdWithOutput("git", "log", "HEAD", "--not", "master", "--no-merges", "--pretty=format:-> %B")
 }
 
 func GetIssueKeyFromBranch() string {
