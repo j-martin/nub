@@ -35,6 +35,46 @@ func main() {
 	app.Usage = "A tool for all your Bench related needs."
 	app.Version = "0.27.0"
 	app.EnableBashCompletion = true
+
+	jiraOpenIssue := cli.Command{
+		Name:    "open",
+		Aliases: []string{"o"},
+		Usage:   "Open JIRA issue in the browser.",
+		Action: func(c *cli.Context) error {
+			return MustInitJIRA(cfg).OpenIssue()
+		},
+	}
+	jiraClaimIssue := cli.Command{
+
+		Name:    "claim",
+		Aliases: []string{"cl"},
+		Usage:   "Claim unassigned issue in the current sprint.",
+		Action: func(c *cli.Context) error {
+			return MustInitJIRA(cfg).ClaimIssueInActiveSprint()
+		},
+	}
+	jiraTransitionIssue := cli.Command{
+		Name:    "transition",
+		Aliases: []string{"t"},
+		Usage:   "Transition issue based on current branch.",
+		Action: func(c *cli.Context) error {
+			var transition string
+			if len(c.Args()) == 0 {
+				transition = c.Args().Get(0)
+			}
+			return MustInitJIRA(cfg).TransitionIssue("", transition)
+		},
+	}
+
+	jiraOpenBoard := cli.Command{
+		Name:    "board",
+		Aliases: []string{"b"},
+		Usage:   "Open your JIRA board.",
+		Action: func(c *cli.Context) error {
+			return openURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
+		},
+	}
+
 	app.Commands = []cli.Command{
 		{
 			Name:  "setup",
@@ -95,7 +135,7 @@ Please make sure you are in the directory where you store your repos and not a s
 
 Continue?`
 						if c.Bool("force") || askForConfirmation(message) {
-							SyncRepositories()
+							Git().SyncRepositories()
 						} else {
 							os.Exit(1)
 						}
@@ -113,7 +153,7 @@ Continue?`
 					},
 					Action: func(c *cli.Context) error {
 						if !c.Bool("no-fetch") {
-							FetchTags()
+							Git().FetchTags()
 						}
 						previousVersion := "production"
 						if len(c.Args()) > 0 {
@@ -123,7 +163,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
+						Git().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
 						return nil
 					},
 				},
@@ -469,6 +509,8 @@ Continue?`
 			Usage:   "JIRA related actions",
 			Aliases: []string{"ji"},
 			Subcommands: []cli.Command{
+				jiraOpenBoard,
+				jiraClaimIssue,
 				{
 					Name:      "create",
 					Aliases:   []string{"c"},
@@ -488,26 +530,8 @@ Continue?`
 						return MustInitJIRA(cfg).CreateIssue(c.String("project"), summary, desc, c.String("transition"), c.Bool("reactive"))
 					},
 				},
-				{
-					Name:    "open",
-					Aliases: []string{"o"},
-					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
-					Action: func(c *cli.Context) error {
-						return MustInitJIRA(cfg).OpenIssue()
-					},
-				},
-				{
-					Name:    "transition",
-					Aliases: []string{"t"},
-					Usage:   "Transition issue based on current branch.",
-					Action: func(c *cli.Context) error {
-						var transition string
-						if len(c.Args()) == 0 {
-							transition = c.Args().Get(0)
-						}
-						return MustInitJIRA(cfg).TransitionIssue("", transition)
-					},
-				},
+				jiraOpenIssue,
+				jiraTransitionIssue,
 			},
 		},
 		{
@@ -515,14 +539,9 @@ Continue?`
 			Usage:   "Git/GitHub/JIRA workflow actions.",
 			Aliases: []string{"w"},
 			Subcommands: []cli.Command{
-				{
-					Name:    "claim",
-					Aliases: []string{"cl"},
-					Usage:   "Claim unassigned issue in the current sprint.",
-					Action: func(c *cli.Context) error {
-						return MustInitJIRA(cfg).ClaimIssueInActiveSprint()
-					},
-				},
+				jiraOpenBoard,
+				jiraClaimIssue,
+				jiraOpenIssue,
 				{
 					Name:    "new-branch",
 					Aliases: []string{"n", "new"},
@@ -536,18 +555,18 @@ Continue?`
 					Aliases: []string{"ch", "b"},
 					Usage:   "Checkout an existing branch.",
 					Action: func(c *cli.Context) error {
-						return CheckoutBranch()
+						return Git().CheckoutBranch()
 					},
 				},
 				{
 					Name:    "commit",
 					Aliases: []string{"c"},
-					Usage:   "Commit",
+					Usage:   "MESSAGE [OPTS]...",
 					Action: func(c *cli.Context) error {
 						if len(c.Args()) < 1 {
 							log.Fatal("Must pass commit message.")
 						}
-						CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
+						Git().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
 						return nil
 					},
 				},
@@ -566,6 +585,7 @@ Continue?`
 						return MustInitGitHub(cfg).CreatePR(title, body)
 					},
 				},
+				jiraTransitionIssue,
 			},
 		},
 		{

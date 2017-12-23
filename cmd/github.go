@@ -29,11 +29,12 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 }
 
 func (gh *GitHub) CreatePR(title, body string) error {
-	GitPush(gh.cfg)
-	branch := GetCurrentBranch()
+	Git().Push(gh.cfg)
+	Git().Fetch()
+	branch := Git().GetCurrentBranch()
 	base := "master"
 	if title == "" {
-		subjects := LogNotInMasterSubjects()
+		subjects := Git().LogNotInMasterSubjects()
 		if len(subjects) == 1 {
 			title = subjects[0]
 		} else {
@@ -42,12 +43,12 @@ func (gh *GitHub) CreatePR(title, body string) error {
 	}
 
 	if body == "" {
-		body = LogNotInMasterBody()
+		body = Git().LogNotInMasterBody()
 	}
 
 	ctx := context.Background()
 	org := gh.cfg.GitHub.Organization
-	repo := GetCurrentRepositoryName()
+	repo := Git().GetCurrentRepositoryName()
 
 	request := github.NewPullRequest{Head: &branch, Base: &base, Title: &title, Body: &body}
 	pr, _, err := gh.client.PullRequests.Create(ctx, org, repo, &request)

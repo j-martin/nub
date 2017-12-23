@@ -44,7 +44,7 @@ func openSplunk(cfg *Configuration, m Manifest, isStaging bool) error {
 func openCircle(cfg *Configuration, m Manifest, getBranch bool) error {
 	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
-		currentBranch := url.QueryEscape(GetCurrentBranch())
+		currentBranch := url.QueryEscape(Git().GetCurrentBranch())
 		return openURI(base, m.Repository, "tree", currentBranch)
 	}
 	return openURI(base, m.Repository)

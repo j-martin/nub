@@ -198,7 +198,12 @@ func prepareSSHArgs(params ConnectionParams) []string {
 			if os.Getenv("TERM_PROGRAM") == "iTerm.app" && os.Getenv("TMUX") == "" {
 				arg = "-CC"
 			}
+
+			tmuxInstall := "test -f /usr/bin/tmux || " +
+				"(test -f /usr/bin/yum && sudo yum install -y tmux || sudo apt-get install -y tmux)"
+
 			tmuxCmd := []string{
+				tmuxInstall, "&&",
 				"tmux", arg, "attach", "-t", usr.Username, "||",
 				"tmux", arg, "new", "-s", usr.Username,
 			}

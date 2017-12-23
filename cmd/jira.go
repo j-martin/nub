@@ -38,13 +38,29 @@ func (j *JIRA) init(cfg *Configuration) error {
 }
 
 func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
-	jql := "resolution = null AND assignee=currentUser() ORDER BY Rank"
-	issues, _, err := j.client.Issue.Search(jql, &jira.SearchOptions{MaxResults: 50})
-	return issues, err
+	return j.search("resolution = null AND assignee=currentUser() ORDER BY Rank")
 }
+
+func (j *JIRA) SearchText(text string) ([]jira.Issue, error) {
+	jql := fmt.Sprintf("text ~ \"%v\" ORDER BY createdDate", text)
+	return j.search(jql)
+}
+
+func (j *JIRA) SearchTextInProject(text string) ([]jira.Issue, error) {
+	jql := fmt.Sprintf("project = %v AND text ~ \"%v\" ORDER BY createdDate", j.cfg.JIRA.Project, text)
+	return j.search(jql)
+}
+
+// func (j *JIRA) openIssue(is []jira.Issue) ([]jira.Issue, error) {
+//		j.pickIssue(is)
+// }
 
 func (j *JIRA) getUnassignedIssuesInSprint() ([]jira.Issue, error) {
 	jql := fmt.Sprintf("project = %v AND sprint IN openSprints() AND assignee = null AND resolution = null ORDER BY Rank", j.cfg.JIRA.Project)
+	return j.search(jql)
+}
+
+func (j *JIRA) search(jql string) ([]jira.Issue, error) {
 	issues, _, err := j.client.Issue.Search(jql, &jira.SearchOptions{MaxResults: 50})
 	return issues, err
 }
@@ -59,7 +75,12 @@ func (j *JIRA) ClaimIssueInActiveSprint() error {
 		return err
 	}
 	i.Fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
-	j.client.Issue.Update(&i)
+	_, res, err := j.client.Issue.Update(&i)
+	if err != nil {
+		b, _ := ioutil.ReadAll(res.Body)
+		log.Print(string(b))
+		return err
+	}
 	err = j.TransitionIssue(i.Key, "inprogress")
 	if err != nil {
 		return err
@@ -77,7 +98,7 @@ func (j *JIRA) CreateBranchFromAssignedIssues() error {
 	if err != nil {
 		return err
 	}
-	CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	Git().CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
 
@@ -121,7 +142,7 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 }
 
 func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
-	key := GetIssueKeyFromBranch()
+	key := Git().GetIssueKeyFromBranch()
 	if key == "" {
 		log.Print("No issue key found in ")
 		is, err := j.getAssignedIssues()
@@ -216,7 +237,9 @@ func (j *JIRA) OpenIssue() error {
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 	if len(issues) == 1 {
-		return issues[0], nil
+		issue := issues[0]
+		log.Printf("%v %v only available", issue.Key, issue.Fields.Summary)
+		return issue, nil
 	}
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
@@ -233,7 +256,7 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 
 	searcher := func(input string, index int) bool {
 		i := issues[index]
-		name := strings.Replace(strings.ToLower(i.Fields.Summary), " ", "", -1)
+		name := strings.Replace(strings.ToLower(i.Key+i.Fields.Summary), " ", "", -1)
 		input = strings.Replace(strings.ToLower(input), " ", "", -1)
 
 		return strings.Contains(name, input)

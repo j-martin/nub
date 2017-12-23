@@ -87,7 +87,7 @@ func (e Manifests) Swap(i, j int) {
 func loadManifest(version string) (Manifest, error) {
 	m := Manifest{}
 
-	if !inRepository() {
+	if !Git().inRepository() {
 		return Manifest{}, errors.New("must be executed in a repository")
 	}
 
@@ -122,8 +122,8 @@ func loadManifest(version string) (Manifest, error) {
 	}
 
 	m.LastUpdate = time.Now().Unix()
-	m.Repository = GetCurrentRepositoryName()
-	m.Branch = GetCurrentBranch()
+	m.Repository = Git().GetCurrentRepositoryName()
+	m.Branch = Git().GetCurrentBranch()
 	m.Version = version
 
 	readme, _ := ioutil.ReadFile("README.md")
@@ -138,7 +138,7 @@ func loadManifest(version string) (Manifest, error) {
 func createManifest() {
 
 	manifest := Manifest{
-		Name: GetCurrentRepositoryName(),
+		Name: Git().GetCurrentRepositoryName(),
 	}
 	manifestString := `---
 name: {{.Name}}
