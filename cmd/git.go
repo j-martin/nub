@@ -75,7 +75,7 @@ func (g *git) UpdateRepository(repository string) {
 }
 
 func (g *git) SyncRepositories() {
-	for _, m := range GetAllActiveManifests() {
+	for _, m := range GetManifestRepository().GetAllActiveManifests() {
 		g.syncRepository(m)
 	}
 }

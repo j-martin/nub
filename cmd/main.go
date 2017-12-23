@@ -187,7 +187,7 @@ Continue?`
 						cli.StringFlag{Name: "lang", Usage: "Display only projects matching the language"},
 					},
 					Action: func(c *cli.Context) error {
-						manifests := GetAllManifests()
+						manifests := GetManifestRepository().GetAllManifests()
 						for _, m := range manifests {
 							if !c.Bool("full") {
 								m.Readme = ""
@@ -251,7 +251,7 @@ Continue?`
 							os.Exit(1)
 						}
 						manifest.Version = c.String("artifact-version")
-						StoreManifest(manifest)
+						GetManifestRepository().StoreManifest(manifest)
 						return MustInitConfluence(cfg).updateDocumentation(manifest)
 					},
 				},

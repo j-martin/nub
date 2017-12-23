@@ -9,16 +9,20 @@ import (
 	"sort"
 )
 
-var manifestsTable = aws.String("manifests")
-
-func getDynamoSvc() *dynamodb.DynamoDB {
-	config := getAWSConfig("us-east-1")
-	return dynamodb.New(session.New(&config))
+type manifestRepository struct {
+	db *dynamodb.DynamoDB
 }
 
-func GetAllActiveManifests() []Manifest {
+var manifestsTable = aws.String("manifests")
+
+func GetManifestRepository() *manifestRepository {
+	config := getAWSConfig("us-east-1")
+	return &manifestRepository{db: dynamodb.New(session.New(&config))}
+}
+
+func (r *manifestRepository) GetAllActiveManifests() []Manifest {
 	ms := Manifests{}
-	for _, m := range GetAllManifests() {
+	for _, m := range r.GetAllManifests() {
 		if m.Active {
 			ms = append(ms, m)
 		}
@@ -26,11 +30,11 @@ func GetAllActiveManifests() []Manifest {
 	return ms
 }
 
-func GetAllManifests() []Manifest {
+func (r *manifestRepository) GetAllManifests() []Manifest {
 	log.Println("Fetching all manifests.")
 	manifests := Manifests{}
 	params := &dynamodb.ScanInput{TableName: manifestsTable}
-	result, err := getDynamoSvc().Scan(params)
+	result, err := r.db.Scan(params)
 
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +45,7 @@ func GetAllManifests() []Manifest {
 	return manifests
 }
 
-func StoreManifest(m Manifest) {
+func (r *manifestRepository) StoreManifest(m Manifest) {
 	log.Printf("Updating manifest: %v", m.Name)
 	manifest, err := dynamodbattribute.MarshalMap(m)
 
@@ -50,7 +54,7 @@ func StoreManifest(m Manifest) {
 	}
 
 	params := &dynamodb.PutItemInput{TableName: manifestsTable, Item: manifest}
-	_, err = getDynamoSvc().PutItem(params)
+	_, err = r.db.PutItem(params)
 
 	if err != nil {
 		log.Println(err)

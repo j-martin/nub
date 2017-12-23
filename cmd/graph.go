@@ -17,7 +17,7 @@ func generateGraphs() {
 		os.Mkdir(outputPath, os.FileMode(0775))
 	}
 	os.Chdir(outputPath)
-	manifests := GetAllManifests()
+	manifests := GetManifestRepository().GetAllManifests()
 	for _, filter := range [][]string{{"service"}, {"front-end"}, {"front-end", "service"}} {
 		for _, outputType := range []godot.OutputType{godot.OUT_PNG, godot.OUT_SVG} {
 			generateGraph(filter, manifests, outputType, true)
