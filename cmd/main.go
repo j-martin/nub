@@ -310,7 +310,7 @@ Continue?`
 			Usage:   "RDS actions.",
 			Aliases: []string{"r"},
 			Action: func(c *cli.Context) error {
-				ConnectToRDSInstance(cfg, c.Args().First(), c.Args().Tail())
+				GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
 				return nil
 			},
 		},

@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+type RDS struct {
+	cfg *Configuration
+}
+
 type DBInstances []*rds.DBInstance
 
 func (e DBInstances) Len() int {
@@ -34,9 +38,13 @@ type EngineConfiguration struct {
 	Command, CommandAlt string
 }
 
-func ConnectToRDSInstance(cfg *Configuration, filter string, args []string) {
+func GetRDS(cfg *Configuration) *RDS {
+	return &RDS{cfg: cfg}
+}
+
+func (r *RDS) ConnectToRDSInstance(filter string, args []string) {
 	channel := make(chan []*rds.DBInstance)
-	regions := cfg.AWS.Regions
+	regions := r.cfg.AWS.Regions
 	for _, region := range regions {
 		go func(region string) {
 			config := getAWSConfig(region)
@@ -63,59 +71,63 @@ func ConnectToRDSInstance(cfg *Configuration, filter string, args []string) {
 
 	sort.Sort(instances)
 
-	type rdsInstance struct {
-		Name, Address, Engine string
-	}
-
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		connectToRDSInstance(instances[0], args, cfg)
+		r.connectToRDSInstance(instances[0], args)
 	} else {
-		var rdsInstances []rdsInstance
-		for _, instance := range instances {
-			name := strings.Split(*instance.Endpoint.Address, ".")[0]
-			rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})
-		}
 
-		templates := &promptui.SelectTemplates{
-			Label:    "{{ . }}:",
-			Active:   "▶ {{ .Name }}",
-			Selected: "▶ {{ .Name }}",
-			Inactive: "  {{ .Name }}",
-			Details: `
+		instance, err := r.pickRDSInstance(instances)
+		if err != nil {
+			log.Fatalf("Failed to pick instance: %v", err)
+		}
+		r.connectToRDSInstance(instance, args)
+	}
+}
+
+func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, error) {
+	type rdsInstance struct {
+		Name, Address, Engine string
+	}
+	var rdsInstances []rdsInstance
+	for _, instance := range instances {
+		name := strings.Split(*instance.Endpoint.Address, ".")[0]
+		rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})
+	}
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Name }}",
+		Selected: "▶ {{ .Name }}",
+		Inactive: "  {{ .Name }}",
+		Details: `
 --------- RDS Instance ----------
 {{ "Name:" | faint }}	{{ .Name }}
 {{ "Address:" | faint }}	{{ .Address }}
 {{ "Engine:" | faint }}	{{ .Engine }}
 `,
-		}
-
-		searcher := func(input string, index int) bool {
-			i := instances[index]
-			name := strings.Replace(strings.ToLower(strings.Split(*i.Endpoint.Address, ".")[0]), " ", "", -1)
-			input = strings.Replace(strings.ToLower(input), " ", "", -1)
-
-			return strings.Contains(name, input)
-		}
-
-		prompt := promptui.Select{
-			Size:      20,
-			Label:     "Select a RDS Instance",
-			Items:     rdsInstances,
-			Templates: templates,
-			Searcher:  searcher,
-		}
-		i, _, err := prompt.Run()
-		if err != nil {
-			log.Fatalf("Failed to pick instance: %v", err)
-		}
-		connectToRDSInstance(instances[i], args, cfg)
 	}
+
+	searcher := func(input string, index int) bool {
+		i := instances[index]
+		name := strings.Replace(strings.ToLower(strings.Split(*i.Endpoint.Address, ".")[0]), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+		return strings.Contains(name, input)
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     "Select a RDS Instance",
+		Items:     rdsInstances,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	return instances[i], err
 }
 
-func getRDSConfig(endpoint string, credentials []RDSConfiguration) RDSConfiguration {
-	for _, i := range credentials {
+func (r *RDS) getRDSConfig(endpoint string) RDSConfiguration {
+	for _, i := range r.cfg.AWS.RDS {
 		if strings.HasPrefix(endpoint, i.Prefix) {
 			if i.Database == "" {
 				segments := strings.Split(endpoint, "-")[1]
@@ -130,8 +142,8 @@ func getRDSConfig(endpoint string, credentials []RDSConfiguration) RDSConfigurat
 	return RDSConfiguration{}
 }
 
-func getEnvironment(endpoint string, environments []Environment) Environment {
-	for _, i := range environments {
+func (r *RDS) getEnvironment(endpoint string) Environment {
+	for _, i := range r.cfg.AWS.Environments {
 		if strings.HasPrefix(endpoint, i.Prefix) {
 			return i
 		}
@@ -140,7 +152,7 @@ func getEnvironment(endpoint string, environments []Environment) Environment {
 	return Environment{}
 }
 
-func tunnelIsReady(port int) bool {
+func (r *RDS) tunnelIsReady(port int) bool {
 	_, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%v", port))
 	if err != nil {
 		return false
@@ -153,7 +165,7 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func getEngineConfiguration(engine string) EngineConfiguration {
+func (r *RDS) getEngineConfiguration(engine string) EngineConfiguration {
 	if engine == "mysql" {
 		return EngineConfiguration{3306, "mycli", "mysql"}
 	}
@@ -161,7 +173,7 @@ func getEngineConfiguration(engine string) EngineConfiguration {
 }
 
 // Escape codes for iTerm2
-func setBackground(endpoint string) {
+func (r *RDS) setBackground(endpoint string) {
 	if strings.HasPrefix(endpoint, "pro") {
 		// red for production
 		print("\033]Ph501010\033\\")
@@ -171,17 +183,17 @@ func setBackground(endpoint string) {
 	}
 }
 
-func rdsCleanup(tunnel *exec.Cmd) {
+func (r *RDS) rdsCleanup(tunnel *exec.Cmd) {
 	// green for safe
 	print("\033]Ph103010\033\\")
 	tunnel.Process.Kill()
 }
-func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg *Configuration) {
+func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 	endpoint := *instance.Endpoint.Address
-	jump := getEnvironment(endpoint, cfg.AWS.Environments).Jumphost
-	rdsConfig := getRDSConfig(endpoint, cfg.AWS.RDS)
+	jump := r.getEnvironment(endpoint).Jumphost
+	rdsConfig := r.getRDSConfig(endpoint)
 	port := random(40000, 60000)
-	engine := getEngineConfiguration(*instance.Engine)
+	engine := r.getEngineConfiguration(*instance.Engine)
 
 	tunnelPath := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
 	log.Printf("Connecting to %s through %s", tunnelPath, jump)
@@ -192,7 +204,7 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg *Configur
 	log.Print("Waiting for tunnel...")
 	for {
 		time.Sleep(100 * time.Millisecond)
-		if tunnelIsReady(port) {
+		if r.tunnelIsReady(port) {
 			break
 		}
 	}
@@ -247,7 +259,7 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg *Configur
 	}
 
 	log.Printf("Running: %s %s", command, strings.Join(args, " "))
-	setBackground(endpoint)
+	r.setBackground(endpoint)
 	cmd := exec.Command(command, args...)
 	cmd.Env = env
 	cmd.Stdout = os.Stdout
@@ -255,8 +267,8 @@ func connectToRDSInstance(instance *rds.DBInstance, args []string, cfg *Configur
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		rdsCleanup(tunnel)
+		r.rdsCleanup(tunnel)
 		log.Fatal(err)
 	}
-	rdsCleanup(tunnel)
+	r.rdsCleanup(tunnel)
 }
