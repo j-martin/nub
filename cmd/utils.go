@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/manifoldco/promptui"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func askForConfirmation(s string) bool {
@@ -101,4 +103,9 @@ func pickItem(label string, items []string) (string, error) {
 	}
 	i, _, err := prompt.Run()
 	return items[i], err
+}
+
+func random(min, max int) int {
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
 }

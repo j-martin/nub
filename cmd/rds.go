@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/manifoldco/promptui"
 	"log"
-	"math/rand"
 	"net"
 	"os"
 	"os/exec"
@@ -158,11 +157,6 @@ func (r *RDS) tunnelIsReady(port int) bool {
 		return false
 	}
 	return true
-}
-
-func random(min, max int) int {
-	rand.Seed(time.Now().Unix())
-	return rand.Intn(max-min) + min
 }
 
 func (r *RDS) getEngineConfiguration(engine string) EngineConfiguration {
