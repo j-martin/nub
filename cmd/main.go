@@ -36,6 +36,24 @@ func main() {
 	app.Version = "0.27.0"
 	app.EnableBashCompletion = true
 
+	jiraSearchIssue := cli.Command{
+		Name:    "search",
+		Aliases: []string{"s"},
+		Usage:   "Search and open JIRA issue in the browser.",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: "all", Usage: "Use all projects."},
+			cli.BoolFlag{Name: "resolved", Usage: "Include resolved issues."},
+			cli.StringFlag{Name: "p", Usage: "Specify the project."},
+		},
+		Action: func(c *cli.Context) error {
+			project := c.String("pr")
+			if !c.Bool("all") {
+				project = cfg.JIRA.Project
+			}
+			return MustInitJIRA(cfg).SearchIssueText(strings.Join(c.Args(), " "), project, c.Bool("resolved"))
+		},
+	}
+
 	jiraOpenIssue := cli.Command{
 		Name:    "open",
 		Aliases: []string{"o"},
@@ -510,6 +528,7 @@ Continue?`
 			Aliases: []string{"ji"},
 			Subcommands: []cli.Command{
 				jiraOpenBoard,
+				jiraSearchIssue,
 				jiraClaimIssue,
 				{
 					Name:      "create",

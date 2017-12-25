@@ -41,19 +41,27 @@ func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
 	return j.search("resolution = null AND assignee=currentUser() ORDER BY Rank")
 }
 
-func (j *JIRA) SearchText(text string) ([]jira.Issue, error) {
+func (j *JIRA) SearchIssueText(text, project string, resolved bool) error {
+	is, err := j.SearchText(text, project, resolved)
+	if err != nil {
+		return err
+	}
+	i, err := j.pickIssue(is)
+	if err != nil {
+		return err
+	}
+	return j.openIssue(i)
+}
+func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
 	jql := fmt.Sprintf("text ~ \"%v\" ORDER BY createdDate", text)
+	if project != "" {
+		jql = fmt.Sprintf("project = %v AND %v", project, jql)
+	}
+	if !resolved {
+		jql = fmt.Sprintf("resolution = null AND %v", jql)
+	}
 	return j.search(jql)
 }
-
-func (j *JIRA) SearchTextInProject(text string) ([]jira.Issue, error) {
-	jql := fmt.Sprintf("project = %v AND text ~ \"%v\" ORDER BY createdDate", j.cfg.JIRA.Project, text)
-	return j.search(jql)
-}
-
-// func (j *JIRA) openIssue(is []jira.Issue) ([]jira.Issue, error) {
-//		j.pickIssue(is)
-// }
 
 func (j *JIRA) getUnassignedIssuesInSprint() ([]jira.Issue, error) {
 	jql := fmt.Sprintf("project = %v AND sprint IN openSprints() AND assignee = null AND resolution = null ORDER BY Rank", j.cfg.JIRA.Project)
@@ -218,11 +226,11 @@ func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
 	return empty, errors.New("no active sprint found")
 }
 
-func (j *JIRA) OpenIssue() error {
-	key, err := j.getIssueKeyFromBranchOrAssigned()
-	if err != nil {
-		return nil
-	}
+func (j *JIRA) openIssue(issue jira.Issue) error {
+	return j.openIssueFromKey(issue.Key)
+}
+
+func (j *JIRA) openIssueFromKey(key string) error {
 	beeInstalled, err := pathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
@@ -233,6 +241,14 @@ func (j *JIRA) OpenIssue() error {
 	}
 	openURI(j.cfg.JIRA.Server, "browse", key)
 	return nil
+}
+
+func (j *JIRA) OpenIssue() error {
+	key, err := j.getIssueKeyFromBranchOrAssigned()
+	if err != nil {
+		return nil
+	}
+	return j.openIssueFromKey(key)
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
@@ -249,6 +265,9 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 		Details: `
 --------- Issue ----------
 {{ "Key:" | faint }}	{{ .Key }}
+{{ "Assignee:" | faint }}	{{ if .Fields.Assignee }}{{ .Fields.Assignee.DisplayName }}{{ end }}
+{{ "Reporter:" | faint }}	{{ .Fields.Reporter.DisplayName }}
+{{ "Status:" | faint }}	{{ .Fields.Status.Name }}
 {{ "Summary:" | faint }}	{{ .Fields.Summary }}
 {{ "Description:" | faint }}	{{ .Fields.Description }}
 `,
