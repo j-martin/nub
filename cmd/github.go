@@ -76,17 +76,17 @@ func (gh *GitHub) CreatePR(title, body string) error {
 	return OpenURI(*pr.HTMLURL)
 }
 
-func (g *GitHub) OpenPage(m *Manifest, p ...string) error {
+func (gh *GitHub) OpenPage(m *Manifest, p ...string) error {
 	base := []string{
-		"https://github.com/",
-		g.cfg.GitHub.Organization,
+		"https://github.com",
+		gh.cfg.GitHub.Organization,
 		m.Repository,
 	}
 	return OpenURI(append(base, p...)...)
 }
 
-func (g *GitHub) OpenPR(m *Manifest, pr string) error {
-	return g.OpenPage(m, "pull", pr, "files")
+func (gh *GitHub) OpenPR(m *Manifest, pr string) error {
+	return gh.OpenPage(m, "pull", pr, "files")
 }
 
 func (gh *GitHub) ListBranches(maxAge int) error {
