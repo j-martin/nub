@@ -29,12 +29,12 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 }
 
 func (gh *GitHub) CreatePR(title, body string) error {
-	Git().Push(gh.cfg)
-	Git().Fetch()
-	branch := Git().GetCurrentBranch()
+	MustInitGit().Push(gh.cfg)
+	MustInitGit().Fetch()
+	branch := MustInitGit().GetCurrentBranch()
 	base := "master"
 	if title == "" {
-		subjects := Git().LogNotInMasterSubjects()
+		subjects := MustInitGit().LogNotInMasterSubjects()
 		if len(subjects) == 1 {
 			title = subjects[0]
 		} else {
@@ -43,12 +43,12 @@ func (gh *GitHub) CreatePR(title, body string) error {
 	}
 
 	if body == "" {
-		body = Git().LogNotInMasterBody()
+		body = MustInitGit().LogNotInMasterBody()
 	}
 
 	ctx := context.Background()
 	org := gh.cfg.GitHub.Organization
-	repo := Git().GetCurrentRepositoryName()
+	repo := MustInitGit().GetCurrentRepositoryName()
 
 	request := github.NewPullRequest{Head: &branch, Base: &base, Title: &title, Body: &body}
 	pr, _, err := gh.client.PullRequests.Create(ctx, org, repo, &request)
@@ -58,7 +58,7 @@ func (gh *GitHub) CreatePR(title, body string) error {
 		existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
 		if len(existingPRs) > 0 {
 			log.Print("Existing PR found.")
-			return openURI(*existingPRs[0].HTMLURL)
+			return OpenURI(*existingPRs[0].HTMLURL)
 		}
 		return err
 	}
@@ -73,7 +73,20 @@ func (gh *GitHub) CreatePR(title, body string) error {
 		}
 
 	}
-	return openURI(*pr.HTMLURL)
+	return OpenURI(*pr.HTMLURL)
+}
+
+func (g *GitHub) OpenPage(m *Manifest, p ...string) error {
+	base := []string{
+		"https://github.com/",
+		g.cfg.GitHub.Organization,
+		m.Repository,
+	}
+	return OpenURI(append(base, p...)...)
+}
+
+func (g *GitHub) OpenPR(m *Manifest, pr string) error {
+	return g.OpenPage(m, "pull", pr, "files")
 }
 
 func (gh *GitHub) ListBranches(maxAge int) error {

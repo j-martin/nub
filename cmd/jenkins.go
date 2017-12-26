@@ -16,7 +16,7 @@ type Jenkins struct {
 	client *gojenkins.Jenkins
 }
 
-func (j *Jenkins) getJobName(m Manifest) string {
+func (j *Jenkins) getJobName(m *Manifest) string {
 	return path.Join(j.cfg.GitHub.Organization, "job", m.Repository, "job", m.Branch)
 }
 
@@ -31,7 +31,7 @@ func MustInitJenkins(cfg *Configuration) *Jenkins {
 	return &Jenkins{cfg: cfg, client: client}
 }
 
-func (j *Jenkins) getJob(m Manifest) *gojenkins.Job {
+func (j *Jenkins) getJob(m *Manifest) *gojenkins.Job {
 	uri := j.getJobName(m)
 	job, err := j.client.GetJob(uri)
 	if err != nil {
@@ -40,7 +40,7 @@ func (j *Jenkins) getJob(m Manifest) *gojenkins.Job {
 	return job
 }
 
-func (j *Jenkins) getLastBuild(m Manifest) *gojenkins.Build {
+func (j *Jenkins) getLastBuild(m *Manifest) *gojenkins.Build {
 	log.Printf("Fetching last build for '%v' '%v'.", m.Repository, m.Branch)
 	lastBuild, err := j.getJob(m).GetLastBuild()
 	if err != nil {
@@ -50,7 +50,7 @@ func (j *Jenkins) getLastBuild(m Manifest) *gojenkins.Build {
 	return lastBuild
 }
 
-func (j *Jenkins) getArtifacts(m Manifest) error {
+func (j *Jenkins) getArtifacts(m *Manifest) error {
 	log.Print("Fetching artifacts.")
 	artifacts := j.getLastBuild(m).GetArtifacts()
 	dir, err := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
@@ -72,7 +72,7 @@ func (j *Jenkins) getArtifacts(m Manifest) error {
 	return nil
 }
 
-func (j *Jenkins) showConsoleOutput(m Manifest) {
+func (j *Jenkins) showConsoleOutput(m *Manifest) {
 	var lastChar int
 	for {
 		build, err := j.getJob(m).GetLastBuild()
@@ -99,7 +99,7 @@ func (j *Jenkins) showConsoleOutput(m Manifest) {
 	}
 }
 
-func (j *Jenkins) buildJob(m Manifest, async bool, force bool) {
+func (j *Jenkins) buildJob(m *Manifest, async bool, force bool) {
 	jobName := j.getJobName(m)
 	job := j.getJob(m)
 	lastBuild, err := job.GetLastBuild()

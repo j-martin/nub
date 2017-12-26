@@ -106,7 +106,7 @@ func (j *JIRA) CreateBranchFromAssignedIssues() error {
 	if err != nil {
 		return err
 	}
-	Git().CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	MustInitGit().CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
 
@@ -150,7 +150,7 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 }
 
 func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
-	key := Git().GetIssueKeyFromBranch()
+	key := MustInitGit().GetIssueKeyFromBranch()
 	if key == "" {
 		log.Print("No issue key found in ")
 		is, err := j.getAssignedIssues()
@@ -227,19 +227,19 @@ func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
 }
 
 func (j *JIRA) openIssue(issue jira.Issue) error {
-	return j.openIssueFromKey(issue.Key)
+	return j.OpenIssueFromKey(issue.Key)
 }
 
-func (j *JIRA) openIssueFromKey(key string) error {
+func (j *JIRA) OpenIssueFromKey(key string) error {
 	beeInstalled, err := pathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
 	}
 	if beeInstalled {
-		openURI("bee://item?id=" + key)
+		OpenURI("bee://item?id=" + key)
 		return nil
 	}
-	openURI(j.cfg.JIRA.Server, "browse", key)
+	OpenURI(j.cfg.JIRA.Server, "browse", key)
 	return nil
 }
 
@@ -248,7 +248,7 @@ func (j *JIRA) OpenIssue() error {
 	if err != nil {
 		return nil
 	}
-	return j.openIssueFromKey(key)
+	return j.OpenIssueFromKey(key)
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
@@ -301,6 +301,7 @@ func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, e
 		Active: "▶ {{ .Name }}	{{ .ID }}",
 		Inactive: "  {{ .Name }}	{{ .ID }}",
 		Selected: "▶ {{ .Name }}	{{ .ID }}",
+		Details: "",
 	}
 
 	searcher := func(input string, index int) bool {

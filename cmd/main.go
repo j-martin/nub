@@ -89,7 +89,7 @@ func main() {
 		Aliases: []string{"b"},
 		Usage:   "Open your JIRA board.",
 		Action: func(c *cli.Context) error {
-			return openURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
+			return OpenURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
 		},
 	}
 
@@ -153,7 +153,7 @@ Please make sure you are in the directory where you store your repos and not a s
 
 Continue?`
 						if c.Bool("force") || askForConfirmation(message) {
-							Git().SyncRepositories()
+							MustInitGit().SyncRepositories()
 						} else {
 							os.Exit(1)
 						}
@@ -171,7 +171,7 @@ Continue?`
 					},
 					Action: func(c *cli.Context) error {
 						if !c.Bool("no-fetch") {
-							Git().FetchTags()
+							MustInitGit().FetchTags()
 						}
 						previousVersion := "production"
 						if len(c.Args()) > 0 {
@@ -181,7 +181,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						Git().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
+						MustInitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
 						return nil
 					},
 				},
@@ -483,7 +483,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						return openGH(cfg, manifest, "")
+						return MustInitGitHub(cfg).OpenPage(manifest)
 					},
 				},
 				{
@@ -491,7 +491,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						return openGH(cfg, manifest, "issues")
+						return MustInitGitHub(cfg).OpenPage(manifest, "issues")
 					},
 				},
 				{
@@ -499,7 +499,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						return openGH(cfg, manifest, "branches")
+						return MustInitGitHub(cfg).OpenPage(manifest, "branches")
 					},
 				},
 				{
@@ -507,7 +507,7 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						return openGH(cfg, manifest, "pulls")
+						return MustInitGitHub(cfg).OpenPage(manifest, "pulls")
 					},
 				},
 				{
@@ -574,7 +574,7 @@ Continue?`
 					Aliases: []string{"ch", "b"},
 					Usage:   "Checkout an existing branch.",
 					Action: func(c *cli.Context) error {
-						return Git().CheckoutBranch()
+						return MustInitGit().CheckoutBranch()
 					},
 				},
 				{
@@ -585,7 +585,7 @@ Continue?`
 						if len(c.Args()) < 1 {
 							log.Fatal("Must pass commit message.")
 						}
-						Git().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
+						MustInitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
 						return nil
 					},
 				},
@@ -605,6 +605,14 @@ Continue?`
 					},
 				},
 				jiraTransitionIssue,
+				{
+					Name:    "log",
+					Aliases: []string{"l"},
+					Usage:   "Show git log and open PR, JIRA ticket, etc.",
+					Action: func(c *cli.Context) error {
+						return MustInitWorkflow(cfg, manifest).Log()
+					},
+				},
 			},
 		},
 		{
@@ -679,7 +687,7 @@ Continue?`
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
 				base := "https://example.atlassian.net/wiki/display/dev/"
-				return openURI(base + manifest.Name)
+				return OpenURI(base + manifest.Name)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -688,7 +696,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Action: func(c *cli.Context) error {
 						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						return openURI(base + manifest.Name + ".raml")
+						return OpenURI(base + manifest.Name + ".raml")
 					},
 				},
 			},

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func openURI(uriSegments ...string) error {
+func OpenURI(uriSegments ...string) error {
 	uri := strings.Join(uriSegments, "/")
 	log.Printf("Opening: %v", uri)
 	if runtime.GOOS == "darwin" {
@@ -20,15 +20,11 @@ func openURI(uriSegments ...string) error {
 	return errors.New("could not open the link automatically")
 }
 
-func openGH(cfg *Configuration, m Manifest, p string) error {
-	return openURI("https://github.com/", cfg.GitHub.Organization, m.Repository, p)
+func openJenkins(cfg *Configuration, m *Manifest, p string) error {
+	return OpenURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
 }
 
-func openJenkins(cfg *Configuration, m Manifest, p string) error {
-	return openURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
-}
-
-func openSplunk(cfg *Configuration, m Manifest, isStaging bool) error {
+func openSplunk(cfg *Configuration, m *Manifest, isStaging bool) error {
 	base := cfg.Splunk.Server +
 		"/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"
 	var sourceType string
@@ -38,14 +34,14 @@ func openSplunk(cfg *Configuration, m Manifest, isStaging bool) error {
 		sourceType = "pro"
 	}
 	sourceType = sourceType + "-" + m.Name + "*"
-	return openURI(base + sourceType)
+	return OpenURI(base + sourceType)
 }
 
-func openCircle(cfg *Configuration, m Manifest, getBranch bool) error {
+func openCircle(cfg *Configuration, m *Manifest, getBranch bool) error {
 	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
-		currentBranch := url.QueryEscape(Git().GetCurrentBranch())
-		return openURI(base, m.Repository, "tree", currentBranch)
+		currentBranch := url.QueryEscape(MustInitGit().GetCurrentBranch())
+		return OpenURI(base, m.Repository, "tree", currentBranch)
 	}
-	return openURI(base, m.Repository)
+	return OpenURI(base, m.Repository)
 }

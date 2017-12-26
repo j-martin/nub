@@ -84,18 +84,18 @@ func (e Manifests) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func loadManifest(version string) (Manifest, error) {
-	m := Manifest{}
+func loadManifest(version string) (*Manifest, error) {
+	m := &Manifest{}
 
-	if !Git().inRepository() {
-		return Manifest{}, errors.New("must be executed in a repository")
+	if !MustInitGit().InRepository() {
+		return m, errors.New("must be executed in a repository")
 	}
 
 	data, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
 		data, err = ioutil.ReadFile("manifest.yml")
 	}
-	err = yaml.Unmarshal(data, &m)
+	err = yaml.Unmarshal(data, m)
 
 	if len(m.Languages) == 0 && m.Language != "" {
 		m.Languages = []string{m.Language}
@@ -122,8 +122,8 @@ func loadManifest(version string) (Manifest, error) {
 	}
 
 	m.LastUpdate = time.Now().Unix()
-	m.Repository = Git().GetCurrentRepositoryName()
-	m.Branch = Git().GetCurrentBranch()
+	m.Repository = MustInitGit().GetCurrentRepositoryName()
+	m.Branch = MustInitGit().GetCurrentBranch()
 	m.Version = version
 
 	readme, _ := ioutil.ReadFile("README.md")
@@ -138,7 +138,7 @@ func loadManifest(version string) (Manifest, error) {
 func createManifest() {
 
 	manifest := Manifest{
-		Name: Git().GetCurrentRepositoryName(),
+		Name: MustInitGit().GetCurrentRepositoryName(),
 	}
 	manifestString := `---
 name: {{.Name}}

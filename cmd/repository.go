@@ -45,9 +45,9 @@ func (r *manifestRepository) GetAllManifests() []Manifest {
 	return manifests
 }
 
-func (r *manifestRepository) StoreManifest(m Manifest) {
+func (r *manifestRepository) StoreManifest(m *Manifest) {
 	log.Printf("Updating manifest: %v", m.Name)
-	manifest, err := dynamodbattribute.MarshalMap(m)
+	manifest, err := dynamodbattribute.MarshalMap(*m)
 
 	if err != nil {
 		log.Println(err)

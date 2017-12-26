@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/manifoldco/promptui"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"log"
 	"os"
 	"os/exec"
@@ -9,17 +13,23 @@ import (
 	"regexp"
 	"strings"
 	"text/tabwriter"
+	"text/template"
 )
 
-type git struct {
-	cfg *Configuration
+type Git struct {
+	repository *git.Repository
+	cfg        *Configuration
 }
 
-func Git() *git {
-	return &git{}
+func MustInitGit() *Git {
+	repo, err := git.PlainOpen(".")
+	if err != nil {
+		log.Fatalf("Failed to initialize: %v", err)
+	}
+	return &Git{repository: repo}
 }
 
-func (g *git) GetCurrentRepositoryName() string {
+func (g *Git) GetCurrentRepositoryName() string {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	result, err := cmd.Output()
 
@@ -31,7 +41,7 @@ func (g *git) GetCurrentRepositoryName() string {
 	return strings.TrimSuffix(path.Base(repositoryUri), path.Ext(repositoryUri))
 }
 
-func (g *git) GetCurrentBranch() string {
+func (g *Git) GetCurrentBranch() string {
 	result, err := exec.Command("git", "symbolic-ref", "--short", "-q", "HEAD").Output()
 	if err != nil {
 		// if on jenkins the HEAD is usually detached, but you can infer the branch name.
@@ -43,7 +53,7 @@ func (g *git) GetCurrentBranch() string {
 	return strings.Trim(string(result), "\n ")
 }
 
-func (g *git) inRepository() bool {
+func (g *Git) InRepository() bool {
 	result, err := pathExists(".git")
 	if err != nil {
 		return false
@@ -51,12 +61,12 @@ func (g *git) inRepository() bool {
 	return result
 }
 
-func (g *git) CloneRepository(repository string) {
+func (g *Git) CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
 	MustRunCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
 }
 
-func (g *git) Push(cfg *Configuration) {
+func (g *Git) Push(cfg *Configuration) {
 	args := []string{"push", "--no-verify", "--set-upstream", "origin", g.GetCurrentBranch()}
 	if cfg.Git.NoVerify {
 		args = append(args, "--no-verify")
@@ -64,7 +74,7 @@ func (g *git) Push(cfg *Configuration) {
 	MustRunCmd("git", args...)
 }
 
-func (g *git) UpdateRepository(repository string) {
+func (g *Git) UpdateRepository(repository string) {
 	log.Printf("Updating: %v", repository)
 	dir, _ := os.Getwd()
 	os.Chdir(path.Join(dir, repository))
@@ -74,13 +84,13 @@ func (g *git) UpdateRepository(repository string) {
 	os.Chdir(dir)
 }
 
-func (g *git) SyncRepositories() {
+func (g *Git) SyncRepositories() {
 	for _, m := range GetManifestRepository().GetAllActiveManifests() {
 		g.syncRepository(m)
 	}
 }
 
-func (g *git) syncRepository(m Manifest) {
+func (g *Git) syncRepository(m Manifest) {
 	repository := m.Repository
 	repositoryExists, _ := pathExists(repository)
 	if repositoryExists {
@@ -115,7 +125,7 @@ func RunCmdWithOutput(cmd string, args ...string) (string, error) {
 	output, err := command.Output()
 	return strings.Trim(string(output), "\n"), err
 }
-func (g *git) PendingChanges(cfg *Configuration, manifest Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
+func (g *Git) PendingChanges(cfg *Configuration, manifest *Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	output := MustRunCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
@@ -136,29 +146,80 @@ func (g *git) PendingChanges(cfg *Configuration, manifest Manifest, previousVers
 	}
 }
 
-func (g *git) FetchTags() {
+func (g *Git) pickCommit(commits []*object.Commit) (*object.Commit, error) {
+	templateFunc := template.FuncMap{
+		"faint": func(s string) string {
+			return s
+		},
+		"shortSHA": func(s plumbing.Hash) string {
+			return fmt.Sprintf("%.8s", s)
+		},
+		"getSubject": func(message string) string {
+			m := strings.Split(message, "-----END PGP SIGNATURE-----")
+			if len(m) > 1 {
+				message = m[1]
+			}
+			for _, i := range strings.Split(message, "\n") {
+				s := strings.Trim(i, " ")
+				if s != "" {
+					return s
+				}
+			}
+			return message
+		},
+	}
+	templates := &promptui.SelectTemplates{
+		Label: "{{ . }}:",
+		Active: "▶ {{ shortSHA .Hash }}	{{ getSubject .Message }}",
+		Inactive: "  {{ shortSHA .Hash }}	{{  getSubject .Message }}",
+		Selected: "▶ {{ shortSHA .Hash }}	{{  getSubject .Message }}",
+		Details: `
+{{ . }}
+`,
+		FuncMap: templateFunc,
+	}
+
+	searcher := func(input string, index int) bool {
+		i := commits[index]
+		name := strings.Replace(strings.ToLower(i.Message), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+		return strings.Contains(name, input)
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     "Pick commit",
+		Items:     commits,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	return commits[i], err
+}
+
+func (g *Git) FetchTags() {
 	MustRunCmd("git", "fetch", "--tags")
 }
 
-func (g *git) Fetch() {
+func (g *Git) Fetch() {
 	MustRunCmd("git", "fetch")
 }
 
-func (g *git) sanitizeBranchName(name string) string {
+func (g *Git) sanitizeBranchName(name string) string {
 	r := regexp.MustCompile("[^a-zA-Z0-9]+")
 	r2 := regexp.MustCompile("-+")
 	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
 }
 
-func (g *git) LogNotInMasterSubjects() []string {
+func (g *Git) LogNotInMasterSubjects() []string {
 	return strings.Split(MustRunCmdWithOutput("git", "log", "HEAD", "--not", "origin/master", "--no-merges", "--pretty=format:%s"), "\n")
 }
 
-func (g *git) LogNotInMasterBody() string {
+func (g *Git) LogNotInMasterBody() string {
 	return MustRunCmdWithOutput("git", "log", "HEAD", "--not", "origin/master", "--no-merges", "--pretty=format:-> %B")
 }
 
-func (g *git) GetIssueKeyFromBranch() string {
+func (g *Git) GetIssueKeyFromBranch() string {
 	name, err := RunCmdWithOutput("git", "symbolic-ref", "--short", "-q", "HEAD")
 	if err != nil {
 		return ""
@@ -166,7 +227,7 @@ func (g *git) GetIssueKeyFromBranch() string {
 	return g.extractIssueKeyFromName(name)
 }
 
-func (g *git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) {
+func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) {
 	issueKey := g.GetIssueKeyFromBranch()
 	args := []string{
 		"commit", "-m", issueKey + " " + strings.Trim(message, " "),
@@ -177,17 +238,17 @@ func (g *git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 	args = append(args, extraArgs...)
 	MustRunCmd("git", args...)
 }
-func (g *git) extractIssueKeyFromName(name string) string {
+func (g *Git) extractIssueKeyFromName(name string) string {
 	r := regexp.MustCompile("^[A-Z]+-\\d+")
 	return r.FindString(name)
 }
 
-func (g *git) CreateBranch(name string) {
+func (g *Git) CreateBranch(name string) {
 	name = g.sanitizeBranchName(name)
 	MustRunCmd("git", "checkout", "-b", name)
 }
 
-func (g *git) CheckoutBranch() error {
+func (g *Git) CheckoutBranch() error {
 	item, err := pickItem("Pick a branch", g.getBranches())
 	if err != nil {
 		return err
@@ -196,7 +257,7 @@ func (g *git) CheckoutBranch() error {
 	return nil
 }
 
-func (g *git) getBranches() []string {
+func (g *Git) getBranches() []string {
 	output := MustRunCmdWithOutput("git", "branch", "--all", "--sort=-committerdate")
 	var branches []string
 	for _, b := range strings.Split(output, "\n") {
@@ -209,7 +270,7 @@ func (g *git) getBranches() []string {
 	return branches
 }
 
-func (g *git) committerSlackReference(cfg *Configuration, previousVersion string, currentVersion string) []string {
+func (g *Git) committerSlackReference(cfg *Configuration, previousVersion string, currentVersion string) []string {
 	committerMapping := make(map[string]string)
 	for _, i := range cfg.Users {
 		committerMapping[i.Name] = i.Slack

@@ -53,7 +53,7 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-func (c *Confluence) marshallManifest(m Manifest) (string, error) {
+func (c *Confluence) marshallManifest(m *Manifest) (string, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
 	m.Branch = ""
@@ -109,7 +109,7 @@ func (c *Confluence) findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bo
 	return fileList, err
 }
 
-func (c *Confluence) joinMarkdownFiles(m Manifest) (content []byte, err error) {
+func (c *Confluence) joinMarkdownFiles(m *Manifest) (content []byte, err error) {
 	files, err := c.findMarkdownFiles(m.Documentation.IgnoredDirs, true)
 	if err != nil {
 		return nil, err
@@ -126,11 +126,11 @@ func (c *Confluence) joinMarkdownFiles(m Manifest) (content []byte, err error) {
 	return content, err
 }
 
-func (c *Confluence) generateGitHubLink(filePath string, m Manifest) string {
+func (c *Confluence) generateGitHubLink(filePath string, m *Manifest) string {
 	return "[" + filePath + "](https://github.com/" + path.Join(c.cfg.GitHub.Organization, m.Repository, "blob/master", filePath) + ")"
 }
 
-func (c *Confluence) createPage(m Manifest) ([]byte, error) {
+func (c *Confluence) createPage(m *Manifest) ([]byte, error) {
 	yaml, err := c.marshallManifest(m)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (c *Confluence) createPage(m Manifest) ([]byte, error) {
 		Manifest Manifest
 		YAML     string
 	}{
-		Manifest: m,
+		Manifest: *m,
 		Config:   *c.cfg,
 		YAML:     yaml,
 	})
@@ -204,7 +204,7 @@ func (c *Confluence) createPage(m Manifest) ([]byte, error) {
 	return append(header.Bytes(), renderedMarkdown...), nil
 }
 
-func (c *Confluence) updateDocumentation(m Manifest) error {
+func (c *Confluence) updateDocumentation(m *Manifest) error {
 	if m.Documentation.PageId == "" {
 		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
 		return nil
