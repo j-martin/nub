@@ -12,15 +12,16 @@ import (
 )
 
 type Jenkins struct {
-	cfg    *Configuration
-	client *gojenkins.Jenkins
+	cfg      *Configuration
+	manifest *Manifest
+	client   *gojenkins.Jenkins
 }
 
-func (j *Jenkins) getJobName(m *Manifest) string {
-	return path.Join(j.cfg.GitHub.Organization, "job", m.Repository, "job", m.Branch)
+func (j *Jenkins) getJobName() string {
+	return path.Join(j.cfg.GitHub.Organization, "job", j.manifest.Repository, "job", j.manifest.Branch)
 }
 
-func MustInitJenkins(cfg *Configuration) *Jenkins {
+func MustInitJenkins(cfg *Configuration, m *Manifest) *Jenkins {
 	checkServerConfig(cfg.Jenkins.Server)
 	loadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
 	jenkins := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password)
@@ -28,11 +29,11 @@ func MustInitJenkins(cfg *Configuration) *Jenkins {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &Jenkins{cfg: cfg, client: client}
+	return &Jenkins{cfg: cfg, client: client, manifest: m}
 }
 
-func (j *Jenkins) getJob(m *Manifest) *gojenkins.Job {
-	uri := j.getJobName(m)
+func (j *Jenkins) getJob() *gojenkins.Job {
+	uri := j.getJobName()
 	job, err := j.client.GetJob(uri)
 	if err != nil {
 		log.Fatalf("Failed to fetch job details. error: %s", err)
@@ -40,9 +41,9 @@ func (j *Jenkins) getJob(m *Manifest) *gojenkins.Job {
 	return job
 }
 
-func (j *Jenkins) getLastBuild(m *Manifest) *gojenkins.Build {
-	log.Printf("Fetching last build for '%v' '%v'.", m.Repository, m.Branch)
-	lastBuild, err := j.getJob(m).GetLastBuild()
+func (j *Jenkins) getLastBuild() *gojenkins.Build {
+	log.Printf("Fetching last build for '%v' '%v'.", j.manifest.Repository, j.manifest.Branch)
+	lastBuild, err := j.getJob().GetLastBuild()
 	if err != nil {
 		log.Fatalf("Failed to fetch build details. error: %s", err)
 	}
@@ -50,10 +51,10 @@ func (j *Jenkins) getLastBuild(m *Manifest) *gojenkins.Build {
 	return lastBuild
 }
 
-func (j *Jenkins) getArtifacts(m *Manifest) error {
+func (j *Jenkins) GetArtifacts() error {
 	log.Print("Fetching artifacts.")
-	artifacts := j.getLastBuild(m).GetArtifacts()
-	dir, err := ioutil.TempDir("", strings.Join([]string{m.Repository, m.Branch}, "-"))
+	artifacts := j.getLastBuild().GetArtifacts()
+	dir, err := ioutil.TempDir("", strings.Join([]string{j.manifest.Repository, j.manifest.Branch}, "-"))
 	if err != nil {
 		return nil
 	}
@@ -72,10 +73,10 @@ func (j *Jenkins) getArtifacts(m *Manifest) error {
 	return nil
 }
 
-func (j *Jenkins) showConsoleOutput(m *Manifest) {
+func (j *Jenkins) ShowConsoleOutput() {
 	var lastChar int
 	for {
-		build, err := j.getJob(m).GetLastBuild()
+		build, err := j.getJob().GetLastBuild()
 		if lastChar == 0 {
 			log.Print(build.GetUrl())
 		}
@@ -99,9 +100,14 @@ func (j *Jenkins) showConsoleOutput(m *Manifest) {
 	}
 }
 
-func (j *Jenkins) buildJob(m *Manifest, async bool, force bool) {
-	jobName := j.getJobName(m)
-	job := j.getJob(m)
+func (j *Jenkins) OpenPage(p ...string) error {
+	base := []string{j.cfg.Jenkins.Server, "job/BenchLabs/job", j.manifest.Repository, "job", j.manifest.Branch}
+	return OpenURI(append(base, p...)...)
+}
+
+func (j *Jenkins) BuildJob(async bool, force bool) {
+	jobName := j.getJobName()
+	job := j.getJob()
 	lastBuild, err := job.GetLastBuild()
 	if err == nil && lastBuild.IsRunning() && !force {
 		log.Fatal("A build for this job is already running pass '--force' to trigger the build.")
@@ -117,7 +123,7 @@ func (j *Jenkins) buildJob(m *Manifest, async bool, force bool) {
 	}
 
 	for {
-		newBuild, err := j.getJob(m).GetLastBuild()
+		newBuild, err := j.getJob().GetLastBuild()
 		if err == nil && (lastBuild == nil || (lastBuild.GetUrl() != newBuild.GetUrl())) {
 			os.Stderr.WriteString("\n")
 			break
@@ -127,5 +133,5 @@ func (j *Jenkins) buildJob(m *Manifest, async bool, force bool) {
 		os.Stderr.WriteString(".")
 		time.Sleep(2 * time.Second)
 	}
-	j.showConsoleOutput(m)
+	j.ShowConsoleOutput()
 }

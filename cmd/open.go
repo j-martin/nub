@@ -20,10 +20,6 @@ func OpenURI(uriSegments ...string) error {
 	return errors.New("could not open the link automatically")
 }
 
-func openJenkins(cfg *Configuration, m *Manifest, p string) error {
-	return OpenURI(cfg.Jenkins.Server, "/job/BenchLabs/job", m.Repository, "job", m.Branch, p)
-}
-
 func openSplunk(cfg *Configuration, m *Manifest, isStaging bool) error {
 	base := cfg.Splunk.Server +
 		"/en-US/app/search/search/?dispatch.sample_ratio=1&earliest=rt-1h&latest=rtnow&q=search%20sourcetype%3D"

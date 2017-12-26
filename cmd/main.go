@@ -620,7 +620,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
-				return openJenkins(cfg, manifest, "")
+				return MustInitJenkins(cfg, manifest).OpenPage()
 			},
 			Subcommands: []cli.Command{
 				{
@@ -628,7 +628,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						return openJenkins(cfg, manifest, "lastBuild/consoleFull")
+						return MustInitJenkins(cfg, manifest).OpenPage("lastBuild/consoleFull")
 					},
 				},
 				{
@@ -636,7 +636,7 @@ Continue?`
 					Aliases: []string{"j"},
 					Usage:   "Shows the console output of the last build.",
 					Action: func(c *cli.Context) error {
-						MustInitJenkins(cfg).showConsoleOutput(manifest)
+						MustInitJenkins(cfg, manifest).ShowConsoleOutput()
 						return nil
 					},
 				},
@@ -645,7 +645,7 @@ Continue?`
 					Aliases: []string{"a"},
 					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						return MustInitJenkins(cfg).getArtifacts(manifest)
+						return MustInitJenkins(cfg, manifest).GetArtifacts()
 					},
 				},
 				{
@@ -657,7 +657,7 @@ Continue?`
 					},
 					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						MustInitJenkins(cfg).buildJob(manifest, c.Bool("no-wait"), c.Bool("force"))
+						MustInitJenkins(cfg, manifest).BuildJob(c.Bool("no-wait"), c.Bool("force"))
 						return nil
 					},
 				},
