@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/manifoldco/promptui"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -13,20 +11,14 @@ import (
 	"regexp"
 	"strings"
 	"text/tabwriter"
-	"text/template"
 )
 
 type Git struct {
-	repository *git.Repository
 	cfg        *Configuration
 }
 
 func MustInitGit() *Git {
-	repo, err := git.PlainOpen(".")
-	if err != nil {
-		log.Fatalf("Failed to initialize: %v", err)
-	}
-	return &Git{repository: repo}
+	return &Git{}
 }
 
 func (g *Git) GetCurrentRepositoryName() string {
@@ -53,8 +45,13 @@ func (g *Git) GetCurrentBranch() string {
 	return strings.Trim(string(result), "\n ")
 }
 
-func (g *Git) InRepository() bool {
-	result, err := pathExists(".git")
+func (g *Git) GetTitleFromBranchName() string {
+	branch := g.GetCurrentBranch()
+	return strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
+}
+
+func InRepository() bool {
+	result, err := PathExists(".git")
 	if err != nil {
 		return false
 	}
@@ -92,7 +89,7 @@ func (g *Git) SyncRepositories() {
 
 func (g *Git) syncRepository(m Manifest) {
 	repository := m.Repository
-	repositoryExists, _ := pathExists(repository)
+	repositoryExists, _ := PathExists(repository)
 	if repositoryExists {
 		g.UpdateRepository(repository)
 	} else {
@@ -125,13 +122,26 @@ func RunCmdWithOutput(cmd string, args ...string) (string, error) {
 	output, err := command.Output()
 	return strings.Trim(string(output), "\n"), err
 }
+
+func (g *Git) Log() (commits []*GitCommit) {
+	output := strings.Split(MustRunCmdWithOutput("git", "log", "--pretty=format:%h||~||%an||~||%s||~||%b|~~~~~|"), "|~~~~~|\n")
+	for _, line := range output {
+		if len(line) == 0 {
+			continue
+		}
+		fields := strings.Split(line, "||~||")
+		commits = append(commits, &GitCommit{Hash:fields[0], Committer:fields[1], Subject:fields[2], Body:fields[3]})
+	}
+	return commits
+}
+
 func (g *Git) PendingChanges(cfg *Configuration, manifest *Manifest, previousVersion, currentVersion string, formatForSlack bool, noAt bool) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	output := MustRunCmdWithOutput("git", "log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
-		re := regexp.MustCompile("([A-Z]{2,}-\\d+)")
+		re := g.GetIssueRegex()
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
-		re = regexp.MustCompile("(Merge pull request #)(\\d+) from \\w+/")
+		re = g.GetPRRegex()
 		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.GitHub.Organization+"/"+manifest.Repository+"/pull/$2|PR#$2> ")
 		re = regexp.MustCompile("(?m:^)([a-z0-9]{6,})")
 		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.GitHub.Organization+"/"+manifest.Repository+"/commit/$1|$1>")
@@ -145,43 +155,34 @@ func (g *Git) PendingChanges(cfg *Configuration, manifest *Manifest, previousVer
 		}
 	}
 }
+func (g *Git) GetPRRegex() *regexp.Regexp {
+	return regexp.MustCompile("(Merge pull request #)(\\d+) from \\w+/")
+}
+func (g *Git) GetIssueRegex() *regexp.Regexp {
+	return regexp.MustCompile("([A-Z]{2,}-\\d+)")
+}
 
-func (g *Git) pickCommit(commits []*object.Commit) (*object.Commit, error) {
-	templateFunc := template.FuncMap{
-		"faint": func(s string) string {
-			return s
-		},
-		"shortSHA": func(s plumbing.Hash) string {
-			return fmt.Sprintf("%.8s", s)
-		},
-		"getSubject": func(message string) string {
-			m := strings.Split(message, "-----END PGP SIGNATURE-----")
-			if len(m) > 1 {
-				message = m[1]
-			}
-			for _, i := range strings.Split(message, "\n") {
-				s := strings.Trim(i, " ")
-				if s != "" {
-					return s
-				}
-			}
-			return message
-		},
-	}
+type GitCommit struct {
+	Hash, Committer, Subject, Body string
+}
+
+func (g *Git) PickCommit(commits []*GitCommit) (*GitCommit, error) {
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
-		Active: "▶ {{ shortSHA .Hash }}	{{ getSubject .Message }}",
-		Inactive: "  {{ shortSHA .Hash }}	{{  getSubject .Message }}",
-		Selected: "▶ {{ shortSHA .Hash }}	{{  getSubject .Message }}",
+		Active: "▶ {{ .Hash }}	{{ .Subject }}",
+		Inactive: "  {{ .Hash }}	{{ .Subject }}",
+		Selected: "▶ {{ .Hash }}	{{ .Subject }}",
 		Details: `
-{{ . }}
+{{ .Hash }}
+{{ .Committer }}
+{{ .Subject }}
+{{ .Body }}
 `,
-		FuncMap: templateFunc,
 	}
 
 	searcher := func(input string, index int) bool {
 		i := commits[index]
-		name := strings.Replace(strings.ToLower(i.Message), " ", "", -1)
+		name := strings.Replace(strings.ToLower(i.Subject), " ", "", -1)
 		input = strings.Replace(strings.ToLower(input), " ", "", -1)
 		return strings.Contains(name, input)
 	}
@@ -206,9 +207,8 @@ func (g *Git) Fetch() {
 }
 
 func (g *Git) sanitizeBranchName(name string) string {
-	r := regexp.MustCompile("[^a-zA-Z0-9]+")
 	r2 := regexp.MustCompile("-+")
-	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
+	return strings.Trim(r2.ReplaceAllString(g.GetIssueRegex().ReplaceAllString(name, "-"), "-"), "-")
 }
 
 func (g *Git) LogNotInMasterSubjects() []string {
@@ -239,8 +239,7 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 	MustRunCmd("git", args...)
 }
 func (g *Git) extractIssueKeyFromName(name string) string {
-	r := regexp.MustCompile("^[A-Z]+-\\d+")
-	return r.FindString(name)
+	return g.GetIssueRegex().FindString(name)
 }
 
 func (g *Git) CreateBranch(name string) {
@@ -249,11 +248,39 @@ func (g *Git) CreateBranch(name string) {
 }
 
 func (g *Git) CheckoutBranch() error {
-	item, err := pickItem("Pick a branch", g.getBranches())
+	item, err := PickItem("Pick a branch", g.getBranches())
 	if err != nil {
 		return err
 	}
 	MustRunCmd("git", "checkout", item)
+	return nil
+}
+
+func ForEachRepo(fn func() error) error {
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		return err
+	}
+	wd, err := os.Getwd()
+	for _, value := range files {
+		if !value.IsDir() {
+			continue
+		}
+
+		err = os.Chdir(path.Join(wd, value.Name()))
+		if err != nil {
+			return err
+		}
+		if !InRepository() {
+			continue
+		}
+		log.Printf(value.Name())
+		err = fn()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -9,7 +9,7 @@ import (
 
 func generateGraphs() {
 	outputPath := "output"
-	dirExist, err := pathExists(outputPath)
+	dirExist, err := PathExists(outputPath)
 	if err != nil {
 		log.Fatal(err)
 	}

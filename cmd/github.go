@@ -7,7 +7,6 @@ import (
 	"golang.org/x/oauth2"
 	"log"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -29,26 +28,27 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 }
 
 func (gh *GitHub) CreatePR(title, body string) error {
-	MustInitGit().Push(gh.cfg)
-	MustInitGit().Fetch()
-	branch := MustInitGit().GetCurrentBranch()
+	g := MustInitGit()
+	g.Push(gh.cfg)
+	g.Fetch()
+	branch := g.GetCurrentBranch()
 	base := "master"
 	if title == "" {
-		subjects := MustInitGit().LogNotInMasterSubjects()
+		subjects := g.LogNotInMasterSubjects()
 		if len(subjects) == 1 {
 			title = subjects[0]
 		} else {
-			title = strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
+			title = g.GetTitleFromBranchName()
 		}
 	}
 
 	if body == "" {
-		body = MustInitGit().LogNotInMasterBody()
+		body = g.LogNotInMasterBody()
 	}
 
 	ctx := context.Background()
 	org := gh.cfg.GitHub.Organization
-	repo := MustInitGit().GetCurrentRepositoryName()
+	repo := g.GetCurrentRepositoryName()
 
 	request := github.NewPullRequest{Head: &branch, Base: &base, Title: &title, Body: &body}
 	pr, _, err := gh.client.PullRequests.Create(ctx, org, repo, &request)

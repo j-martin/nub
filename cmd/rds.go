@@ -186,7 +186,7 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 	endpoint := *instance.Endpoint.Address
 	jump := r.getEnvironment(endpoint).Jumphost
 	rdsConfig := r.getRDSConfig(endpoint)
-	port := random(40000, 60000)
+	port := Random(40000, 60000)
 	engine := r.getEngineConfiguration(*instance.Engine)
 
 	tunnelPath := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
@@ -207,8 +207,8 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 		fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
 		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
-		fmt.Sprintf("LC_ALL=%s", getEnvWithDefault("LC_ALL", "en_US.UTF-8")),
-		fmt.Sprintf("LANG=%s", getEnvWithDefault("LANG", "en_US.UTF-8")),
+		fmt.Sprintf("LC_ALL=%s", GetEnvWithDefault("LC_ALL", "en_US.UTF-8")),
+		fmt.Sprintf("LANG=%s", GetEnvWithDefault("LANG", "en_US.UTF-8")),
 		// sets environment variables for the pg, mysql clients and other scripts.
 		"PGHOST=127.0.0.1",
 		fmt.Sprintf("PGPORT=%v", port),

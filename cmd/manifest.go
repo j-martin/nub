@@ -87,7 +87,7 @@ func (e Manifests) Swap(i, j int) {
 func loadManifest(version string) (*Manifest, error) {
 	m := &Manifest{}
 
-	if !MustInitGit().InRepository() {
+	if !InRepository() {
 		return m, errors.New("must be executed in a repository")
 	}
 
@@ -165,7 +165,7 @@ documentation:
 		panic(err)
 	}
 
-	fileExists, err := pathExists(manifestFile)
+	fileExists, err := PathExists(manifestFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,7 +180,7 @@ documentation:
 	}
 
 	log.Println("Edit the manifest file.")
-	editFile(manifestFile)
+	EditFile(manifestFile)
 	log.Println("Done. Don't forget to add and commit the file.")
 }
 

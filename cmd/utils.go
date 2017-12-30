@@ -8,11 +8,12 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"time"
 )
 
-func askForConfirmation(s string) bool {
+func AskForConfirmation(s string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -33,7 +34,7 @@ func askForConfirmation(s string) bool {
 	}
 }
 
-func getEnvWithDefault(key string, defaultValue string) string {
+func GetEnvWithDefault(key string, defaultValue string) string {
 	val := os.Getenv(key)
 	if val == "" {
 		val = defaultValue
@@ -41,8 +42,8 @@ func getEnvWithDefault(key string, defaultValue string) string {
 	return val
 }
 
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
+func PathExists(fpath ...string) (bool, error) {
+	_, err := os.Stat(path.Join(fpath...))
 	if err == nil {
 		return true, nil
 	}
@@ -52,7 +53,7 @@ func pathExists(path string) (bool, error) {
 	return true, err
 }
 
-func editFile(filePath string) {
+func EditFile(filePath string) {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vim"
@@ -67,7 +68,7 @@ func editFile(filePath string) {
 	}
 }
 
-func joinStringPointers(ptrs []*string, joinStr string) string {
+func JoinStringPointers(ptrs []*string, joinStr string) string {
 	var arr []string
 	for _, ref := range ptrs {
 		if ref == nil {
@@ -79,7 +80,7 @@ func joinStringPointers(ptrs []*string, joinStr string) string {
 	return strings.Join(arr, joinStr)
 }
 
-func pickItem(label string, items []string) (string, error) {
+func PickItem(label string, items []string) (string, error) {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
 		Active:   "▶ {{ .}}",
@@ -105,7 +106,41 @@ func pickItem(label string, items []string) (string, error) {
 	return items[i], err
 }
 
-func random(min, max int) int {
+func Random(min, max int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Intn(max-min) + min
+}
+
+func HasNonEmptyLines(lines []string) bool {
+	for _, s := range lines {
+		if s != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func ConditionalOp(message string, noop bool, fn func() error) error {
+	if noop {
+		log.Printf("%v (noop)", message)
+		return nil
+	}
+	log.Printf(message)
+	return fn()
+}
+
+func (g *Git) Update() {
+	MustRunCmd("git", "clean", "-fd")
+	MustRunCmd("git", "reset", "--hard")
+	MustRunCmd("git", "checkout", "master", "-f")
+	MustRunCmd("git", "pull")
+	MustRunCmd("git", "pull", "--tags")
+}
+
+func (g *Git) ContainedUncommittedChanges() bool {
+	return HasNonEmptyLines(strings.Split(MustRunCmdWithOutput("git", "status", "--short"), "\n"))
+}
+
+func (g *Git) IsDifferentFromMaster() bool {
+	return HasNonEmptyLines(g.LogNotInMasterSubjects())
 }

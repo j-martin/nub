@@ -240,7 +240,7 @@ func ListEnvironments(cfg *Configuration) {
 			var rows []string
 			for _, e := range resp.Environments {
 				row := []*string{e.ApplicationName, e.EnvironmentName, &region, e.Status, e.Health, e.HealthStatus, e.VersionLabel, e.CNAME}
-				rows = append(rows, joinStringPointers(row, "\t"))
+				rows = append(rows, JoinStringPointers(row, "\t"))
 			}
 			channel <- rows
 		}(region)

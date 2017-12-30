@@ -97,21 +97,29 @@ func (j *JIRA) ClaimIssueInActiveSprint() error {
 	return nil
 }
 
-func (j *JIRA) CreateBranchFromAssignedIssues() error {
+func (j *JIRA) PickAssignedIssue() (jira.Issue, error) {
 	issues, err := j.getAssignedIssues()
 	if err != nil {
-		return err
+		return jira.Issue{}, err
 	}
-	issue, err := j.pickIssue(issues)
+	return j.pickIssue(issues)
+}
+
+func (j *JIRA) CreateBranchFromAssignedIssue() error {
+	issue, err := j.PickAssignedIssue()
 	if err != nil {
 		return err
 	}
+	return j.CreateBranchFromIssue(issue)
+}
+
+func (j *JIRA) CreateBranchFromIssue(issue jira.Issue) error {
 	MustInitGit().CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
 
 func (j *JIRA) sanitizeTransitionName(tr string) string {
-	r := strings.NewReplacer("'", "", " ", "")
+	r := strings.NewReplacer("'", "", " ", "", "in", "")
 	return r.Replace(strings.ToLower(tr))
 }
 
@@ -231,7 +239,7 @@ func (j *JIRA) openIssue(issue jira.Issue) error {
 }
 
 func (j *JIRA) OpenIssueFromKey(key string) error {
-	beeInstalled, err := pathExists("/Applications/Bee.app")
+	beeInstalled, err := PathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
 	}
@@ -252,6 +260,9 @@ func (j *JIRA) OpenIssue() error {
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
+	if len(issues) == 0 {
+		return jira.Issue{}, errors.New("no issue to pick")
+	}
 	if len(issues) == 1 {
 		issue := issues[0]
 		log.Printf("%v %v only available", issue.Key, issue.Fields.Summary)
@@ -293,6 +304,9 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 }
 
 func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, error) {
+	if len(transitions) == 0 {
+		return jira.Transition{}, errors.New("no transition to pick")
+	}
 	if len(transitions) == 1 {
 		return transitions[0], nil
 	}

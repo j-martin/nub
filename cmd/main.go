@@ -152,7 +152,7 @@ Existing work will be stashed and pull the master branch. Your work won't be los
 Please make sure you are in the directory where you store your repos and not a specific repo.
 
 Continue?`
-						if c.Bool("force") || askForConfirmation(message) {
+						if c.Bool("force") || AskForConfirmation(message) {
 							MustInitGit().SyncRepositories()
 						} else {
 							os.Exit(1)
@@ -566,7 +566,7 @@ Continue?`
 					Aliases: []string{"n", "new"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
 					Action: func(c *cli.Context) error {
-						return MustInitJIRA(cfg).CreateBranchFromAssignedIssues()
+						return MustInitJIRA(cfg).CreateBranchFromAssignedIssue()
 					},
 				},
 				{
@@ -601,7 +601,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							body = c.Args().Get(1)
 						}
-						return MustInitGitHub(cfg).CreatePR(title, body)
+						return MustInitWorkflow(cfg, manifest).CreatePR(title, body)
 					},
 				},
 				jiraTransitionIssue,
@@ -611,6 +611,40 @@ Continue?`
 					Usage:   "Show git log and open PR, JIRA ticket, etc.",
 					Action: func(c *cli.Context) error {
 						return MustInitWorkflow(cfg, manifest).Log()
+					},
+				},
+				{
+					Name:    "mass",
+					Aliases: []string{"m"},
+					Usage:   "Create new branch, in each repo, commit and push PRs.",
+					Subcommands: []cli.Command{
+						{
+							Name:    "start",
+							Aliases: []string{"s"},
+							Usage:   "Clean the repository, checkout master, pull and create new branch.",
+							Action: func(c *cli.Context) error {
+								return MustInitWorkflow(cfg, manifest).MassStart()
+							},
+						},
+						{
+							Name:    "done",
+							Aliases: []string{"d"},
+							Usage:   "Commit changes and create PRs. To be used after running '... start' and you made your changes.",
+							Flags: []cli.Flag{
+								cli.BoolFlag{Name: "noop", Usage: "Do not do any actions."},
+							},
+							Action: func(c *cli.Context) error {
+								return MustInitWorkflow(cfg, manifest).MassDone(c.Bool("noop"))
+							},
+						},
+						{
+							Name:    "update",
+							Aliases: []string{"u"},
+							Usage:   "Clean the repository, checkout master and pull.",
+							Action: func(c *cli.Context) error {
+								return MustInitWorkflow(cfg, manifest).MassUpdate()
+							},
+						},
 					},
 				},
 			},

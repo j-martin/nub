@@ -183,7 +183,7 @@ aws_secret_access_key = CHANGE_ME`
 func createAndEdit(filePath string, content string) {
 	directory := path.Dir(filePath)
 	log.Print(directory)
-	dirExists, err := pathExists(directory)
+	dirExists, err := PathExists(directory)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func createAndEdit(filePath string, content string) {
 		os.MkdirAll(directory, 0700)
 	}
 
-	fileExists, err := pathExists(filePath)
+	fileExists, err := PathExists(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func createAndEdit(filePath string, content string) {
 	}
 
 	log.Printf("Editing %s.", filePath)
-	editFile(filePath)
+	EditFile(filePath)
 }
 
 func checkServerConfig(server string) {

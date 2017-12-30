@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"regexp"
+	"log"
 )
 
 type Workflow struct {
@@ -25,45 +23,98 @@ func MustInitWorkflow(cfg *Configuration, manifest *Manifest) *Workflow {
 	}
 }
 
-func (w *Workflow) Log() error {
-	cs, err := w.git.repository.Log(&git.LogOptions{})
-	if err != nil {
-		return err
+func (wf *Workflow) Git() *Git {
+	if wf.git == nil {
+		wf.git = MustInitGit()
 	}
-	var commits []*object.Commit
-	i := 0
-	for i < 100 {
-		c, err := cs.Next()
-		if err != nil && err.Error() == "EOF" {
-			break
-		} else if err != nil {
-			return err
-		}
-		commits = append(commits, c)
-		i++
-	}
-	c, err := w.git.pickCommit(commits)
-	if err != nil {
-		return err
-	}
-	return w.OpenCommit(c)
+	return wf.git
 }
 
-func (w *Workflow) OpenCommit(c *object.Commit) error {
-	issueRegex := regexp.MustCompile("([A-Z]{2,}-\\d+)")
-	issueKey := issueRegex.FindString(c.Message)
-	issueRegex = regexp.MustCompile("(Merge pull request #)(\\d+) from \\w+/")
-	pr := issueRegex.FindStringSubmatch(c.Message)
+func (wf *Workflow) GitHub() *GitHub {
+	if wf.github == nil {
+		wf.github = MustInitGitHub(wf.cfg)
+	}
+	return wf.github
+}
+
+func (wf *Workflow) JIRA() *JIRA {
+	if wf.jira == nil {
+		wf.jira = MustInitJIRA(wf.cfg)
+	}
+	return wf.jira
+}
+
+func (wf *Workflow) MassUpdate() error {
+	return ForEachRepo(func() error {
+		wf.Git().Update()
+		return nil
+	})
+}
+
+func (wf *Workflow) MassStart() error {
+	issue, err := wf.JIRA().PickAssignedIssue()
+	if err != nil {
+		return err
+	}
+
+	return ForEachRepo(func() error {
+		wf.Git().Update()
+		return wf.JIRA().CreateBranchFromIssue(issue)
+	})
+}
+
+func (wf *Workflow) MassDone(noop bool) error {
+	return ForEachRepo(func() error {
+		g := MustInitGit()
+		if g.ContainedUncommittedChanges() {
+			ConditionalOp("Committing.", noop, func() error {
+				MustRunCmd("git", "commit", "-m", g.GetTitleFromBranchName(), "--all")
+				return nil
+			})
+		}
+
+		if !g.IsDifferentFromMaster() {
+			log.Printf("No commits. Skipping.")
+			return nil
+		}
+
+		ConditionalOp("Pushing", noop, func() error {
+			g.Push(wf.cfg)
+			return nil
+		})
+		return nil
+	})
+}
+
+func (wf *Workflow) CreatePR(title, body string) error {
+	err := wf.GitHub().CreatePR(title, body)
+	if err != nil {
+		return err
+	}
+	return wf.JIRA().TransitionIssue("", "review")
+}
+
+func (wf *Workflow) Log() error {
+	c, err := wf.Git().PickCommit(wf.Git().Log())
+	if err != nil {
+		return err
+	}
+	return wf.OpenCommit(c)
+}
+
+func (wf *Workflow) OpenCommit(c *GitCommit) error {
+	issueKey := wf.Git().GetIssueRegex().FindString(c.Subject)
+	pr := wf.Git().GetPRRegex().FindStringSubmatch(c.Subject)
 
 	openList := make(map[string]func() error)
 	if len(pr) > 2 && pr[2] != "" {
 		openList["GitHub PR"] = func() error {
-			return w.github.OpenPR(w.manifest, pr[2])
+			return wf.GitHub().OpenPR(wf.manifest, pr[2])
 		}
 	}
 	if issueKey != "" {
 		openList["JIRA"] = func() error {
-			return w.jira.OpenIssueFromKey(issueKey)
+			return wf.JIRA().OpenIssueFromKey(issueKey)
 		}
 	}
 	if len(openList) > 0 {
@@ -71,7 +122,7 @@ func (w *Workflow) OpenCommit(c *object.Commit) error {
 		for k := range openList {
 			titles = append(titles, k)
 		}
-		result, err := pickItem("Open", titles)
+		result, err := PickItem("Open", titles)
 		if err != nil {
 			return err
 		}
