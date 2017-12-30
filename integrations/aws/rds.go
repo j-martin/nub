@@ -186,7 +186,7 @@ func (r *RDS) rdsCleanup(tunnel *exec.Cmd) {
 }
 func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 	endpoint := *instance.Endpoint.Address
-	jump := r.getEnvironment(endpoint).Jumphost
+	jump := r.getEnvironment(endpoint).JumpHost
 	rdsConfig := r.getRDSConfig(endpoint)
 	port := utils.Random(40000, 60000)
 	engine := r.getEngineConfiguration(*instance.Engine)

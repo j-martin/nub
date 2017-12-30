@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/aws"
-	version "github.com/mcuadros/go-version"
+	"github.com/benchlabs/bub/utils"
+	"github.com/mcuadros/go-version"
 )
 
 type S3path struct {
@@ -113,6 +113,6 @@ func updateBub(path S3path) error {
 	if os.Rename(f.Name(), exe) != nil {
 		return err
 	}
-	log.Printf("Update complete. %v", core.MustRunCmdWithOutput(exe, "--version"))
+	log.Printf("Update complete. %v", utils.MustRunCmdWithStdout(exe, "--version"))
 	return nil
 }

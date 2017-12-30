@@ -15,25 +15,46 @@ import (
 	"time"
 )
 
+func MustRunCmd(cmd string, args ...string) {
+	command := exec.Command(cmd, args...)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	err := command.Run()
+	if err != nil {
+		log.Fatalf("Command failed: %v", err)
+	}
+}
+
+func MustRunCmdWithStdout(cmd string, args ...string) string {
+	command := exec.Command(cmd, args...)
+	command.Stderr = os.Stderr
+	output, err := command.Output()
+	if err != nil {
+		log.Fatalf("Command failed: %v", err)
+	}
+	return string(output)
+}
+
 func AskForConfirmation(s string) bool {
 	reader := bufio.NewReader(os.Stdin)
-
 	for {
 		fmt.Printf("%s [y/n]: ", s)
-
 		response, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
-
 		if response == "y" || response == "yes" {
 			return true
 		} else if response == "n" || response == "no" {
 			return false
 		}
 	}
+}
+
+func CurrentTimeForFilename() string {
+	return time.Now().Format("2006-01-02T15-04-05Z")
 }
 
 func GetEnvWithDefault(key string, defaultValue string) string {
@@ -85,9 +106,9 @@ func JoinStringPointers(ptrs []*string, joinStr string) string {
 func PickItem(label string, items []string) (string, error) {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
-		Active:   "▶ {{ .}}",
-		Inactive: "  {{ .}}",
-		Selected: "▶ {{ .}}",
+		Active:   "▶ {{ . }}",
+		Inactive: "  {{ . }}",
+		Selected: "▶ {{ . }}",
 	}
 
 	searcher := func(input string, index int) bool {
@@ -104,6 +125,7 @@ func PickItem(label string, items []string) (string, error) {
 		Templates: templates,
 		Searcher:  searcher,
 	}
+
 	i, _, err := prompt.Run()
 	return items[i], err
 }

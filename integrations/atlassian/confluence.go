@@ -132,7 +132,7 @@ func (c *Confluence) generateGitHubLink(filePath string, m *core.Manifest) strin
 }
 
 func (c *Confluence) createPage(m *core.Manifest) ([]byte, error) {
-	yaml, err := c.marshallManifest(m)
+	marshaledManifest, err := c.marshallManifest(m)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (c *Confluence) createPage(m *core.Manifest) ([]byte, error) {
 	<ac:structured-macro ac:name="expand" ac:schema-version="1" ac:macro-id="856ee728-b2f6-4c39-b63d-e1e4a2b9a6ed">
 		<ac:parameter ac:name="title">See manifest...</ac:parameter><ac:rich-text-body>
 		<ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="9d13770a-90d2-4283-93fc-3faf24eef746"><ac:plain-text-body>
-			<![CDATA[{{ .YAML }}]]>
+			<![CDATA[{{ .MarshaledManifest }}]]>
 		</ac:plain-text-body></ac:structured-macro>
 	</ac:rich-text-body></ac:structured-macro>
 </p>
@@ -169,13 +169,13 @@ func (c *Confluence) createPage(m *core.Manifest) ([]byte, error) {
 	var header bytes.Buffer
 	writer := bufio.NewWriter(&header)
 	err = t.Execute(writer, struct {
-		Config   core.Configuration
-		Manifest core.Manifest
-		YAML     string
+		Config            core.Configuration
+		Manifest          core.Manifest
+		MarshaledManifest string
 	}{
-		Manifest: *m,
-		Config:   *c.cfg,
-		YAML:     yaml,
+		Manifest:          *m,
+		Config:            *c.cfg,
+		MarshaledManifest: marshaledManifest,
 	})
 	writer.Flush()
 

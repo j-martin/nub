@@ -50,7 +50,7 @@ func (wf *Workflow) JIRA() *atlassian.JIRA {
 
 func (wf *Workflow) MassUpdate() error {
 	return core.ForEachRepo(func() error {
-		wf.Git().Update()
+		wf.Git().CleanAndUpdate()
 		return nil
 	})
 }
@@ -62,7 +62,7 @@ func (wf *Workflow) MassStart() error {
 	}
 
 	return core.ForEachRepo(func() error {
-		wf.Git().Update()
+		wf.Git().CleanAndUpdate()
 		return wf.JIRA().CreateBranchFromIssue(issue)
 	})
 }
@@ -72,7 +72,7 @@ func (wf *Workflow) MassDone(noop bool) error {
 		g := core.MustInitGit()
 		if g.ContainedUncommittedChanges() {
 			utils.ConditionalOp("Committing.", noop, func() error {
-				core.MustRunCmd("git", "commit", "-m", g.GetTitleFromBranchName(), "--all")
+				g.CommitWithBranchName()
 				return nil
 			})
 		}

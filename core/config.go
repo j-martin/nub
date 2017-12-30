@@ -18,7 +18,8 @@ type RDSConfiguration struct {
 }
 
 type Environment struct {
-	Prefix, Jumphost, Region string
+	Prefix, Region string
+	JumpHost       string `yaml:"jumphost"`
 }
 
 type User struct {

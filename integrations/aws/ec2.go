@@ -8,13 +8,13 @@ import (
 	"os/user"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/manifoldco/promptui"
 	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
+	"github.com/manifoldco/promptui"
 )
 
 type ConnectionParams struct {
@@ -87,7 +87,7 @@ func getUsers(i *ec2.Instance) []string {
 func getJumpHost(name string, cfg *core.Configuration) string {
 	for _, i := range cfg.AWS.Environments {
 		if strings.HasPrefix(name, i.Prefix) {
-			return i.Jumphost
+			return i.JumpHost
 		}
 	}
 	log.Fatal("Could not find jump host in configuration.")
@@ -172,7 +172,7 @@ func saveCommandOutput(i *ec2.Instance, cmd *exec.Cmd) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	outputPath := "output-" + getInstanceName(i) + "-" + time.Now().Format("2006-01-02T15-04-05Z") + ".txt"
+	outputPath := "output-" + getInstanceName(i) + "-" + utils.CurrentTimeForFilename() + ".txt"
 	f, err := os.Create(outputPath)
 	if err != nil {
 		log.Fatal(err)
