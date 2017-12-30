@@ -1,6 +1,7 @@
-package main
+package core
 
 import (
+	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/tmc/keyring"
 	"gopkg.in/yaml.v2"
@@ -122,7 +123,7 @@ func GetConfigString() string {
 	return strings.Replace(config, "\t", "  ", -1)
 }
 
-func loadConfiguration() *Configuration {
+func LoadConfiguration() *Configuration {
 	cfg := Configuration{}
 
 	usr, err := user.Current()
@@ -152,7 +153,7 @@ func loadConfiguration() *Configuration {
 	return &cfg
 }
 
-func editConfiguration() {
+func EditConfiguration() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -161,7 +162,7 @@ func editConfiguration() {
 	createAndEdit(configPath, GetConfigString())
 }
 
-func setup() {
+func Setup() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -183,7 +184,7 @@ aws_secret_access_key = CHANGE_ME`
 func createAndEdit(filePath string, content string) {
 	directory := path.Dir(filePath)
 	log.Print(directory)
-	dirExists, err := PathExists(directory)
+	dirExists, err := utils.PathExists(directory)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -192,7 +193,7 @@ func createAndEdit(filePath string, content string) {
 		os.MkdirAll(directory, 0700)
 	}
 
-	fileExists, err := PathExists(filePath)
+	fileExists, err := utils.PathExists(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,26 +204,26 @@ func createAndEdit(filePath string, content string) {
 	}
 
 	log.Printf("Editing %s.", filePath)
-	EditFile(filePath)
+	utils.EditFile(filePath)
 }
 
-func checkServerConfig(server string) {
+func CheckServerConfig(server string) {
 	if server == "" {
 		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
 	}
 }
 
-func loadCredentials(item string, username, password *string) (err error) {
-	if err = loadCredentialItem(item+" Username", username); err != nil {
+func LoadCredentials(item string, username, password *string) (err error) {
+	if err = LoadCredentialItem(item+" Username", username); err != nil {
 		return err
 	}
-	if err = loadCredentialItem(item+" Password", password); err != nil {
+	if err = LoadCredentialItem(item+" Password", password); err != nil {
 		return err
 	}
 	return nil
 }
 
-func loadCredentialItem(item string, ptr *string) (err error) {
+func LoadCredentialItem(item string, ptr *string) (err error) {
 	if strings.ToLower(os.Getenv("BUB_RESET_PASSWORD")) == "true" {
 		return setKeyringItem(item, ptr)
 	}
@@ -237,10 +238,10 @@ func loadCredentialItem(item string, ptr *string) (err error) {
 		return nil
 	}
 
-	return loadKeyringItem(item, ptr)
+	return LoadKeyringItem(item, ptr)
 }
 
-func loadKeyringItem(item string, ptr *string) (err error) {
+func LoadKeyringItem(item string, ptr *string) (err error) {
 	service := "bub"
 	if pw, err := keyring.Get(service, item); err == nil {
 		*ptr = pw
@@ -268,5 +269,5 @@ func setKeyringItem(item string, ptr *string) (err error) {
 	if err != nil {
 		return err
 	}
-	return loadKeyringItem(item, ptr)
+	return LoadKeyringItem(item, ptr)
 }

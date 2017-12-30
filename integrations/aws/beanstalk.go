@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+	"github.com/benchlabs/bub/utils"
+	"github.com/benchlabs/bub/core"
 )
 
 type Environments []*elasticbeanstalk.EnvironmentDescription
@@ -57,7 +59,7 @@ func (e Versions) Swap(i, j int) {
 }
 
 func getBeanstalkSvc(region string) *elasticbeanstalk.ElasticBeanstalk {
-	config := getAWSConfig(region)
+	config := GetAWSConfig(region)
 	sess, err := session.NewSession(&config)
 	if err != nil {
 		log.Fatal("Failed to create session,", err)
@@ -224,7 +226,7 @@ func ListApplicationVersions(region string, application string) {
 	table.Flush()
 }
 
-func ListEnvironments(cfg *Configuration) {
+func ListEnvironments(cfg *core.Configuration) {
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(table, "Application\tEnvironment\tRegion\tStatus\tHealth\tHealthStatus\tVersionLabel\tCNAME")
 
@@ -240,7 +242,7 @@ func ListEnvironments(cfg *Configuration) {
 			var rows []string
 			for _, e := range resp.Environments {
 				row := []*string{e.ApplicationName, e.EnvironmentName, &region, e.Status, e.Health, e.HealthStatus, e.VersionLabel, e.CNAME}
-				rows = append(rows, JoinStringPointers(row, "\t"))
+				rows = append(rows, utils.JoinStringPointers(row, "\t"))
 			}
 			channel <- rows
 		}(region)

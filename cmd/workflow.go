@@ -2,50 +2,54 @@ package main
 
 import (
 	"fmt"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/integrations"
+	"github.com/benchlabs/bub/utils"
 	"log"
+	"github.com/benchlabs/bub/integrations/atlassian"
 )
 
 type Workflow struct {
-	cfg      *Configuration
-	git      *Git
-	github   *GitHub
-	jira     *JIRA
-	manifest *Manifest
+	cfg      *core.Configuration
+	git      *core.Git
+	github   *integrations.GitHub
+	jira     *atlassian.JIRA
+	manifest *core.Manifest
 }
 
-func MustInitWorkflow(cfg *Configuration, manifest *Manifest) *Workflow {
+func MustInitWorkflow(cfg *core.Configuration, manifest *core.Manifest) *Workflow {
 	return &Workflow{
 		cfg:      cfg,
-		git:      MustInitGit(),
-		github:   MustInitGitHub(cfg),
-		jira:     MustInitJIRA(cfg),
+		git:      core.MustInitGit(),
+		github:   integrations.MustInitGitHub(cfg),
+		jira:     atlassian.MustInitJIRA(cfg),
 		manifest: manifest,
 	}
 }
 
-func (wf *Workflow) Git() *Git {
+func (wf *Workflow) Git() *core.Git {
 	if wf.git == nil {
-		wf.git = MustInitGit()
+		wf.git = core.MustInitGit()
 	}
 	return wf.git
 }
 
-func (wf *Workflow) GitHub() *GitHub {
+func (wf *Workflow) GitHub() *integrations.GitHub {
 	if wf.github == nil {
-		wf.github = MustInitGitHub(wf.cfg)
+		wf.github = integrations.MustInitGitHub(wf.cfg)
 	}
 	return wf.github
 }
 
-func (wf *Workflow) JIRA() *JIRA {
+func (wf *Workflow) JIRA() *atlassian.JIRA {
 	if wf.jira == nil {
-		wf.jira = MustInitJIRA(wf.cfg)
+		wf.jira = atlassian.MustInitJIRA(wf.cfg)
 	}
 	return wf.jira
 }
 
 func (wf *Workflow) MassUpdate() error {
-	return ForEachRepo(func() error {
+	return core.ForEachRepo(func() error {
 		wf.Git().Update()
 		return nil
 	})
@@ -57,18 +61,18 @@ func (wf *Workflow) MassStart() error {
 		return err
 	}
 
-	return ForEachRepo(func() error {
+	return core.ForEachRepo(func() error {
 		wf.Git().Update()
 		return wf.JIRA().CreateBranchFromIssue(issue)
 	})
 }
 
 func (wf *Workflow) MassDone(noop bool) error {
-	return ForEachRepo(func() error {
-		g := MustInitGit()
+	return core.ForEachRepo(func() error {
+		g := core.MustInitGit()
 		if g.ContainedUncommittedChanges() {
-			ConditionalOp("Committing.", noop, func() error {
-				MustRunCmd("git", "commit", "-m", g.GetTitleFromBranchName(), "--all")
+			utils.ConditionalOp("Committing.", noop, func() error {
+				core.MustRunCmd("git", "commit", "-m", g.GetTitleFromBranchName(), "--all")
 				return nil
 			})
 		}
@@ -78,7 +82,7 @@ func (wf *Workflow) MassDone(noop bool) error {
 			return nil
 		}
 
-		ConditionalOp("Pushing", noop, func() error {
+		utils.ConditionalOp("Pushing", noop, func() error {
 			g.Push(wf.cfg)
 			return nil
 		})
@@ -102,7 +106,7 @@ func (wf *Workflow) Log() error {
 	return wf.OpenCommit(c)
 }
 
-func (wf *Workflow) OpenCommit(c *GitCommit) error {
+func (wf *Workflow) OpenCommit(c *core.GitCommit) error {
 	issueKey := wf.Git().GetIssueRegex().FindString(c.Subject)
 	pr := wf.Git().GetPRRegex().FindStringSubmatch(c.Subject)
 
@@ -122,7 +126,7 @@ func (wf *Workflow) OpenCommit(c *GitCommit) error {
 		for k := range openList {
 			titles = append(titles, k)
 		}
-		result, err := PickItem("Open", titles)
+		result, err := utils.PickItem("Open", titles)
 		if err != nil {
 			return err
 		}

@@ -1,13 +1,25 @@
-package main
+package ci
 
 import (
+	"github.com/benchlabs/bub/core"
 	"github.com/jszwedko/go-circleci"
 	"log"
 	"os"
 	"time"
+	"github.com/benchlabs/bub/utils"
+	"net/url"
 )
 
-func triggerAndWaitForSuccess(cfg *Configuration, m *Manifest) {
+func OpenCircle(cfg *core.Configuration, m *core.Manifest, getBranch bool) error {
+	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
+	if getBranch {
+		currentBranch := url.QueryEscape(core.MustInitGit().GetCurrentBranch())
+		return utils.OpenURI(base, m.Repository, "tree", currentBranch)
+	}
+	return utils.OpenURI(base, m.Repository)
+}
+
+func TriggerAndWaitForSuccess(cfg *core.Configuration, m *core.Manifest) {
 
 	token := os.Getenv("CIRCLE_TOKEN")
 

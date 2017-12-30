@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"fmt"
@@ -14,10 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/manifoldco/promptui"
+	"github.com/benchlabs/bub/core"
 )
 
 type ConnectionParams struct {
-	Configuration *Configuration
+	Configuration *core.Configuration
 	Filter        string
 	Output        bool
 	All           bool
@@ -31,7 +32,7 @@ func FetchInstances(done chan []*ec2.Instance, region string, filter string) {
 		log.Fatalf("Failed to create session %v\n", err)
 	}
 
-	config := getAWSConfig(region)
+	config := GetAWSConfig(region)
 	svc := ec2.New(sess, &config)
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
@@ -83,7 +84,7 @@ func getUsers(i *ec2.Instance) []string {
 	return append(users, "ubuntu")
 }
 
-func getJumpHost(name string, cfg *Configuration) string {
+func getJumpHost(name string, cfg *core.Configuration) string {
 	for _, i := range cfg.AWS.Environments {
 		if strings.HasPrefix(name, i.Prefix) {
 			return i.Jumphost

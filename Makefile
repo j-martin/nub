@@ -10,7 +10,7 @@ OUTPUT		= bin/bub
 all: deps test darwin linux
 
 darwin:
-	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
+	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
 
 linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)" "$(SRC)"
@@ -24,8 +24,12 @@ deps: $(DEP)
 	$(DEP) ensure --vendor-only
 
 test:
-	go test "$(SRC)"
-	go vet "$(SRC)"
+	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
+		| sort -u \
+		| xargs -n1 go test
+	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
+		| sort -u \
+		| xargs -n1 go vet
 
 clean:
 	rm -rf bin
@@ -44,4 +48,6 @@ install: deps $(PLATFORM)
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
 
 fmt:
-	go fmt "$(SRC)"
+	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
+		| sort -u \
+		| xargs -n1 go fmt

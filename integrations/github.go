@@ -1,8 +1,10 @@
-package main
+package integrations
 
 import (
 	"context"
 	"fmt"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"log"
@@ -11,13 +13,13 @@ import (
 )
 
 type GitHub struct {
-	cfg    *Configuration
+	cfg    *core.Configuration
 	client *github.Client
 }
 
-func MustInitGitHub(cfg *Configuration) *GitHub {
+func MustInitGitHub(cfg *core.Configuration) *GitHub {
 	ctx := context.Background()
-	loadKeyringItem("GitHub Token", &cfg.GitHub.Token)
+	core.LoadKeyringItem("GitHub Token", &cfg.GitHub.Token)
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHub.Token},
 	)
@@ -28,7 +30,7 @@ func MustInitGitHub(cfg *Configuration) *GitHub {
 }
 
 func (gh *GitHub) CreatePR(title, body string) error {
-	g := MustInitGit()
+	g := core.MustInitGit()
 	g.Push(gh.cfg)
 	g.Fetch()
 	branch := g.GetCurrentBranch()
@@ -58,7 +60,7 @@ func (gh *GitHub) CreatePR(title, body string) error {
 		existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
 		if len(existingPRs) > 0 {
 			log.Print("Existing PR found.")
-			return OpenURI(*existingPRs[0].HTMLURL)
+			return utils.OpenURI(*existingPRs[0].HTMLURL)
 		}
 		return err
 	}
@@ -73,19 +75,19 @@ func (gh *GitHub) CreatePR(title, body string) error {
 		}
 
 	}
-	return OpenURI(*pr.HTMLURL)
+	return utils.OpenURI(*pr.HTMLURL)
 }
 
-func (gh *GitHub) OpenPage(m *Manifest, p ...string) error {
+func (gh *GitHub) OpenPage(m *core.Manifest, p ...string) error {
 	base := []string{
 		"https://github.com",
 		gh.cfg.GitHub.Organization,
 		m.Repository,
 	}
-	return OpenURI(append(base, p...)...)
+	return utils.OpenURI(append(base, p...)...)
 }
 
-func (gh *GitHub) OpenPR(m *Manifest, pr string) error {
+func (gh *GitHub) OpenPR(m *core.Manifest, pr string) error {
 	return gh.OpenPage(m, "pull", pr, "files")
 }
 

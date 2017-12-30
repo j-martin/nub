@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,14 +10,16 @@ import (
 )
 
 type manifestRepository struct {
-	db *dynamodb.DynamoDB
+	db             *dynamodb.DynamoDB
+	manifestsTable *string
 }
 
-var manifestsTable = aws.String("manifests")
-
 func GetManifestRepository() *manifestRepository {
-	config := getAWSConfig("us-east-1")
-	return &manifestRepository{db: dynamodb.New(session.New(&config))}
+	config := aws.Config{Region: aws.String("us-east-1")}
+	return &manifestRepository{
+		db:             dynamodb.New(session.New(&config)),
+		manifestsTable: aws.String("manifests"),
+	}
 }
 
 func (r *manifestRepository) GetAllActiveManifests() []Manifest {
@@ -33,7 +35,7 @@ func (r *manifestRepository) GetAllActiveManifests() []Manifest {
 func (r *manifestRepository) GetAllManifests() []Manifest {
 	log.Println("Fetching all manifests.")
 	manifests := Manifests{}
-	params := &dynamodb.ScanInput{TableName: manifestsTable}
+	params := &dynamodb.ScanInput{TableName: r.manifestsTable}
 	result, err := r.db.Scan(params)
 
 	if err != nil {
@@ -53,7 +55,7 @@ func (r *manifestRepository) StoreManifest(m *Manifest) {
 		log.Println(err)
 	}
 
-	params := &dynamodb.PutItemInput{TableName: manifestsTable, Item: manifest}
+	params := &dynamodb.PutItemInput{TableName: r.manifestsTable, Item: manifest}
 	_, err = r.db.PutItem(params)
 
 	if err != nil {

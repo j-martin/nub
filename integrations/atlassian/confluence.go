@@ -1,4 +1,4 @@
-package main
+package atlassian
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"bufio"
 	"bytes"
+	"github.com/benchlabs/bub/core"
 	"github.com/bndr/gopencils"
 	"github.com/pkg/errors"
 	"github.com/russross/blackfriday"
@@ -19,12 +20,12 @@ import (
 )
 
 type Confluence struct {
-	cfg    *Configuration
+	cfg    *core.Configuration
 	client *gopencils.Resource
 }
 
-func MustInitConfluence(cfg *Configuration) *Confluence {
-	loadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
+func MustInitConfluence(cfg *core.Configuration) *Confluence {
+	core.LoadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
 	api := gopencils.Api(
 		cfg.Confluence.Server+"/rest/api",
 		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
@@ -53,7 +54,7 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-func (c *Confluence) marshallManifest(m *Manifest) (string, error) {
+func (c *Confluence) marshallManifest(m *core.Manifest) (string, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
 	m.Branch = ""
@@ -109,7 +110,7 @@ func (c *Confluence) findMarkdownFiles(ignoreDirs []string, ignoreCommonFiles bo
 	return fileList, err
 }
 
-func (c *Confluence) joinMarkdownFiles(m *Manifest) (content []byte, err error) {
+func (c *Confluence) joinMarkdownFiles(m *core.Manifest) (content []byte, err error) {
 	files, err := c.findMarkdownFiles(m.Documentation.IgnoredDirs, true)
 	if err != nil {
 		return nil, err
@@ -126,11 +127,11 @@ func (c *Confluence) joinMarkdownFiles(m *Manifest) (content []byte, err error) 
 	return content, err
 }
 
-func (c *Confluence) generateGitHubLink(filePath string, m *Manifest) string {
+func (c *Confluence) generateGitHubLink(filePath string, m *core.Manifest) string {
 	return "[" + filePath + "](https://github.com/" + path.Join(c.cfg.GitHub.Organization, m.Repository, "blob/master", filePath) + ")"
 }
 
-func (c *Confluence) createPage(m *Manifest) ([]byte, error) {
+func (c *Confluence) createPage(m *core.Manifest) ([]byte, error) {
 	yaml, err := c.marshallManifest(m)
 	if err != nil {
 		return nil, err
@@ -168,8 +169,8 @@ func (c *Confluence) createPage(m *Manifest) ([]byte, error) {
 	var header bytes.Buffer
 	writer := bufio.NewWriter(&header)
 	err = t.Execute(writer, struct {
-		Config   Configuration
-		Manifest Manifest
+		Config   core.Configuration
+		Manifest core.Manifest
 		YAML     string
 	}{
 		Manifest: *m,
@@ -204,7 +205,7 @@ func (c *Confluence) createPage(m *Manifest) ([]byte, error) {
 	return append(header.Bytes(), renderedMarkdown...), nil
 }
 
-func (c *Confluence) updateDocumentation(m *Manifest) error {
+func (c *Confluence) UpdateDocumentation(m *core.Manifest) error {
 	if m.Documentation.PageId == "" {
 		log.Print("documenation.pageId: No confluence page defined in manifest. Moving on.")
 		return nil

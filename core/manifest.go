@@ -1,7 +1,8 @@
-package main
+package core
 
 import (
 	"errors"
+	"github.com/benchlabs/bub/utils"
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
@@ -84,10 +85,10 @@ func (e Manifests) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func loadManifest(version string) (*Manifest, error) {
+func LoadManifest(version string) (*Manifest, error) {
 	m := &Manifest{}
 
-	if !InRepository() {
+	if !utils.InRepository() {
 		return m, errors.New("must be executed in a repository")
 	}
 
@@ -135,7 +136,7 @@ func loadManifest(version string) (*Manifest, error) {
 	return m, err
 }
 
-func createManifest() {
+func CreateManifest() {
 
 	manifest := Manifest{
 		Name: MustInitGit().GetCurrentRepositoryName(),
@@ -165,7 +166,7 @@ documentation:
 		panic(err)
 	}
 
-	fileExists, err := PathExists(manifestFile)
+	fileExists, err := utils.PathExists(manifestFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,11 +181,11 @@ documentation:
 	}
 
 	log.Println("Edit the manifest file.")
-	EditFile(manifestFile)
+	utils.EditFile(manifestFile)
 	log.Println("Done. Don't forget to add and commit the file.")
 }
 
-func isSameType(m Manifest, manifestType string) bool {
+func IsSameType(m Manifest, manifestType string) bool {
 	for _, i := range m.Types {
 		if i == manifestType {
 			return true

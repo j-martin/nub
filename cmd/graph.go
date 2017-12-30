@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/paetzke/godot/godot"
 	"log"
 	"os"
@@ -9,7 +11,7 @@ import (
 
 func generateGraphs() {
 	outputPath := "output"
-	dirExist, err := PathExists(outputPath)
+	dirExist, err := utils.PathExists(outputPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -17,7 +19,7 @@ func generateGraphs() {
 		os.Mkdir(outputPath, os.FileMode(0775))
 	}
 	os.Chdir(outputPath)
-	manifests := GetManifestRepository().GetAllManifests()
+	manifests := core.GetManifestRepository().GetAllManifests()
 	for _, filter := range [][]string{{"service"}, {"front-end"}, {"front-end", "service"}} {
 		for _, outputType := range []godot.OutputType{godot.OUT_PNG, godot.OUT_SVG} {
 			generateGraph(filter, manifests, outputType, true)
@@ -27,7 +29,7 @@ func generateGraphs() {
 	log.Printf("Graphs generated in %v done.", outputPath)
 }
 
-func generateGraph(typeFilters []string, manifests Manifests, outputType godot.OutputType, requestFlow bool) {
+func generateGraph(typeFilters []string, manifests core.Manifests, outputType godot.OutputType, requestFlow bool) {
 	segments := []string{"graph"}
 	segments = append(segments, typeFilters...)
 	if requestFlow {

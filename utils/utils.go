@@ -1,7 +1,8 @@
-package main
+package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/manifoldco/promptui"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -129,18 +131,21 @@ func ConditionalOp(message string, noop bool, fn func() error) error {
 	return fn()
 }
 
-func (g *Git) Update() {
-	MustRunCmd("git", "clean", "-fd")
-	MustRunCmd("git", "reset", "--hard")
-	MustRunCmd("git", "checkout", "master", "-f")
-	MustRunCmd("git", "pull")
-	MustRunCmd("git", "pull", "--tags")
+func InRepository() bool {
+	result, err := PathExists(".git")
+	if err != nil {
+		return false
+	}
+	return result
 }
 
-func (g *Git) ContainedUncommittedChanges() bool {
-	return HasNonEmptyLines(strings.Split(MustRunCmdWithOutput("git", "status", "--short"), "\n"))
-}
-
-func (g *Git) IsDifferentFromMaster() bool {
-	return HasNonEmptyLines(g.LogNotInMasterSubjects())
+func OpenURI(uriSegments ...string) error {
+	uri := strings.Join(uriSegments, "/")
+	log.Printf("Opening: %v", uri)
+	if runtime.GOOS == "darwin" {
+		return exec.Command("open", uri).Run()
+	} else if runtime.GOOS == "linux" {
+		return exec.Command("xdg-open", uri).Run()
+	}
+	return errors.New("could not open the link automatically")
 }

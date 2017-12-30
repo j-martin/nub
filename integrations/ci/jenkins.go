@@ -1,7 +1,9 @@
-package main
+package ci
 
 import (
 	"fmt"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/bndr/gojenkins"
 	"io/ioutil"
 	"log"
@@ -12,8 +14,8 @@ import (
 )
 
 type Jenkins struct {
-	cfg      *Configuration
-	manifest *Manifest
+	cfg      *core.Configuration
+	manifest *core.Manifest
 	client   *gojenkins.Jenkins
 }
 
@@ -21,9 +23,9 @@ func (j *Jenkins) getJobName() string {
 	return path.Join(j.cfg.GitHub.Organization, "job", j.manifest.Repository, "job", j.manifest.Branch)
 }
 
-func MustInitJenkins(cfg *Configuration, m *Manifest) *Jenkins {
-	checkServerConfig(cfg.Jenkins.Server)
-	loadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
+func MustInitJenkins(cfg *core.Configuration, m *core.Manifest) *Jenkins {
+	core.CheckServerConfig(cfg.Jenkins.Server)
+	core.LoadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
 	jenkins := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password)
 	client, err := jenkins.Init()
 	if err != nil {
@@ -102,7 +104,7 @@ func (j *Jenkins) ShowConsoleOutput() {
 
 func (j *Jenkins) OpenPage(p ...string) error {
 	base := []string{j.cfg.Jenkins.Server, "job/BenchLabs/job", j.manifest.Repository, "job", j.manifest.Branch}
-	return OpenURI(append(base, p...)...)
+	return utils.OpenURI(append(base, p...)...)
 }
 
 func (j *Jenkins) BuildJob(async bool, force bool) {

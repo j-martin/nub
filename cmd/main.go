@@ -7,12 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/integrations"
+	"github.com/benchlabs/bub/integrations/aws"
+	"github.com/benchlabs/bub/utils"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
+	"github.com/benchlabs/bub/integrations/atlassian"
+	"github.com/benchlabs/bub/integrations/ci"
 )
 
-func getRegion(environment string, cfg *Configuration, c *cli.Context) string {
-
+func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
 	region := c.String("region")
 	if region == "" {
 		prefix := strings.Split(environment, "-")[0]
@@ -27,13 +32,13 @@ func getRegion(environment string, cfg *Configuration, c *cli.Context) string {
 }
 
 func main() {
-	cfg := loadConfiguration()
-	manifest, manifestErr := loadManifest("")
+	cfg := core.LoadConfiguration()
+	manifest, manifestErr := core.LoadManifest("")
 
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.27.0"
+	app.Version = "0.28.0"
 	app.EnableBashCompletion = true
 
 	jiraSearchIssue := cli.Command{
@@ -50,7 +55,7 @@ func main() {
 			if !c.Bool("all") {
 				project = cfg.JIRA.Project
 			}
-			return MustInitJIRA(cfg).SearchIssueText(strings.Join(c.Args(), " "), project, c.Bool("resolved"))
+			return atlassian.MustInitJIRA(cfg).SearchIssueText(strings.Join(c.Args(), " "), project, c.Bool("resolved"))
 		},
 	}
 
@@ -59,7 +64,7 @@ func main() {
 		Aliases: []string{"o"},
 		Usage:   "Open JIRA issue in the browser.",
 		Action: func(c *cli.Context) error {
-			return MustInitJIRA(cfg).OpenIssue()
+			return atlassian.MustInitJIRA(cfg).OpenIssue()
 		},
 	}
 	jiraClaimIssue := cli.Command{
@@ -68,7 +73,7 @@ func main() {
 		Aliases: []string{"cl"},
 		Usage:   "Claim unassigned issue in the current sprint.",
 		Action: func(c *cli.Context) error {
-			return MustInitJIRA(cfg).ClaimIssueInActiveSprint()
+			return atlassian.MustInitJIRA(cfg).ClaimIssueInActiveSprint()
 		},
 	}
 	jiraTransitionIssue := cli.Command{
@@ -80,7 +85,7 @@ func main() {
 			if len(c.Args()) == 0 {
 				transition = c.Args().Get(0)
 			}
-			return MustInitJIRA(cfg).TransitionIssue("", transition)
+			return atlassian.MustInitJIRA(cfg).TransitionIssue("", transition)
 		},
 	}
 
@@ -89,7 +94,7 @@ func main() {
 		Aliases: []string{"b"},
 		Usage:   "Open your JIRA board.",
 		Action: func(c *cli.Context) error {
-			return OpenURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
+			return utils.OpenURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
 		},
 	}
 
@@ -98,7 +103,7 @@ func main() {
 			Name:  "setup",
 			Usage: "Setup bub on your machine.",
 			Action: func(c *cli.Context) error {
-				setup()
+				core.Setup()
 				return nil
 			},
 		},
@@ -127,9 +132,9 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 				if c.Bool("show-default") {
-					print(GetConfigString())
+					print(core.GetConfigString())
 				} else {
-					editConfiguration()
+					core.EditConfiguration()
 				}
 				return nil
 			},
@@ -152,8 +157,8 @@ Existing work will be stashed and pull the master branch. Your work won't be los
 Please make sure you are in the directory where you store your repos and not a specific repo.
 
 Continue?`
-						if c.Bool("force") || AskForConfirmation(message) {
-							MustInitGit().SyncRepositories()
+						if c.Bool("force") || utils.AskForConfirmation(message) {
+							core.MustInitGit().SyncRepositories()
 						} else {
 							os.Exit(1)
 						}
@@ -171,7 +176,7 @@ Continue?`
 					},
 					Action: func(c *cli.Context) error {
 						if !c.Bool("no-fetch") {
-							MustInitGit().FetchTags()
+							core.MustInitGit().FetchTags()
 						}
 						previousVersion := "production"
 						if len(c.Args()) > 0 {
@@ -181,7 +186,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						MustInitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
+						core.MustInitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
 						return nil
 					},
 				},
@@ -205,7 +210,7 @@ Continue?`
 						cli.StringFlag{Name: "lang", Usage: "Display only projects matching the language"},
 					},
 					Action: func(c *cli.Context) error {
-						manifests := GetManifestRepository().GetAllManifests()
+						manifests := core.GetManifestRepository().GetAllManifests()
 						for _, m := range manifests {
 							if !c.Bool("full") {
 								m.Readme = ""
@@ -216,11 +221,11 @@ Continue?`
 								continue
 							}
 
-							if c.Bool("service") && !isSameType(m, "service") {
+							if c.Bool("service") && !core.IsSameType(m, "service") {
 								continue
 							}
 
-							if c.Bool("lib") && !isSameType(m, "library") {
+							if c.Bool("lib") && !core.IsSameType(m, "library") {
 								continue
 							}
 
@@ -243,7 +248,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Creates a base manifest.",
 					Action: func(c *cli.Context) error {
-						createManifest()
+						core.CreateManifest()
 						return nil
 					},
 				},
@@ -269,8 +274,8 @@ Continue?`
 							os.Exit(1)
 						}
 						manifest.Version = c.String("artifact-version")
-						GetManifestRepository().StoreManifest(manifest)
-						return MustInitConfluence(cfg).updateDocumentation(manifest)
+						core.GetManifestRepository().StoreManifest(manifest)
+						return atlassian.MustInitConfluence(cfg).UpdateDocumentation(manifest)
 					},
 				},
 				{
@@ -319,7 +324,14 @@ Continue?`
 					args = c.Args()[1:]
 				}
 
-				ConnectToInstance(ConnectionParams{cfg, name, c.Bool("output"), c.Bool("all"), c.Bool("jump"), args})
+				aws.ConnectToInstance(aws.ConnectionParams{
+					Configuration: cfg,
+					Filter:        name,
+					Output:        c.Bool("output"),
+					All:           c.Bool("all"),
+					UseJumpHost:   c.Bool("jump"),
+					Args:          args},
+				)
 				return nil
 			},
 		},
@@ -328,7 +340,7 @@ Continue?`
 			Usage:   "RDS actions.",
 			Aliases: []string{"r"},
 			Action: func(c *cli.Context) error {
-				GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
+				aws.GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
 				return nil
 			},
 		},
@@ -340,7 +352,7 @@ Continue?`
 				cli.StringFlag{Name: "region"},
 			},
 			Action: func(c *cli.Context) error {
-				ListEnvironments(cfg)
+				aws.ListEnvironments(cfg)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -352,7 +364,7 @@ Continue?`
 						cli.StringFlag{Name: "region"},
 					},
 					Action: func(c *cli.Context) error {
-						ListEnvironments(cfg)
+						aws.ListEnvironments(cfg)
 						return nil
 					},
 				},
@@ -373,7 +385,7 @@ Continue?`
 							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
+						aws.ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
 						return nil
 					},
 				},
@@ -393,7 +405,7 @@ Continue?`
 							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						EnvironmentIsReady(getRegion(environment, cfg, c), environment, true)
+						aws.EnvironmentIsReady(getRegion(environment, cfg, c), environment, true)
 						return nil
 					},
 				},
@@ -414,7 +426,7 @@ Continue?`
 							environment = "pro-" + manifest.Name
 							log.Printf("Manifest found. Using '%v'", environment)
 						}
-						DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool("all"))
+						aws.DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool("all"))
 						return nil
 					},
 				},
@@ -435,7 +447,7 @@ Continue?`
 							log.Printf("Manifest found. Using '%v'", application)
 						}
 
-						ListApplicationVersions(getRegion(application, cfg, c), application)
+						aws.ListApplicationVersions(getRegion(application, cfg, c), application)
 						return nil
 					},
 				},
@@ -462,12 +474,12 @@ Continue?`
 						region := getRegion(environment, cfg, c)
 
 						if c.NArg() < 2 {
-							ListApplicationVersions(region, GetApplication(environment))
+							aws.ListApplicationVersions(region, aws.GetApplication(environment))
 							log.Println("Version required. Specify one of the application versions above.")
 							os.Exit(2)
 						}
 						version := c.Args().Get(1)
-						DeployVersion(region, environment, version)
+						aws.DeployVersion(region, environment, version)
 						return nil
 					},
 				},
@@ -483,7 +495,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Usage:   "Open repo in your browser.",
 					Action: func(c *cli.Context) error {
-						return MustInitGitHub(cfg).OpenPage(manifest)
+						return integrations.MustInitGitHub(cfg).OpenPage(manifest)
 					},
 				},
 				{
@@ -491,7 +503,7 @@ Continue?`
 					Aliases: []string{"i"},
 					Usage:   "Open issues list in your browser.",
 					Action: func(c *cli.Context) error {
-						return MustInitGitHub(cfg).OpenPage(manifest, "issues")
+						return integrations.MustInitGitHub(cfg).OpenPage(manifest, "issues")
 					},
 				},
 				{
@@ -499,7 +511,7 @@ Continue?`
 					Aliases: []string{"b"},
 					Usage:   "Open branches list in your browser.",
 					Action: func(c *cli.Context) error {
-						return MustInitGitHub(cfg).OpenPage(manifest, "branches")
+						return integrations.MustInitGitHub(cfg).OpenPage(manifest, "branches")
 					},
 				},
 				{
@@ -507,7 +519,7 @@ Continue?`
 					Aliases: []string{"p"},
 					Usage:   "Open Pull Request list in your browser.",
 					Action: func(c *cli.Context) error {
-						return MustInitGitHub(cfg).OpenPage(manifest, "pulls")
+						return integrations.MustInitGitHub(cfg).OpenPage(manifest, "pulls")
 					},
 				},
 				{
@@ -517,7 +529,7 @@ Continue?`
 						cli.StringFlag{Name: "max-age", Value: "30"},
 					},
 					Action: func(c *cli.Context) error {
-						return MustInitGitHub(cfg).ListBranches(c.Int("max-age"))
+						return integrations.MustInitGitHub(cfg).ListBranches(c.Int("max-age"))
 					},
 				},
 			},
@@ -546,7 +558,7 @@ Continue?`
 						}
 						summary := c.Args().Get(0)
 						desc := c.Args().Get(1)
-						return MustInitJIRA(cfg).CreateIssue(c.String("project"), summary, desc, c.String("transition"), c.Bool("reactive"))
+						return atlassian.MustInitJIRA(cfg).CreateIssue(c.String("project"), summary, desc, c.String("transition"), c.Bool("reactive"))
 					},
 				},
 				jiraOpenIssue,
@@ -566,7 +578,7 @@ Continue?`
 					Aliases: []string{"n", "new"},
 					Usage:   "Checkout a new branch based on JIRA issues assigned to you.",
 					Action: func(c *cli.Context) error {
-						return MustInitJIRA(cfg).CreateBranchFromAssignedIssue()
+						return atlassian.MustInitJIRA(cfg).CreateBranchFromAssignedIssue()
 					},
 				},
 				{
@@ -574,7 +586,7 @@ Continue?`
 					Aliases: []string{"ch", "b"},
 					Usage:   "Checkout an existing branch.",
 					Action: func(c *cli.Context) error {
-						return MustInitGit().CheckoutBranch()
+						return core.MustInitGit().CheckoutBranch()
 					},
 				},
 				{
@@ -585,7 +597,7 @@ Continue?`
 						if len(c.Args()) < 1 {
 							log.Fatal("Must pass commit message.")
 						}
-						MustInitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
+						core.MustInitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
 						return nil
 					},
 				},
@@ -654,7 +666,7 @@ Continue?`
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
 			Action: func(c *cli.Context) error {
-				return MustInitJenkins(cfg, manifest).OpenPage()
+				return ci.MustInitJenkins(cfg, manifest).OpenPage()
 			},
 			Subcommands: []cli.Command{
 				{
@@ -662,7 +674,7 @@ Continue?`
 					Aliases: []string{"c"},
 					Usage:   "Opens the (web) console of the last build of master.",
 					Action: func(c *cli.Context) error {
-						return MustInitJenkins(cfg, manifest).OpenPage("lastBuild/consoleFull")
+						return ci.MustInitJenkins(cfg, manifest).OpenPage("lastBuild/consoleFull")
 					},
 				},
 				{
@@ -670,7 +682,7 @@ Continue?`
 					Aliases: []string{"j"},
 					Usage:   "Shows the console output of the last build.",
 					Action: func(c *cli.Context) error {
-						MustInitJenkins(cfg, manifest).ShowConsoleOutput()
+						ci.MustInitJenkins(cfg, manifest).ShowConsoleOutput()
 						return nil
 					},
 				},
@@ -679,7 +691,7 @@ Continue?`
 					Aliases: []string{"a"},
 					Usage:   "Get the previous build's artifacts.",
 					Action: func(c *cli.Context) error {
-						return MustInitJenkins(cfg, manifest).GetArtifacts()
+						return ci.MustInitJenkins(cfg, manifest).GetArtifacts()
 					},
 				},
 				{
@@ -691,7 +703,7 @@ Continue?`
 					},
 					Usage: "Trigger build of the current branch.",
 					Action: func(c *cli.Context) error {
-						MustInitJenkins(cfg, manifest).BuildJob(c.Bool("no-wait"), c.Bool("force"))
+						ci.MustInitJenkins(cfg, manifest).BuildJob(c.Bool("no-wait"), c.Bool("force"))
 						return nil
 					},
 				},
@@ -702,7 +714,7 @@ Continue?`
 			Usage:   "Open the service production logs.",
 			Aliases: []string{"s"},
 			Action: func(c *cli.Context) error {
-				return openSplunk(cfg, manifest, false)
+				return integrations.OpenSplunk(cfg, manifest, false)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -710,7 +722,7 @@ Continue?`
 					Aliases: []string{"s"},
 					Usage:   "Open the service staging logs.",
 					Action: func(c *cli.Context) error {
-						return openSplunk(cfg, manifest, true)
+						return integrations.OpenSplunk(cfg, manifest, true)
 					},
 				},
 			},
@@ -721,7 +733,7 @@ Continue?`
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
 				base := "https://example.atlassian.net/wiki/display/dev/"
-				return OpenURI(base + manifest.Name)
+				return utils.OpenURI(base + manifest.Name)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -730,7 +742,7 @@ Continue?`
 					Aliases: []string{"r"},
 					Action: func(c *cli.Context) error {
 						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						return OpenURI(base + manifest.Name + ".raml")
+						return utils.OpenURI(base + manifest.Name + ".raml")
 					},
 				},
 			},
@@ -740,7 +752,7 @@ Continue?`
 			Usage:   "CircleCI related actions",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
-				return openCircle(cfg, manifest, false)
+				return ci.OpenCircle(cfg, manifest, false)
 			},
 			Subcommands: []cli.Command{
 				{
@@ -748,7 +760,7 @@ Continue?`
 					Usage:   "Trigger the current branch of the current repo and wait for success.",
 					Aliases: []string{"t"},
 					Action: func(c *cli.Context) error {
-						triggerAndWaitForSuccess(cfg, manifest)
+						ci.TriggerAndWaitForSuccess(cfg, manifest)
 						return nil
 					},
 				},
@@ -757,7 +769,7 @@ Continue?`
 					Usage:   "Opens the result for the current branch.",
 					Aliases: []string{"b"},
 					Action: func(c *cli.Context) error {
-						return openCircle(cfg, manifest, true)
+						return ci.OpenCircle(cfg, manifest, true)
 					},
 				},
 			},

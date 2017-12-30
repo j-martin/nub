@@ -1,7 +1,8 @@
-package main
+package core
 
 import (
 	"fmt"
+	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
 	"io/ioutil"
 	"log"
@@ -14,7 +15,7 @@ import (
 )
 
 type Git struct {
-	cfg        *Configuration
+	cfg *Configuration
 }
 
 func MustInitGit() *Git {
@@ -50,14 +51,6 @@ func (g *Git) GetTitleFromBranchName() string {
 	return strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
 }
 
-func InRepository() bool {
-	result, err := PathExists(".git")
-	if err != nil {
-		return false
-	}
-	return result
-}
-
 func (g *Git) CloneRepository(repository string) {
 	log.Printf("Cloning: %v", repository)
 	MustRunCmd("git", "clone", "git@github.com:benchlabs/"+repository+".git")
@@ -89,7 +82,7 @@ func (g *Git) SyncRepositories() {
 
 func (g *Git) syncRepository(m Manifest) {
 	repository := m.Repository
-	repositoryExists, _ := PathExists(repository)
+	repositoryExists, _ := utils.PathExists(repository)
 	if repositoryExists {
 		g.UpdateRepository(repository)
 	} else {
@@ -130,7 +123,7 @@ func (g *Git) Log() (commits []*GitCommit) {
 			continue
 		}
 		fields := strings.Split(line, "||~||")
-		commits = append(commits, &GitCommit{Hash:fields[0], Committer:fields[1], Subject:fields[2], Body:fields[3]})
+		commits = append(commits, &GitCommit{Hash: fields[0], Committer: fields[1], Subject: fields[2], Body: fields[3]})
 	}
 	return commits
 }
@@ -207,8 +200,9 @@ func (g *Git) Fetch() {
 }
 
 func (g *Git) sanitizeBranchName(name string) string {
+	r := regexp.MustCompile("[^a-zA-Z0-9]+")
 	r2 := regexp.MustCompile("-+")
-	return strings.Trim(r2.ReplaceAllString(g.GetIssueRegex().ReplaceAllString(name, "-"), "-"), "-")
+	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
 }
 
 func (g *Git) LogNotInMasterSubjects() []string {
@@ -248,7 +242,7 @@ func (g *Git) CreateBranch(name string) {
 }
 
 func (g *Git) CheckoutBranch() error {
-	item, err := PickItem("Pick a branch", g.getBranches())
+	item, err := utils.PickItem("Pick a branch", g.getBranches())
 	if err != nil {
 		return err
 	}
@@ -271,7 +265,7 @@ func ForEachRepo(fn func() error) error {
 		if err != nil {
 			return err
 		}
-		if !InRepository() {
+		if !utils.InRepository() {
 			continue
 		}
 		log.Printf(value.Name())
@@ -320,4 +314,20 @@ func (g *Git) committerSlackReference(cfg *Configuration, previousVersion string
 		committerSlackArr = append(committerSlackArr, v)
 	}
 	return committerSlackArr
+}
+
+func (g *Git) Update() {
+	MustRunCmd("git", "clean", "-fd")
+	MustRunCmd("git", "reset", "--hard")
+	MustRunCmd("git", "checkout", "master", "-f")
+	MustRunCmd("git", "pull")
+	MustRunCmd("git", "pull", "--tags")
+}
+
+func (g *Git) ContainedUncommittedChanges() bool {
+	return utils.HasNonEmptyLines(strings.Split(MustRunCmdWithOutput("git", "status", "--short"), "\n"))
+}
+
+func (g *Git) IsDifferentFromMaster() bool {
+	return utils.HasNonEmptyLines(g.LogNotInMasterSubjects())
 }

@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"fmt"
@@ -12,10 +12,12 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"github.com/benchlabs/bub/utils"
+	"github.com/benchlabs/bub/core"
 )
 
 type RDS struct {
-	cfg *Configuration
+	cfg *core.Configuration
 }
 
 type DBInstances []*rds.DBInstance
@@ -37,7 +39,7 @@ type EngineConfiguration struct {
 	Command, CommandAlt string
 }
 
-func GetRDS(cfg *Configuration) *RDS {
+func GetRDS(cfg *core.Configuration) *RDS {
 	return &RDS{cfg: cfg}
 }
 
@@ -46,7 +48,7 @@ func (r *RDS) ConnectToRDSInstance(filter string, args []string) {
 	regions := r.cfg.AWS.Regions
 	for _, region := range regions {
 		go func(region string) {
-			config := getAWSConfig(region)
+			config := GetAWSConfig(region)
 			svc := rds.New(session.New(&config))
 			resp, err := svc.DescribeDBInstances(&rds.DescribeDBInstancesInput{})
 			if err != nil {
@@ -125,7 +127,7 @@ func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, err
 	return instances[i], err
 }
 
-func (r *RDS) getRDSConfig(endpoint string) RDSConfiguration {
+func (r *RDS) getRDSConfig(endpoint string) core.RDSConfiguration {
 	for _, i := range r.cfg.AWS.RDS {
 		if strings.HasPrefix(endpoint, i.Prefix) {
 			if i.Database == "" {
@@ -138,17 +140,17 @@ func (r *RDS) getRDSConfig(endpoint string) RDSConfiguration {
 		}
 	}
 	log.Fatalf("No RDS Configuration found for %s, please check your configuration. Run 'bub config'.", endpoint)
-	return RDSConfiguration{}
+	return core.RDSConfiguration{}
 }
 
-func (r *RDS) getEnvironment(endpoint string) Environment {
+func (r *RDS) getEnvironment(endpoint string) core.Environment {
 	for _, i := range r.cfg.AWS.Environments {
 		if strings.HasPrefix(endpoint, i.Prefix) {
 			return i
 		}
 	}
 	log.Fatalf("No environment matched %s, please check your configuration. Run 'bub config'.", endpoint)
-	return Environment{}
+	return core.Environment{}
 }
 
 func (r *RDS) tunnelIsReady(port int) bool {
@@ -186,7 +188,7 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 	endpoint := *instance.Endpoint.Address
 	jump := r.getEnvironment(endpoint).Jumphost
 	rdsConfig := r.getRDSConfig(endpoint)
-	port := Random(40000, 60000)
+	port := utils.Random(40000, 60000)
 	engine := r.getEngineConfiguration(*instance.Engine)
 
 	tunnelPath := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
@@ -207,8 +209,8 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 		fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
 		fmt.Sprintf("EDITOR=%s", os.Getenv("EDITOR")),
-		fmt.Sprintf("LC_ALL=%s", GetEnvWithDefault("LC_ALL", "en_US.UTF-8")),
-		fmt.Sprintf("LANG=%s", GetEnvWithDefault("LANG", "en_US.UTF-8")),
+		fmt.Sprintf("LC_ALL=%s", utils.GetEnvWithDefault("LC_ALL", "en_US.UTF-8")),
+		fmt.Sprintf("LANG=%s", utils.GetEnvWithDefault("LANG", "en_US.UTF-8")),
 		// sets environment variables for the pg, mysql clients and other scripts.
 		"PGHOST=127.0.0.1",
 		fmt.Sprintf("PGPORT=%v", port),

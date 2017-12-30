@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/integrations/aws"
 	version "github.com/mcuadros/go-version"
 )
 
@@ -21,7 +23,7 @@ type S3path struct {
 }
 
 func latestRelease(base S3path) (obj *s3.Object, err error) {
-	s3cfg := getAWSConfig(base.Region)
+	s3cfg := aws.GetAWSConfig(base.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
 		return nil, err
@@ -61,7 +63,7 @@ func updateBub(path S3path) error {
 		log.Fatalf("Could not get bub's path: %s", err)
 	}
 	log.Printf("Downloading s3://%s/%s to %s", path.Bucket, path.Path, exe)
-	s3cfg := getAWSConfig(path.Region)
+	s3cfg := aws.GetAWSConfig(path.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
 		return err
@@ -111,6 +113,6 @@ func updateBub(path S3path) error {
 	if os.Rename(f.Name(), exe) != nil {
 		return err
 	}
-	log.Printf("Update complete. %v", MustRunCmdWithOutput(exe, "--version"))
+	log.Printf("Update complete. %v", core.MustRunCmdWithOutput(exe, "--version"))
 	return nil
 }

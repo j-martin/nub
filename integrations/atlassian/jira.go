@@ -1,8 +1,10 @@
-package main
+package atlassian
 
 import (
 	"fmt"
 	"github.com/andygrunwald/go-jira"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -12,20 +14,20 @@ import (
 
 type JIRA struct {
 	client *jira.Client
-	cfg    *Configuration
+	cfg    *core.Configuration
 }
 
-func MustInitJIRA(cfg *Configuration) *JIRA {
+func MustInitJIRA(cfg *core.Configuration) *JIRA {
 	j := JIRA{}
-	loadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
+	core.LoadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
 	if err := j.init(cfg); err != nil {
 		log.Fatalf("Failed to initiate JIRA client: %v", err)
 	}
 	return &j
 }
 
-func (j *JIRA) init(cfg *Configuration) error {
-	checkServerConfig(cfg.JIRA.Server)
+func (j *JIRA) init(cfg *core.Configuration) error {
+	core.CheckServerConfig(cfg.JIRA.Server)
 	client, err := jira.NewClient(nil, cfg.JIRA.Server)
 	if err != nil {
 		return err
@@ -114,7 +116,7 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 }
 
 func (j *JIRA) CreateBranchFromIssue(issue jira.Issue) error {
-	MustInitGit().CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	core.MustInitGit().CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
 
@@ -158,7 +160,7 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 }
 
 func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
-	key := MustInitGit().GetIssueKeyFromBranch()
+	key := core.MustInitGit().GetIssueKeyFromBranch()
 	if key == "" {
 		log.Print("No issue key found in ")
 		is, err := j.getAssignedIssues()
@@ -239,15 +241,15 @@ func (j *JIRA) openIssue(issue jira.Issue) error {
 }
 
 func (j *JIRA) OpenIssueFromKey(key string) error {
-	beeInstalled, err := PathExists("/Applications/Bee.app")
+	beeInstalled, err := utils.PathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
 	}
 	if beeInstalled {
-		OpenURI("bee://item?id=" + key)
+		utils.OpenURI("bee://item?id=" + key)
 		return nil
 	}
-	OpenURI(j.cfg.JIRA.Server, "browse", key)
+	utils.OpenURI(j.cfg.JIRA.Server, "browse", key)
 	return nil
 }
 
