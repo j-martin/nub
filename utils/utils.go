@@ -15,24 +15,18 @@ import (
 	"time"
 )
 
-func MustRunCmd(cmd string, args ...string) {
+func RunCmd(cmd string, args ...string) error {
 	command := exec.Command(cmd, args...)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	err := command.Run()
-	if err != nil {
-		log.Fatalf("Command failed: %v", err)
-	}
+	return command.Run()
 }
 
-func MustRunCmdWithStdout(cmd string, args ...string) string {
+func RunCmdWithStdout(cmd string, args ...string) (string, error) {
 	command := exec.Command(cmd, args...)
 	command.Stderr = os.Stderr
 	output, err := command.Output()
-	if err != nil {
-		log.Fatalf("Command failed: %v", err)
-	}
-	return string(output)
+	return string(output), err
 }
 
 func AskForConfirmation(s string) bool {
@@ -155,6 +149,14 @@ func ConditionalOp(message string, noop bool, fn func() error) error {
 
 func InRepository() bool {
 	result, err := PathExists(".git")
+	if err != nil {
+		return false
+	}
+	return result
+}
+
+func IsRepository(repoDir string) bool {
+	result, err := PathExists(repoDir, ".git")
 	if err != nil {
 		return false
 	}

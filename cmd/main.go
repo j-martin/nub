@@ -9,12 +9,12 @@ import (
 
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations"
+	"github.com/benchlabs/bub/integrations/atlassian"
 	"github.com/benchlabs/bub/integrations/aws"
+	"github.com/benchlabs/bub/integrations/ci"
 	"github.com/benchlabs/bub/utils"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
-	"github.com/benchlabs/bub/integrations/atlassian"
-	"github.com/benchlabs/bub/integrations/ci"
 )
 
 func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
@@ -157,12 +157,10 @@ Existing work will be stashed and pull the master branch. Your work won't be los
 Please make sure you are in the directory where you store your repos and not a specific repo.
 
 Continue?`
-						if c.Bool("force") || utils.AskForConfirmation(message) {
-							core.MustInitGit().SyncRepositories()
-						} else {
+						if !c.Bool("force") && !utils.AskForConfirmation(message) {
 							os.Exit(1)
 						}
-						return nil
+						return core.SyncRepositories()
 					},
 				},
 				{
@@ -176,7 +174,7 @@ Continue?`
 					},
 					Action: func(c *cli.Context) error {
 						if !c.Bool("no-fetch") {
-							core.MustInitGit().FetchTags()
+							core.InitGit().FetchTags()
 						}
 						previousVersion := "production"
 						if len(c.Args()) > 0 {
@@ -186,7 +184,7 @@ Continue?`
 						if len(c.Args()) > 1 {
 							nextVersion = c.Args().Get(1)
 						}
-						core.MustInitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
+						core.InitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
 						return nil
 					},
 				},
@@ -586,7 +584,7 @@ Continue?`
 					Aliases: []string{"ch", "b"},
 					Usage:   "Checkout an existing branch.",
 					Action: func(c *cli.Context) error {
-						return core.MustInitGit().CheckoutBranch()
+						return core.InitGit().CheckoutBranch()
 					},
 				},
 				{
@@ -597,7 +595,7 @@ Continue?`
 						if len(c.Args()) < 1 {
 							log.Fatal("Must pass commit message.")
 						}
-						core.MustInitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
+						core.InitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
 						return nil
 					},
 				},

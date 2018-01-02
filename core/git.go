@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 	"text/tabwriter"
 )
 
@@ -23,23 +25,45 @@ type GitCommit struct {
 	Hash, Committer, Subject, Body string
 }
 
-func MustInitGit() *Git {
+type RepoOperation func(string) error
+
+func InitGit() *Git {
 	return &Git{}
 }
 
-func (g *Git) MustRunGit(args ...string) {
-	if g.dir != "" {
-		args = append([]string{"-C", g.dir}, args...)
-	}
-	utils.MustRunCmd("git", args...)
+func MustInitGit(repoDir string) *Git {
+	log.Printf("Initiating: %v", repoDir)
+	return &Git{dir: repoDir}
 }
 
-
-func (g *Git) MustRunGitWithStdout(args ...string) string {
+func (g *Git) RunGit(args ...string) error {
+	log.Printf("running: git %v on %v", strings.Join(args, " "), g.dir)
 	if g.dir != "" {
 		args = append([]string{"-C", g.dir}, args...)
 	}
-	return utils.MustRunCmdWithStdout("git", args...)
+	return utils.RunCmd("git", args...)
+}
+
+func (g *Git) MustRunGit(args ...string) {
+	err := g.RunGit(args...)
+	if err != nil {
+		log.Fatalf("Git failed: %v", err)
+	}
+}
+
+func (g *Git) RunGitWithStdout(args ...string) (string, error) {
+	if g.dir != "" {
+		args = append([]string{"-C", g.dir}, args...)
+	}
+	return utils.RunCmdWithStdout("git", args...)
+}
+
+func (g *Git) MustRunGitWithStdout(args ...string) string {
+	output, err := g.RunGitWithStdout(args...)
+	if err != nil {
+		log.Fatalf("Git failed: %v", err)
+	}
+	return output
 }
 
 func (g *Git) GetCurrentRepositoryName() string {
@@ -64,48 +88,87 @@ func (g *Git) GetTitleFromBranchName() string {
 	return strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
 }
 
-func (g *Git) CloneRepository(repository string) {
-	log.Printf("Cloning: %v", repository)
-	g.MustRunGit("clone", "git@github.com:benchlabs/"+repository+".git")
+func (g *Git) Clone() error {
+	log.Printf("Cloning: %v", g.dir)
+	return utils.RunCmd("git", "clone", "git@github.com:benchlabs/"+g.dir+".git")
 }
 
 func (g *Git) Push(cfg *Configuration) {
-	args := []string{"push", "--no-verify", "--set-upstream", "origin", g.GetCurrentBranch()}
+	args := []string{"push", "--set-upstream", "origin", g.GetCurrentBranch()}
 	if cfg.Git.NoVerify {
 		args = append(args, "--no-verify")
 	}
 	g.MustRunGit(args...)
 }
 
-func (g *Git) UpdateRepository(repository string) {
-	log.Printf("Updating: %v", repository)
-	dir, _ := os.Getwd()
-	os.Chdir(path.Join(dir, repository))
-	g.CleanAndUpdate()
-	os.Chdir(dir)
-}
-
-func (g *Git) CleanAndUpdate() {
-	g.MustRunGit("stash", "save", "pre-update-"+utils.CurrentTimeForFilename())
-	g.MustRunGit("clean", "-fd")
-	g.MustRunGit("checkout", "master", "-f")
-	g.MustRunGit("pull")
-	g.MustRunGit("pull", "--tags")
-}
-
-func (g *Git) SyncRepositories() {
-	for _, m := range GetManifestRepository().GetAllActiveManifests() {
-		g.syncRepository(m)
+func (g *Git) CleanAndUpdate() error {
+	commands := [][]string{
+		{"stash", "save", "pre-update-" + utils.CurrentTimeForFilename()},
+		{"clean", "-fd"},
+		{"checkout", "master", "-f"},
+		{"pull"},
+		{"pull", "--tags"},
 	}
+	for _, cmd := range commands {
+		err := g.RunGit(cmd...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (g *Git) syncRepository(m Manifest) {
-	repository := m.Repository
-	repositoryExists, _ := utils.PathExists(repository)
+func SyncRepositories() error {
+	manifests := GetManifestRepository().GetAllActiveManifests()
+	var repos []string
+	for _, m := range manifests {
+		repos = append(repos, m.Repository)
+	}
+	return ConcurrentRepositoryOperations(repos, func(repo string) error {
+		return MustInitGit(repo).syncRepository()
+	})
+}
+
+type ConcurrentErrors map[string]error
+
+func ConcurrentRepositoryOperations(repos []string, fn RepoOperation) error {
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	errs := ConcurrentErrors{}
+	for _, r := range repos {
+		log.Printf("Sync: %v", r)
+		wg.Add(1)
+		go func(repo string) {
+			defer wg.Done()
+			err := fn(repo)
+			mutex.Lock()
+			errs[repo] = err
+			mutex.Unlock()
+			log.Printf("%v: done.", repo)
+		}(r)
+	}
+	wg.Wait()
+	errorCount := 0
+	for repo, err := range errs {
+		if err != nil {
+			errorCount++
+			log.Printf("%v failed to be updated: %v", repo, err)
+		}
+	}
+	if errorCount > 0 {
+		log.Printf("%v repos failed to be updated.", errorCount)
+		return errors.New("some repos failed to update")
+	}
+	log.Print("All Done.")
+	return nil
+}
+
+func (g *Git) syncRepository() error {
+	repositoryExists, _ := utils.PathExists(g.dir)
 	if repositoryExists {
-		g.UpdateRepository(repository)
+		return g.CleanAndUpdate()
 	} else {
-		g.CloneRepository(repository)
+		return g.Clone()
 	}
 }
 
@@ -249,32 +312,22 @@ func (g *Git) CheckoutBranch() error {
 	return nil
 }
 
-func ForEachRepo(fn func() error) error {
+func ForEachRepo(fn RepoOperation) error {
+	var repos []string
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
 		return err
 	}
-	wd, err := os.Getwd()
 	for _, value := range files {
 		if !value.IsDir() {
 			continue
 		}
-
-		err = os.Chdir(path.Join(wd, value.Name()))
-		if err != nil {
-			return err
-		}
-		if !utils.InRepository() {
+		if !utils.IsRepository(value.Name()) {
 			continue
 		}
-		log.Printf(value.Name())
-		err = fn()
-		if err != nil {
-			return err
-		}
+		repos = append(repos, value.Name())
 	}
-
-	return nil
+	return ConcurrentRepositoryOperations(repos, fn)
 }
 
 func (g *Git) getBranches() []string {

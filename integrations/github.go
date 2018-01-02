@@ -29,8 +29,8 @@ func MustInitGitHub(cfg *core.Configuration) *GitHub {
 	return &GitHub{cfg, client}
 }
 
-func (gh *GitHub) CreatePR(title, body string) error {
-	g := core.MustInitGit()
+func (gh *GitHub) CreatePR(title, body, repoDir string) error {
+	g := core.MustInitGit(repoDir)
 	g.Push(gh.cfg)
 	g.Fetch()
 	branch := g.GetCurrentBranch()
@@ -89,6 +89,14 @@ func (gh *GitHub) OpenPage(m *core.Manifest, p ...string) error {
 
 func (gh *GitHub) OpenPR(m *core.Manifest, pr string) error {
 	return gh.OpenPage(m, "pull", pr, "files")
+}
+
+func (gh *GitHub) OpenCommit(m *core.Manifest, commit *core.GitCommit) error {
+	return gh.OpenPage(m, "commit", commit.Hash)
+}
+
+func (gh *GitHub) OpenCompare(m *core.Manifest, commit *core.GitCommit, ref string) error {
+	return gh.OpenPage(m, "compare", commit.Hash+"..."+ref)
 }
 
 func (gh *GitHub) ListBranches(maxAge int) error {

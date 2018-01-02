@@ -123,8 +123,8 @@ func LoadManifest(version string) (*Manifest, error) {
 	}
 
 	m.LastUpdate = time.Now().Unix()
-	m.Repository = MustInitGit().GetCurrentRepositoryName()
-	m.Branch = MustInitGit().GetCurrentBranch()
+	m.Repository = InitGit().GetCurrentRepositoryName()
+	m.Branch = InitGit().GetCurrentBranch()
 	m.Version = version
 
 	readme, _ := ioutil.ReadFile("README.md")
@@ -139,7 +139,7 @@ func LoadManifest(version string) (*Manifest, error) {
 func CreateManifest() {
 
 	manifest := Manifest{
-		Name: MustInitGit().GetCurrentRepositoryName(),
+		Name: InitGit().GetCurrentRepositoryName(),
 	}
 	manifestString := `---
 name: {{.Name}}

@@ -112,11 +112,11 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 	if err != nil {
 		return err
 	}
-	return j.CreateBranchFromIssue(issue)
+	return j.CreateBranchFromIssue("",issue)
 }
 
-func (j *JIRA) CreateBranchFromIssue(issue jira.Issue) error {
-	core.MustInitGit().CreateBranch(issue.Key + " " + issue.Fields.Summary)
+func (j *JIRA) CreateBranchFromIssue(repoDir string,issue jira.Issue) error {
+	core.MustInitGit(repoDir).CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
 
@@ -160,7 +160,7 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 }
 
 func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
-	key := core.MustInitGit().GetIssueKeyFromBranch()
+	key := core.InitGit().GetIssueKeyFromBranch()
 	if key == "" {
 		log.Print("No issue key found in ")
 		is, err := j.getAssignedIssues()

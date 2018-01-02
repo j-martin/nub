@@ -2,18 +2,18 @@ package ci
 
 import (
 	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/jszwedko/go-circleci"
 	"log"
+	"net/url"
 	"os"
 	"time"
-	"github.com/benchlabs/bub/utils"
-	"net/url"
 )
 
 func OpenCircle(cfg *core.Configuration, m *core.Manifest, getBranch bool) error {
 	base := "https://circleci.com/gh/" + cfg.GitHub.Organization
 	if getBranch {
-		currentBranch := url.QueryEscape(core.MustInitGit().GetCurrentBranch())
+		currentBranch := url.QueryEscape(core.InitGit().GetCurrentBranch())
 		return utils.OpenURI(base, m.Repository, "tree", currentBranch)
 	}
 	return utils.OpenURI(base, m.Repository)
