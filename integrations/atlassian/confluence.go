@@ -54,7 +54,7 @@ type PageBodyValue struct {
 	Value string `json:"value"`
 }
 
-func (c *Confluence) marshallManifest(m *core.Manifest) (string, error) {
+func (c *Confluence) marshallManifest(m core.Manifest) (string, error) {
 	m.Readme = "See below."
 	m.ChangeLog = "See below."
 	m.Branch = ""
@@ -132,7 +132,7 @@ func (c *Confluence) generateGitHubLink(filePath string, m *core.Manifest) strin
 }
 
 func (c *Confluence) createPage(m *core.Manifest) ([]byte, error) {
-	marshaledManifest, err := c.marshallManifest(m)
+	marshaledManifest, err := c.marshallManifest(*m)
 	if err != nil {
 		return nil, err
 	}
