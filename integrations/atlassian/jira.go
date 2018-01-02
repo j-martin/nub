@@ -84,19 +84,32 @@ func (j *JIRA) ClaimIssueInActiveSprint() error {
 	if err != nil {
 		return err
 	}
-	i.Fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
-	_, res, err := j.client.Issue.Update(&i)
+
+	key := i.Key
+	updatedIssue := &jira.Issue{
+		Key: key,
+		Fields: &jira.IssueFields{
+			Type:        i.Fields.Type,
+			Summary:     i.Fields.Summary,
+			Description: i.Fields.Description,
+			Assignee:    &jira.User{Name: j.cfg.JIRA.Username},
+		},
+	}
+	_, res, err := j.client.Issue.Update(updatedIssue)
 	if err != nil {
-		b, _ := ioutil.ReadAll(res.Body)
-		log.Print(string(b))
+		j.logBody(res)
 		return err
 	}
-	err = j.TransitionIssue(i.Key, "inprogress")
+	err = j.TransitionIssue(key, "progress")
 	if err != nil {
 		return err
 	}
-	log.Printf("%v claimed.", i.Key)
+	log.Printf("%v claimed.", key)
 	return nil
+}
+func (j *JIRA) logBody(res *jira.Response) {
+	b, _ := ioutil.ReadAll(res.Body)
+	log.Print(string(b))
 }
 
 func (j *JIRA) PickAssignedIssue() (jira.Issue, error) {
@@ -112,10 +125,10 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 	if err != nil {
 		return err
 	}
-	return j.CreateBranchFromIssue("",issue)
+	return j.CreateBranchFromIssue("", issue)
 }
 
-func (j *JIRA) CreateBranchFromIssue(repoDir string,issue jira.Issue) error {
+func (j *JIRA) CreateBranchFromIssue(repoDir string, issue jira.Issue) error {
 	core.MustInitGit(repoDir).CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
@@ -150,8 +163,9 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 	if err != nil {
 		return err
 	}
-	_, err = j.client.Issue.DoTransition(key, transition.ID)
+	res, err := j.client.Issue.DoTransition(key, transition.ID)
 	if err != nil {
+		j.logBody(res)
 		return err
 	}
 
@@ -197,8 +211,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 
 	i, res, err := j.client.Issue.Create(&jira.Issue{Fields: &fields})
 	if err != nil {
-		b, _ := ioutil.ReadAll(res.Body)
-		log.Print(string(b))
+		j.logBody(res)
 		return err
 	}
 	log.Printf("%v created.", i.Key)
