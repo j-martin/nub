@@ -12,6 +12,9 @@ all: deps test darwin linux
 darwin:
 	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
 
+darwin-dev:
+	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
+
 linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)" "$(SRC)"
 

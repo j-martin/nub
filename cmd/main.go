@@ -13,6 +13,7 @@ import (
 	"github.com/benchlabs/bub/integrations/aws"
 	"github.com/benchlabs/bub/integrations/ci"
 	"github.com/benchlabs/bub/utils"
+	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 )
@@ -734,6 +735,25 @@ Continue?`
 				return utils.OpenURI(base + manifest.Name)
 			},
 			Subcommands: []cli.Command{
+				{
+					Name:    "search-and-replace",
+					Usage:   "CQL OLD_STRING NEW_STRING",
+					Aliases: []string{"r"},
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "noop", Usage: "No Op."},
+					},
+					Action: func(c *cli.Context) error {
+						if len(c.Args()) != 3 {
+							return errors.New("not enough args")
+						}
+						return atlassian.MustInitConfluence(cfg).SearchAndReplace(
+							c.Args().Get(0),
+							c.Args().Get(1),
+							c.Args().Get(2),
+							c.Bool("noop"),
+						)
+					},
+				},
 				{
 					Name:    "raml",
 					Usage:   "Opens raml file on GitHub.",

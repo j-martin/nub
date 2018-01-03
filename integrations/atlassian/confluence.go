@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"bytes"
 	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/bndr/gopencils"
 	"github.com/pkg/errors"
 	"github.com/russross/blackfriday"
@@ -52,6 +53,46 @@ type PageBody struct {
 
 type PageBodyValue struct {
 	Value string `json:"value"`
+}
+
+type SearchResults struct {
+	Results []struct {
+		ID         string `json:"id"`
+		Type       string `json:"type"`
+		Status     string `json:"status"`
+		Title      string `json:"title"`
+		ChildTypes struct {
+		} `json:"childTypes"`
+		Restrictions struct {
+		} `json:"restrictions"`
+		Expandable struct {
+			Container   string `json:"container"`
+			Metadata    string `json:"metadata"`
+			Extensions  string `json:"extensions"`
+			Operations  string `json:"operations"`
+			Children    string `json:"children"`
+			History     string `json:"history"`
+			Ancestors   string `json:"ancestors"`
+			Body        string `json:"body"`
+			Version     string `json:"version"`
+			Descendants string `json:"descendants"`
+			Space       string `json:"space"`
+		} `json:"_expandable"`
+		Links struct {
+			Webui  string `json:"webui"`
+			Self   string `json:"self"`
+			Tinyui string `json:"tinyui"`
+		} `json:"_links"`
+	} `json:"results"`
+	Start int `json:"start"`
+	Limit int `json:"limit"`
+	Size  int `json:"size"`
+	Links struct {
+		Base    string `json:"base"`
+		Context string `json:"context"`
+		Next    string `json:"next"`
+		Self    string `json:"self"`
+	} `json:"_links"`
 }
 
 func (c *Confluence) marshallManifest(m core.Manifest) (string, error) {
@@ -229,7 +270,7 @@ func (c *Confluence) UpdateDocumentation(m *core.Manifest) error {
 		return nil
 	}
 
-	err = c.updatePage(m.Documentation.PageId, pageInfo, htmlData)
+	err = c.updatePage(m.Documentation.PageId, pageInfo, string(htmlData))
 	if err != nil {
 		return err
 	}
@@ -243,7 +284,7 @@ func sanitizeBody(body string) string {
 	return r.Replace(body)
 }
 
-func (c *Confluence) updatePage(pageID string, pageInfo PageInfo, newContent []byte) error {
+func (c *Confluence) updatePage(pageID string, pageInfo PageInfo, newContent string) error {
 	nextPageVersion := pageInfo.Version.Number + 1
 
 	if len(pageInfo.Ancestors) == 0 {
@@ -269,7 +310,7 @@ func (c *Confluence) updatePage(pageID string, pageInfo PageInfo, newContent []b
 		"ancestors": oldAncestors,
 		"body": map[string]interface{}{
 			"storage": map[string]interface{}{
-				"value":          string(newContent),
+				"value":          newContent,
 				"representation": "storage",
 			},
 		},
@@ -327,4 +368,38 @@ func (c *Confluence) getPageInfo(pageID string) (PageInfo, error) {
 	response := request.Response.(*PageInfo)
 
 	return *response, nil
+}
+
+func (c *Confluence) SearchAndReplace(cql, old, new string, noop bool) error {
+	result := &SearchResults{}
+	qs := map[string]string{
+		"cql":   cql,
+		"start": "0",
+		"limit": "500",
+	}
+	_, err := c.client.Res(
+		"content/search", result).Get(qs)
+	if err != nil {
+		log.Fatalf("Failed to search: %v", err)
+	}
+	for _, i := range result.Results {
+		page, err := c.getPageInfo(i.ID)
+		if err != nil {
+			return err
+		}
+		initialBody := page.Body.Storage.Value
+		updatedBody := strings.Replace(initialBody, old, new, -1)
+		if initialBody == updatedBody {
+			log.Printf("No update needed for %v, %v", i.ID, page.Title)
+			continue
+		}
+		title := fmt.Sprintf("No update needed for %v, %v", i.ID, page.Title)
+		err = utils.ConditionalOp(title, noop, func() error {
+			return c.updatePage(i.ID, page, updatedBody)
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
