@@ -11,11 +11,13 @@ import (
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/utils"
 	"github.com/bndr/gopencils"
+	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/russross/blackfriday"
 	"gopkg.in/yaml.v2"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -54,40 +56,41 @@ type PageBody struct {
 type PageBodyValue struct {
 	Value string `json:"value"`
 }
+type SearchResult struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Status     string `json:"status"`
+	Title      string `json:"title"`
+	ChildTypes struct {
+	} `json:"childTypes"`
+	Restrictions struct {
+	} `json:"restrictions"`
+	Expandable struct {
+		Container   string `json:"container"`
+		Metadata    string `json:"metadata"`
+		Extensions  string `json:"extensions"`
+		Operations  string `json:"operations"`
+		Children    string `json:"children"`
+		History     string `json:"history"`
+		Ancestors   string `json:"ancestors"`
+		Body        string `json:"body"`
+		Version     string `json:"version"`
+		Descendants string `json:"descendants"`
+		Space       string `json:"space"`
+	} `json:"_expandable"`
+	Links struct {
+		Webui  string `json:"webui"`
+		Self   string `json:"self"`
+		Tinyui string `json:"tinyui"`
+	} `json:"_links"`
+}
 
 type SearchResults struct {
-	Results []struct {
-		ID         string `json:"id"`
-		Type       string `json:"type"`
-		Status     string `json:"status"`
-		Title      string `json:"title"`
-		ChildTypes struct {
-		} `json:"childTypes"`
-		Restrictions struct {
-		} `json:"restrictions"`
-		Expandable struct {
-			Container   string `json:"container"`
-			Metadata    string `json:"metadata"`
-			Extensions  string `json:"extensions"`
-			Operations  string `json:"operations"`
-			Children    string `json:"children"`
-			History     string `json:"history"`
-			Ancestors   string `json:"ancestors"`
-			Body        string `json:"body"`
-			Version     string `json:"version"`
-			Descendants string `json:"descendants"`
-			Space       string `json:"space"`
-		} `json:"_expandable"`
-		Links struct {
-			Webui  string `json:"webui"`
-			Self   string `json:"self"`
-			Tinyui string `json:"tinyui"`
-		} `json:"_links"`
-	} `json:"results"`
-	Start int `json:"start"`
-	Limit int `json:"limit"`
-	Size  int `json:"size"`
-	Links struct {
+	Results []SearchResult `json:"results"`
+	Start   int            `json:"start"`
+	Limit   int            `json:"limit"`
+	Size    int            `json:"size"`
+	Links   struct {
 		Base    string `json:"base"`
 		Context string `json:"context"`
 		Next    string `json:"next"`
@@ -371,18 +374,8 @@ func (c *Confluence) getPageInfo(pageID string) (PageInfo, error) {
 }
 
 func (c *Confluence) SearchAndReplace(cql, old, new string, noop bool) error {
-	result := &SearchResults{}
-	qs := map[string]string{
-		"cql":   cql,
-		"start": "0",
-		"limit": "500",
-	}
-	_, err := c.client.Res(
-		"content/search", result).Get(qs)
-	if err != nil {
-		log.Fatalf("Failed to search: %v", err)
-	}
-	for _, i := range result.Results {
+	results := c.Search(cql)
+	for _, i := range results {
 		page, err := c.getPageInfo(i.ID)
 		if err != nil {
 			return err
@@ -390,10 +383,10 @@ func (c *Confluence) SearchAndReplace(cql, old, new string, noop bool) error {
 		initialBody := page.Body.Storage.Value
 		updatedBody := strings.Replace(initialBody, old, new, -1)
 		if initialBody == updatedBody {
-			log.Printf("No update needed for %v, %v", i.ID, page.Title)
+			log.Printf("No update needed for %v, %v", i.Links.Tinyui, page.Title)
 			continue
 		}
-		title := fmt.Sprintf("No update needed for %v, %v", i.ID, page.Title)
+		title := fmt.Sprintf("No update needed for %v, %v", i.Links.Tinyui, page.Title)
 		err = utils.ConditionalOp(title, noop, func() error {
 			return c.updatePage(i.ID, page, updatedBody)
 		})
@@ -402,4 +395,76 @@ func (c *Confluence) SearchAndReplace(cql, old, new string, noop bool) error {
 		}
 	}
 	return nil
+}
+
+func (c *Confluence) SearchAndOpen(cql ...string) error {
+	query := strings.Join(cql, " ")
+	page, err := c.pickPage(c.Search(query))
+	if err != nil {
+		return err
+	}
+	return utils.OpenURI(c.cfg.Confluence.Server + page.Links.Webui)
+}
+
+func (c *Confluence) pickPage(results []SearchResult) (SearchResult, error) {
+	if len(results) == 0 {
+		return SearchResult{}, errors.New("no page to pick")
+	}
+	if len(results) == 1 {
+		return results[0], nil
+	}
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Title }}",
+		Inactive: "  {{ .Title }}",
+		Selected: "▶ {{ .Title }}",
+		Details:  "",
+	}
+
+	searcher := func(input string, index int) bool {
+		i := results[index]
+		name := strings.Replace(strings.ToLower(i.Title), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+		return strings.Contains(name, input)
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     "Pick an page",
+		Items:     results,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+	i, _, err := prompt.Run()
+	return results[i], err
+}
+
+func (c *Confluence) Search(cql string) []SearchResult {
+	start := 0
+	limit := 500
+	response := c.search(cql, 0, limit)
+	results := response.Results
+	for response.Size == limit {
+		start += limit
+		response = c.search(cql, start, limit)
+		results = append(results, response.Results...)
+	}
+	return results
+}
+
+func (c *Confluence) search(cql string, start, limit int) *SearchResults {
+	log.Printf("%v %v %v", cql, start, limit)
+	result := &SearchResults{}
+	qs := map[string]string{
+		"cql":   cql,
+		"start": strconv.Itoa(start),
+		"limit": strconv.Itoa(limit),
+	}
+	_, err := c.client.Res(
+		"content/search", result).Get(qs)
+	if err != nil {
+		log.Fatalf("Failed to search: %v", err)
+	}
+	return result
 }

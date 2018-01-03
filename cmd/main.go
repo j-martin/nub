@@ -736,6 +736,20 @@ Continue?`
 			},
 			Subcommands: []cli.Command{
 				{
+					Name:    "search",
+					Usage:   "CQL",
+					Aliases: []string{"s"},
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "noop", Usage: "No Op."},
+					},
+					Action: func(c *cli.Context) error {
+						if len(c.Args()) == 0 {
+							return errors.New("not enough args")
+						}
+						return atlassian.MustInitConfluence(cfg).SearchAndOpen(c.Args()...)
+					},
+				},
+				{
 					Name:    "search-and-replace",
 					Usage:   "CQL OLD_STRING NEW_STRING",
 					Aliases: []string{"r"},
