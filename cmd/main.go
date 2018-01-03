@@ -39,7 +39,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.28.2"
+	app.Version = "0.29.0"
 	app.EnableBashCompletion = true
 
 	jiraSearchIssue := cli.Command{
@@ -74,7 +74,11 @@ func main() {
 		Aliases: []string{"cl"},
 		Usage:   "Claim unassigned issue in the current sprint.",
 		Action: func(c *cli.Context) error {
-			return atlassian.MustInitJIRA(cfg).ClaimIssueInActiveSprint()
+			var issueKey string
+			if len(c.Args()) > 0 {
+				issueKey = c.Args().Get(0)
+			}
+			return atlassian.MustInitJIRA(cfg).ClaimIssueInActiveSprint(issueKey)
 		},
 	}
 	jiraTransitionIssue := cli.Command{

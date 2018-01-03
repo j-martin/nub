@@ -54,6 +54,7 @@ func (j *JIRA) SearchIssueText(text, project string, resolved bool) error {
 	}
 	return j.openIssue(i)
 }
+
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
 	jql := fmt.Sprintf("text ~ \"%v\" ORDER BY createdDate", text)
 	if project != "" {
@@ -75,7 +76,14 @@ func (j *JIRA) search(jql string) ([]jira.Issue, error) {
 	return issues, err
 }
 
-func (j *JIRA) ClaimIssueInActiveSprint() error {
+func (j *JIRA) ClaimIssueInActiveSprint(key string) error {
+	if key != "" {
+		i, _, err := j.client.Issue.Get(key, &jira.GetQueryOptions{})
+		if err != nil {
+			return err
+		}
+		return j.claimIssue(i)
+	}
 	is, err := j.getUnassignedIssuesInSprint()
 	if err != nil {
 		return err
@@ -84,7 +92,10 @@ func (j *JIRA) ClaimIssueInActiveSprint() error {
 	if err != nil {
 		return err
 	}
+	return j.claimIssue(i)
+}
 
+func (j *JIRA) claimIssue(i *jira.Issue) error {
 	key := i.Key
 	updatedIssue := &jira.Issue{
 		Key: key,
@@ -107,15 +118,16 @@ func (j *JIRA) ClaimIssueInActiveSprint() error {
 	log.Printf("%v claimed.", key)
 	return nil
 }
+
 func (j *JIRA) logBody(res *jira.Response) {
 	b, _ := ioutil.ReadAll(res.Body)
 	log.Print(string(b))
 }
 
-func (j *JIRA) PickAssignedIssue() (jira.Issue, error) {
+func (j *JIRA) PickAssignedIssue() (*jira.Issue, error) {
 	issues, err := j.getAssignedIssues()
 	if err != nil {
-		return jira.Issue{}, err
+		return nil, err
 	}
 	return j.pickIssue(issues)
 }
@@ -128,7 +140,7 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 	return j.CreateBranchFromIssue("", issue)
 }
 
-func (j *JIRA) CreateBranchFromIssue(repoDir string, issue jira.Issue) error {
+func (j *JIRA) CreateBranchFromIssue(repoDir string, issue *jira.Issue) error {
 	core.MustInitGit(repoDir).CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
@@ -249,7 +261,7 @@ func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
 	return empty, errors.New("no active sprint found")
 }
 
-func (j *JIRA) openIssue(issue jira.Issue) error {
+func (j *JIRA) openIssue(issue *jira.Issue) error {
 	return j.OpenIssueFromKey(issue.Key)
 }
 
@@ -274,14 +286,14 @@ func (j *JIRA) OpenIssue() error {
 	return j.OpenIssueFromKey(key)
 }
 
-func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
+func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 	if len(issues) == 0 {
-		return jira.Issue{}, errors.New("no issue to pick")
+		return nil, errors.New("no issue to pick")
 	}
 	if len(issues) == 1 {
 		issue := issues[0]
 		log.Printf("%v %v only available", issue.Key, issue.Fields.Summary)
-		return issue, nil
+		return &issue, nil
 	}
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
@@ -315,7 +327,7 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (jira.Issue, error) {
 		Searcher:  searcher,
 	}
 	i, _, err := prompt.Run()
-	return issues[i], err
+	return &issues[i], err
 }
 
 func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, error) {
