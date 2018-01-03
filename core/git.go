@@ -74,12 +74,15 @@ func (g *Git) GetCurrentRepositoryName() string {
 }
 
 func (g *Git) GetCurrentBranch() string {
-	result, err := exec.Command("git", "symbolic-ref", "--short", "-q", "HEAD").Output()
+	result, err := g.RunGitWithStdout("symbolic-ref", "--short", "-q", "HEAD")
 	if err != nil {
 		// if on jenkins the HEAD is usually detached, but you can infer the branch name.
-		log.Printf("Could not get branch name from git: %v", err)
-		log.Print("Trying to infer from environment variables.")
-		return os.Getenv("BRANCH_NAME")
+		branchEnv := os.Getenv("BRANCH_NAME")
+		if branchEnv != "" {
+			log.Printf("Could not get branch name from git: %v", err)
+			log.Printf("Inferring from environment variables: %v", branchEnv)
+		}
+		return branchEnv
 	}
 
 	return strings.Trim(string(result), "\n ")
@@ -274,11 +277,7 @@ func (g *Git) LogNotInMasterBody() string {
 }
 
 func (g *Git) GetIssueKeyFromBranch() string {
-	name, err := RunCmdWithOutput("git", "symbolic-ref", "--short", "-q", "HEAD")
-	if err != nil {
-		return ""
-	}
-	return g.extractIssueKeyFromName(name)
+	return g.extractIssueKeyFromName(g.GetCurrentBranch())
 }
 
 func (g *Git) CommitWithBranchName() {

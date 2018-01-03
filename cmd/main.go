@@ -39,7 +39,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
-	app.Version = "0.29.0"
+	app.Version = "0.29.1"
 	app.EnableBashCompletion = true
 
 	jiraSearchIssue := cli.Command{
@@ -631,13 +631,16 @@ Continue?`
 				{
 					Name:    "mass",
 					Aliases: []string{"m"},
-					Usage:   "Create new branch, in each repo, commit and push PRs.",
+					Usage:   "Mass repo changes. EXPERIMENTAL",
 					Subcommands: []cli.Command{
 						{
 							Name:    "start",
 							Aliases: []string{"s"},
 							Usage:   "Clean the repository, checkout master, pull and create new branch.",
 							Action: func(c *cli.Context) error {
+								if utils.AskForConfirmation("You will lose existing changes.") {
+									os.Exit(1)
+								}
 								return MustInitWorkflow(cfg, manifest).MassStart()
 							},
 						},
@@ -649,6 +652,9 @@ Continue?`
 								cli.BoolFlag{Name: "noop", Usage: "Do not do any actions."},
 							},
 							Action: func(c *cli.Context) error {
+								if utils.AskForConfirmation("You will lose existing changes.") {
+									os.Exit(1)
+								}
 								return MustInitWorkflow(cfg, manifest).MassDone(c.Bool("noop"))
 							},
 						},
@@ -657,6 +663,9 @@ Continue?`
 							Aliases: []string{"u"},
 							Usage:   "Clean the repository, checkout master and pull.",
 							Action: func(c *cli.Context) error {
+								if utils.AskForConfirmation("You will lose existing changes.") {
+									os.Exit(1)
+								}
 								return MustInitWorkflow(cfg, manifest).MassUpdate()
 							},
 						},
