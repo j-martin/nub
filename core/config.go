@@ -95,7 +95,7 @@ github:
 		# - reviewers (GitHub username) that will be applied to the PRs by default.
 
 jenkins:
-	server: "https://jenkins.example.com"
+	server: "https://jenkins.example..com"
 
 confluence:
 	server: "https://example.atlassian.net/wiki"

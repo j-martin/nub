@@ -32,15 +32,17 @@ func InitGit() *Git {
 }
 
 func MustInitGit(repoDir string) *Git {
-	log.Printf("Initiating: %v", repoDir)
+	if repoDir != "" {
+		log.Printf("Initiating: %v", repoDir)
+	}
 	return &Git{dir: repoDir}
 }
 
 func (g *Git) RunGit(args ...string) error {
-	log.Printf("running: git %v on %v", strings.Join(args, " "), g.dir)
 	if g.dir != "" {
 		args = append([]string{"-C", g.dir}, args...)
 	}
+	log.Printf("Running: 'git %v'", strings.Join(args, " "))
 	return utils.RunCmd("git", args...)
 }
 
