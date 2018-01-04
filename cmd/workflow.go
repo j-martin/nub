@@ -94,12 +94,15 @@ func (wf *Workflow) MassDone(noop bool) error {
 	})
 }
 
-func (wf *Workflow) CreatePR(title, body string) error {
+func (wf *Workflow) CreatePR(title, body string, review bool) error {
 	err := wf.GitHub().CreatePR(title, body, "")
 	if err != nil {
 		return err
 	}
-	return wf.JIRA().TransitionIssue("", "review")
+	if review {
+		return wf.JIRA().TransitionIssue("", "review")
+	}
+	return nil
 }
 
 func (wf *Workflow) Log() error {

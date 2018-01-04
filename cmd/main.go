@@ -18,7 +18,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var appVersion = "0.30.0"
+var appVersion = "0.31.0"
 
 func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
 	region := c.String("region")
@@ -37,7 +37,6 @@ func getRegion(environment string, cfg *core.Configuration, c *cli.Context) stri
 func main() {
 	cfg := core.LoadConfiguration()
 	manifest, manifestErr := core.LoadManifest("")
-
 	app := cli.NewApp()
 	app.Name = "bub"
 	app.Usage = "A tool for all your Bench related needs."
@@ -533,6 +532,9 @@ Continue?`
 			Name:    "pull-request",
 			Aliases: []string{"pr"},
 			Usage:   "Creates a PR for the current branch.",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "t", Usage: "Transition the issue to review."},
+			},
 			Action: func(c *cli.Context) error {
 				var title, body string
 				if len(c.Args()) > 0 {
@@ -541,7 +543,7 @@ Continue?`
 				if len(c.Args()) > 1 {
 					body = c.Args().Get(1)
 				}
-				return MustInitWorkflow(cfg, manifest).CreatePR(title, body)
+				return MustInitWorkflow(cfg, manifest).CreatePR(title, body, c.Bool("transition"))
 			},
 		},
 		jiraTransitionIssue,
