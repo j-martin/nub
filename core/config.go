@@ -160,52 +160,16 @@ func EditConfiguration() {
 		log.Fatal(err)
 	}
 	configPath := path.Join(usr.HomeDir, ".config", "bub", "config.yml")
-	createAndEdit(configPath, GetConfigString())
+	utils.CreateAndEdit(configPath, GetConfigString())
 }
 
-func Setup() {
+func MustSetupConfig() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	//TODO: move aws configuration to config.yml
-	awsCredentials := `[default]
-output=json
-region=us-east-1
-aws_access_key_id = CHANGE_ME
-aws_secret_access_key = CHANGE_ME`
-
-	createAndEdit(path.Join(usr.HomeDir, ".aws", "credentials"), awsCredentials)
-	createAndEdit(path.Join(usr.HomeDir, ".config", "bub", "config.yml"), GetConfigString())
-
-	log.Println("Done.")
-}
-
-func createAndEdit(filePath string, content string) {
-	directory := path.Dir(filePath)
-	log.Print(directory)
-	dirExists, err := utils.PathExists(directory)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if !dirExists {
-		os.MkdirAll(directory, 0700)
-	}
-
-	fileExists, err := utils.PathExists(filePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if !fileExists {
-		log.Printf("Creating %s file.", filePath)
-		ioutil.WriteFile(filePath, []byte(content), 0700)
-	}
-
-	log.Printf("Editing %s.", filePath)
-	utils.EditFile(filePath)
+	utils.Prompt("Setting up the base config. Just save and exit.")
+	utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", "config.yml"), GetConfigString())
 }
 
 func CheckServerConfig(server string) {

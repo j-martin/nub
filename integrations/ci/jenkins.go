@@ -25,13 +25,27 @@ func (j *Jenkins) getJobName() string {
 
 func MustInitJenkins(cfg *core.Configuration, m *core.Manifest) *Jenkins {
 	core.CheckServerConfig(cfg.Jenkins.Server)
-	core.LoadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
+	mustLoadJenkinsCredentials(cfg)
 	jenkins := gojenkins.CreateJenkins(cfg.Jenkins.Server, cfg.Jenkins.Username, cfg.Jenkins.Password)
 	client, err := jenkins.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &Jenkins{cfg: cfg, client: client, manifest: m}
+}
+
+func mustLoadJenkinsCredentials(cfg *core.Configuration) {
+	err := core.LoadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
+	if err != nil {
+		log.Fatalf("Failed to set JIRA credentials: %v", err)
+	}
+}
+
+func MustSetupJenkins(cfg *core.Configuration) {
+	utils.Prompt("Log into Jenkins, click on your username (top right corner), go to Configure, click on 'Show API Token...'.\n" +
+		"Theses are you username and password.")
+	utils.OpenURI(cfg.Jenkins.Server)
+	mustLoadJenkinsCredentials(cfg)
 }
 
 func (j *Jenkins) getJob() *gojenkins.Job {

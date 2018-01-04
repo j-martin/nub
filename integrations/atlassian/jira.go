@@ -19,11 +19,25 @@ type JIRA struct {
 
 func MustInitJIRA(cfg *core.Configuration) *JIRA {
 	j := JIRA{}
-	core.LoadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
-	if err := j.init(cfg); err != nil {
+	mustLoadJIRACredentials(cfg)
+	err := j.init(cfg)
+	if err != nil {
 		log.Fatalf("Failed to initiate JIRA client: %v", err)
 	}
 	return &j
+}
+
+func mustLoadJIRACredentials(cfg *core.Configuration) {
+	err := core.LoadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
+	if err != nil {
+		log.Fatalf("Failed to set JIRA credentials: %v", err)
+	}
+}
+
+func MustSetupJIRA(cfg *core.Configuration) {
+	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username.")
+	utils.OpenURI(cfg.JIRA.Server, "secure/ViewProfile.jspa")
+	mustLoadJIRACredentials(cfg)
 }
 
 func (j *JIRA) init(cfg *core.Configuration) error {

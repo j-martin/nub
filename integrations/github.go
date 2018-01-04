@@ -19,7 +19,7 @@ type GitHub struct {
 
 func MustInitGitHub(cfg *core.Configuration) *GitHub {
 	ctx := context.Background()
-	core.LoadKeyringItem("GitHub Token", &cfg.GitHub.Token)
+	mustLoadGitHubToken(cfg)
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHub.Token},
 	)
@@ -27,6 +27,19 @@ func MustInitGitHub(cfg *core.Configuration) *GitHub {
 
 	client := github.NewClient(tc)
 	return &GitHub{cfg, client}
+}
+
+func mustLoadGitHubToken(cfg *core.Configuration) {
+	err := core.LoadKeyringItem("GitHub Token", &cfg.GitHub.Token)
+	if err != nil {
+		log.Fatalf("Failed to set GitHub Token: %v", err)
+	}
+}
+
+func MustSetupGitHub(cfg *core.Configuration) {
+	utils.Prompt("Create a new GitHub Token. Grant 'Full control of private repositories'.")
+	utils.OpenURI("https://github.com/settings/tokens/new")
+	mustLoadGitHubToken(cfg)
 }
 
 func (gh *GitHub) CreatePR(title, body, repoDir string) error {

@@ -28,12 +28,25 @@ type Confluence struct {
 }
 
 func MustInitConfluence(cfg *core.Configuration) *Confluence {
-	core.LoadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
+	mustLoadConfluenceCredentials(cfg)
 	api := gopencils.Api(
 		cfg.Confluence.Server+"/rest/api",
 		&gopencils.BasicAuth{Username: cfg.Confluence.Username, Password: cfg.Confluence.Password},
 	)
 	return &Confluence{client: api, cfg: cfg}
+}
+
+func mustLoadConfluenceCredentials(cfg *core.Configuration) {
+	err := core.LoadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
+	if err != nil {
+		log.Fatalf("Failed to set JIRA credentials: %v", err)
+	}
+}
+
+func MustSetupConfluence(cfg *core.Configuration) {
+	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username.")
+	utils.OpenURI(cfg.Confluence.Server, "users/viewmyprofile.action")
+	mustLoadConfluenceCredentials(cfg)
 }
 
 type PageInfo struct {
@@ -454,7 +467,7 @@ func (c *Confluence) Search(cql string) []SearchResult {
 }
 
 func (c *Confluence) search(cql string, start, limit int) *SearchResults {
-	log.Printf("%v %v %v", cql, start, limit)
+	log.Printf("Searching: %v position: %v", cql, start)
 	result := &SearchResults{}
 	qs := map[string]string{
 		"cql":   cql,

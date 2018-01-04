@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/manifoldco/promptui"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -27,6 +28,13 @@ func RunCmdWithStdout(cmd string, args ...string) (string, error) {
 	command.Stderr = os.Stderr
 	output, err := command.Output()
 	return string(output), err
+}
+
+func Prompt(message string) {
+	fmt.Println("\n")
+	fmt.Println(message)
+	fmt.Print("Press 'Enter' to continue...")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
 }
 
 func AskForConfirmation(s string) bool {
@@ -83,6 +91,31 @@ func EditFile(filePath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func CreateAndEdit(filePath string, content string) {
+	directory := path.Dir(filePath)
+	dirExists, err := PathExists(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !dirExists {
+		os.MkdirAll(directory, 0700)
+	}
+
+	fileExists, err := PathExists(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !fileExists {
+		log.Printf("Creating %s file.", filePath)
+		ioutil.WriteFile(filePath, []byte(content), 0700)
+	}
+
+	fmt.Printf("Editing %s.", filePath)
+	EditFile(filePath)
 }
 
 func JoinStringPointers(ptrs []*string, joinStr string) string {
