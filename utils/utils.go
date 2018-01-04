@@ -31,8 +31,7 @@ func RunCmdWithStdout(cmd string, args ...string) (string, error) {
 }
 
 func Prompt(message string) {
-	fmt.Println("\n")
-	fmt.Println(message)
+	fmt.Println("\n" + message)
 	fmt.Print("Press 'Enter' to continue...")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 }
