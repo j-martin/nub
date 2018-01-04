@@ -219,6 +219,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 
 	if reactive {
 		fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
+		fields.Labels = []string{"reactive"}
 	}
 
 	i, res, err := j.client.Issue.Create(&jira.Issue{Fields: &fields})
