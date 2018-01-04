@@ -286,7 +286,7 @@ func ConnectToInstance(params ConnectionParams) {
 
 		searcher := func(input string, index int) bool {
 			i := instances[index]
-			name := strings.Replace(strings.ToLower(*i.Architecture), " ", "", -1)
+			name := strings.Replace(strings.ToLower(*i.Architecture+*i.InstanceId), " ", "", -1)
 			input = strings.Replace(strings.ToLower(input), " ", "", -1)
 
 			return strings.Contains(name, input)
