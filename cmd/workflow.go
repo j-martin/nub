@@ -50,7 +50,7 @@ func (wf *Workflow) JIRA() *atlassian.JIRA {
 
 func (wf *Workflow) MassUpdate() error {
 	return core.ForEachRepo(func(repoDir string) error {
-		return core.MustInitGit(repoDir).CleanAndUpdate()
+		return core.MustInitGit(repoDir).Sync(true)
 	})
 }
 
@@ -62,7 +62,7 @@ func (wf *Workflow) MassStart() error {
 
 	return core.ForEachRepo(func(repo string) error {
 		g := core.MustInitGit(repo)
-		err := g.CleanAndUpdate()
+		err := g.Sync(true)
 		if err != nil {
 			return err
 		}

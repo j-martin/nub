@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"regexp"
 	"strings"
@@ -106,13 +105,16 @@ func (g *Git) Push(cfg *Configuration) {
 	g.MustRunGit(args...)
 }
 
-func (g *Git) CleanAndUpdate() error {
+func (g *Git) Sync(unStash bool) error {
 	commands := [][]string{
 		{"stash", "save", "pre-update-" + utils.CurrentTimeForFilename()},
 		{"clean", "-fd"},
 		{"checkout", "master", "-f"},
 		{"pull"},
 		{"pull", "--tags"},
+	}
+	if unStash {
+		commands = append(commands, []string{"stash", "apply"})
 	}
 	for _, cmd := range commands {
 		err := g.RunGit(cmd...)
@@ -171,16 +173,10 @@ func ConcurrentRepositoryOperations(repos []string, fn RepoOperation) error {
 func (g *Git) syncRepository() error {
 	repositoryExists, _ := utils.PathExists(g.dir)
 	if repositoryExists {
-		return g.CleanAndUpdate()
+		return g.Sync(true)
 	} else {
 		return g.Clone()
 	}
-}
-
-func RunCmdWithOutput(cmd string, args ...string) (string, error) {
-	command := exec.Command(cmd, args...)
-	output, err := command.Output()
-	return strings.Trim(string(output), "\n"), err
 }
 
 func (g *Git) Log() (commits []*GitCommit) {

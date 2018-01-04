@@ -586,7 +586,7 @@ Continue?`
 				},
 				{
 					Name:    "checkout-branch",
-					Aliases: []string{"ch", "b"},
+					Aliases: []string{"ch", "br"},
 					Usage:   "Checkout an existing branch.",
 					Action: func(c *cli.Context) error {
 						return core.InitGit().CheckoutBranch()
@@ -638,7 +638,7 @@ Continue?`
 							Aliases: []string{"s"},
 							Usage:   "Clean the repository, checkout master, pull and create new branch.",
 							Action: func(c *cli.Context) error {
-								if utils.AskForConfirmation("You will lose existing changes.") {
+								if !utils.AskForConfirmation("You will lose existing changes.") {
 									os.Exit(1)
 								}
 								return MustInitWorkflow(cfg, manifest).MassStart()
@@ -652,7 +652,7 @@ Continue?`
 								cli.BoolFlag{Name: "noop", Usage: "Do not do any actions."},
 							},
 							Action: func(c *cli.Context) error {
-								if utils.AskForConfirmation("You will lose existing changes.") {
+								if !utils.AskForConfirmation("You will lose existing changes.") {
 									os.Exit(1)
 								}
 								return MustInitWorkflow(cfg, manifest).MassDone(c.Bool("noop"))
@@ -663,7 +663,7 @@ Continue?`
 							Aliases: []string{"u"},
 							Usage:   "Clean the repository, checkout master and pull.",
 							Action: func(c *cli.Context) error {
-								if utils.AskForConfirmation("You will lose existing changes.") {
+								if !utils.AskForConfirmation("You will lose existing changes.") {
 									os.Exit(1)
 								}
 								return MustInitWorkflow(cfg, manifest).MassUpdate()
@@ -677,10 +677,15 @@ Continue?`
 			Name:    "jenkins",
 			Usage:   "Jenkins related actions.",
 			Aliases: []string{"j"},
-			Action: func(c *cli.Context) error {
-				return ci.MustInitJenkins(cfg, manifest).OpenPage()
-			},
 			Subcommands: []cli.Command{
+				{
+					Name:    "console",
+					Aliases: []string{"c"},
+					Usage:   "Opens the master build..",
+					Action: func(c *cli.Context) error {
+						return ci.MustInitJenkins(cfg, manifest).OpenPage()
+					},
+				},
 				{
 					Name:    "console",
 					Aliases: []string{"c"},
@@ -723,12 +728,17 @@ Continue?`
 		},
 		{
 			Name:    "splunk",
-			Usage:   "Open the service production logs.",
+			Usage:   "Splunk related actions.",
 			Aliases: []string{"s"},
-			Action: func(c *cli.Context) error {
-				return integrations.OpenSplunk(cfg, manifest, false)
-			},
 			Subcommands: []cli.Command{
+				{
+					Name:    "production",
+					Aliases: []string{"p"},
+					Usage:   "Open the service production logs.",
+					Action: func(c *cli.Context) error {
+						return integrations.OpenSplunk(cfg, manifest, false)
+					},
+				},
 				{
 					Name:    "staging",
 					Aliases: []string{"s"},
@@ -743,11 +753,15 @@ Continue?`
 			Name:    "docs",
 			Usage:   "Documentation related actions.",
 			Aliases: []string{"d"},
-			Action: func(c *cli.Context) error {
-				base := "https://example.atlassian.net/wiki/display/dev/"
-				return utils.OpenURI(base + manifest.Name)
-			},
 			Subcommands: []cli.Command{
+				{
+					Name:    "open",
+					Usage:   "Open Confluence",
+					Aliases: []string{"o"},
+					Action: func(c *cli.Context) error {
+						return utils.OpenURI(cfg.Confluence.Server)
+					},
+				},
 				{
 					Name:    "search",
 					Usage:   "CQL",
@@ -773,6 +787,9 @@ Continue?`
 						if len(c.Args()) != 3 {
 							return errors.New("not enough args")
 						}
+						if !utils.AskForConfirmation("This may modify a lot of pages, are you sure?") {
+							os.Exit(1)
+						}
 						return atlassian.MustInitConfluence(cfg).SearchAndReplace(
 							c.Args().Get(0),
 							c.Args().Get(1),
@@ -781,24 +798,11 @@ Continue?`
 						)
 					},
 				},
-				{
-					Name:    "raml",
-					Usage:   "Opens raml file on GitHub.",
-					Aliases: []string{"r"},
-					Action: func(c *cli.Context) error {
-						base := "https://github.com/BenchLabs/bench-raml/tree/master/specs/"
-						return utils.OpenURI(base + manifest.Name + ".raml")
-					},
-				},
 			},
 		},
 		{
-			Name:    "circle",
-			Usage:   "CircleCI related actions",
-			Aliases: []string{"c"},
-			Action: func(c *cli.Context) error {
-				return ci.OpenCircle(cfg, manifest, false)
-			},
+			Name:  "circle",
+			Usage: "CircleCI related actions",
 			Subcommands: []cli.Command{
 				{
 					Name:    "trigger",
@@ -807,6 +811,14 @@ Continue?`
 					Action: func(c *cli.Context) error {
 						ci.TriggerAndWaitForSuccess(cfg, manifest)
 						return nil
+					},
+				},
+				{
+					Name:    "open",
+					Usage:   "Open Circle for the current repository.",
+					Aliases: []string{"t"},
+					Action: func(c *cli.Context) error {
+						return ci.OpenCircle(cfg, manifest, false)
 					},
 				},
 				{
