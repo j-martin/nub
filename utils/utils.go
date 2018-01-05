@@ -109,7 +109,7 @@ func CreateAndEdit(filePath string, content string) {
 	}
 
 	if !fileExists {
-		log.Printf("Creating %s file.", filePath)
+		log.Printf("Creating %s file.\n", filePath)
 		ioutil.WriteFile(filePath, []byte(content), 0700)
 	}
 

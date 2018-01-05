@@ -2,7 +2,6 @@ PLATFORM	= $(shell uname | tr 'A-Z' 'a-z')
 ARCH		= amd64
 DEP		= ./.dep
 DEP_VERSION	= 0.3.2
-SRC		= ./cmd
 OUTPUT		= bin/bub
 
 .PHONY: all deps test clean release fmt
@@ -10,13 +9,13 @@ OUTPUT		= bin/bub
 all: deps test darwin linux
 
 darwin:
-	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
+	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)"
 
 darwin-dev:
-	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-darwin-$(ARCH)" "$(SRC)"
+	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-darwin-$(ARCH)"
 
 linux:
-	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)" "$(SRC)"
+	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)"
 
 $(DEP):
 	curl --silent "https://s3.amazonaws.com/s3bucket/libs/golang/dep-$(PLATFORM)-amd64-$(DEP_VERSION).gz" \

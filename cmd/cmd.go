@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -18,8 +18,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var appVersion = "0.31.0"
-
 func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
 	region := c.String("region")
 	if region == "" {
@@ -34,15 +32,8 @@ func getRegion(environment string, cfg *core.Configuration, c *cli.Context) stri
 	return region
 }
 
-func main() {
-	cfg := core.LoadConfiguration()
+func Init(app *cli.App, cfg *core.Configuration) {
 	manifest, manifestErr := core.LoadManifest("")
-	app := cli.NewApp()
-	app.Name = "bub"
-	app.Usage = "A tool for all your Bench related needs."
-	app.Version = appVersion
-	app.EnableBashCompletion = true
-
 	manifestCommands := []cli.Command{
 		{
 			Name:    "list",
