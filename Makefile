@@ -11,11 +11,11 @@ all: deps test darwin linux
 darwin:
 	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)"
 
-darwin-dev:
-	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-darwin-$(ARCH)"
-
 linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)"
+
+dev:
+	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"
 
 $(DEP):
 	curl --silent "https://s3.amazonaws.com/s3bucket/libs/golang/dep-$(PLATFORM)-amd64-$(DEP_VERSION).gz" \
@@ -26,12 +26,7 @@ deps: $(DEP)
 	$(DEP) ensure --vendor-only
 
 test:
-	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
-		| sort -u \
-		| xargs -n1 go test
-	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
-		| sort -u \
-		| xargs -n1 go vet
+	go test ./...
 
 clean:
 	rm -rf bin
@@ -50,6 +45,4 @@ install: deps $(PLATFORM)
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
 
 fmt:
-	find . -mindepth 1 -maxdepth 2 -name '*.go' -type f -exec dirname {} \; \
-		| sort -u \
-		| xargs -n1 go fmt
+	go fmt ./...
