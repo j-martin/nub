@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
 	"log"
 	"net"
@@ -12,8 +14,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"github.com/benchlabs/bub/utils"
-	"github.com/benchlabs/bub/core"
 )
 
 type RDS struct {

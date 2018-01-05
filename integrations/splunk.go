@@ -17,4 +17,3 @@ func OpenSplunk(cfg *core.Configuration, m *core.Manifest, isStaging bool) error
 	sourceType = sourceType + "-" + m.Name + "*"
 	return utils.OpenURI(base + sourceType)
 }
-

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
 	"log"
 	"os"
 	"sort"
 	"strings"
 	"text/tabwriter"
 	"time"
-	"github.com/benchlabs/bub/utils"
-	"github.com/benchlabs/bub/core"
 )
 
 type Environments []*elasticbeanstalk.EnvironmentDescription
