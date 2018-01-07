@@ -13,13 +13,35 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/aws"
 	"github.com/benchlabs/bub/utils"
 	"github.com/mcuadros/go-version"
+	"github.com/urfave/cli"
 )
 
 type S3path struct {
 	Region, Bucket, Path string
+}
+
+func buildUpdateCmd(cfg *core.Configuration) cli.Command {
+	return cli.Command{
+		Name:  "update",
+		Usage: "Update the bub command to the latest release",
+		Action: func(c *cli.Context) error {
+			path := S3path{
+				Region: cfg.Updates.Region,
+				Bucket: cfg.Updates.Bucket,
+				Path:   cfg.Updates.Prefix,
+			}
+			obj, err := latestRelease(path)
+			if err != nil {
+				return err
+			}
+			path.Path = *obj.Key
+			return updateBub(path)
+		},
+	}
 }
 
 func latestRelease(base S3path) (obj *s3.Object, err error) {
