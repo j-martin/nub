@@ -58,7 +58,7 @@ func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
 	return j.search("resolution = null AND assignee=currentUser() ORDER BY Rank")
 }
 
-func (j *JIRA) SearchIssueText(text, project string, resolved bool) error {
+func (j *JIRA) SearchIssueText(text, project string, resolved, forceBrowser bool) error {
 	is, err := j.SearchText(text, project, resolved)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (j *JIRA) SearchIssueText(text, project string, resolved bool) error {
 	if err != nil {
 		return err
 	}
-	return j.openIssue(i)
+	return j.openIssue(i, forceBrowser)
 }
 
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
@@ -277,16 +277,16 @@ func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
 	return empty, errors.New("no active sprint found")
 }
 
-func (j *JIRA) openIssue(issue *jira.Issue) error {
-	return j.OpenIssueFromKey(issue.Key)
+func (j *JIRA) openIssue(issue *jira.Issue, forceBrowser bool) error {
+	return j.OpenIssueFromKey(issue.Key, forceBrowser)
 }
 
-func (j *JIRA) OpenIssueFromKey(key string) error {
+func (j *JIRA) OpenIssueFromKey(key string, forceBrowser bool) error {
 	beeInstalled, err := utils.PathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
 	}
-	if beeInstalled {
+	if !forceBrowser && beeInstalled {
 		utils.OpenURI("bee://item?id=" + key)
 		return nil
 	}
@@ -294,7 +294,7 @@ func (j *JIRA) OpenIssueFromKey(key string) error {
 	return nil
 }
 
-func (j *JIRA) OpenIssue(key string) error {
+func (j *JIRA) OpenIssue(key string, browser bool) error {
 	if key == "" {
 		var err error
 		key, err = j.getIssueKeyFromBranchOrAssigned()
@@ -302,7 +302,7 @@ func (j *JIRA) OpenIssue(key string) error {
 			return nil
 		}
 	}
-	return j.OpenIssueFromKey(key)
+	return j.OpenIssueFromKey(key, browser)
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {

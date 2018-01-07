@@ -132,7 +132,7 @@ func (wf *Workflow) OpenCommit(c *core.GitCommit) error {
 	}
 	if issueKey != "" {
 		openList["JIRA"] = func() error {
-			return wf.JIRA().OpenIssueFromKey(issueKey)
+			return wf.JIRA().OpenIssueFromKey(issueKey, false)
 		}
 	}
 	if len(openList) > 0 {

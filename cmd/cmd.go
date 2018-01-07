@@ -408,13 +408,18 @@ Continue?`
 			cli.BoolFlag{Name: "all", Usage: "Use all projects."},
 			cli.BoolFlag{Name: "resolved", Usage: "Include resolved issues."},
 			cli.StringFlag{Name: "p", Usage: "Specify the project."},
+			cli.BoolFlag{Name: "b", Usage: "Must open the issue with the browser."},
 		},
 		Action: func(c *cli.Context) error {
 			project := c.String("pr")
 			if !c.Bool("all") {
 				project = cfg.JIRA.Project
 			}
-			return atlassian.MustInitJIRA(cfg).SearchIssueText(strings.Join(c.Args(), " "), project, c.Bool("resolved"))
+			return atlassian.MustInitJIRA(cfg).SearchIssueText(
+				strings.Join(c.Args(), " "),
+				project,
+				c.Bool("resolved"),
+				c.Bool("b"))
 		},
 	}
 
@@ -422,12 +427,15 @@ Continue?`
 		Name:    "open",
 		Aliases: []string{"o"},
 		Usage:   "Open JIRA issue in the browser.",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: "b", Usage: "Must use the browser event if Bee is present."},
+		},
 		Action: func(c *cli.Context) error {
 			var key string
 			if len(c.Args()) > 0 {
 				key = c.Args().Get(0)
 			}
-			return atlassian.MustInitJIRA(cfg).OpenIssue(key)
+			return atlassian.MustInitJIRA(cfg).OpenIssue(key, c.Bool("b"))
 		},
 	}
 	jiraClaimIssue := cli.Command{
