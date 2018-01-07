@@ -282,8 +282,12 @@ func (g *Git) CommitWithBranchName() {
 
 func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) {
 	issueKey := g.GetIssueKeyFromBranch()
+	message = strings.Trim(message, " ")
+	if issueKey != "" {
+		message = issueKey + " " + message
+	}
 	args := []string{
-		"commit", "-m", issueKey + " " + strings.Trim(message, " "),
+		"commit", "-m", message,
 	}
 	if cfg.Git.NoVerify {
 		args = append(args, "--no-verify")
