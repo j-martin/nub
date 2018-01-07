@@ -131,6 +131,9 @@ func (j *JIRA) claimIssue(i *jira.Issue) error {
 		return err
 	}
 	log.Printf("%v claimed.", key)
+	if utils.IsRepository(".") && utils.AskForConfirmation("Create the branch for this issue?") {
+		j.CreateBranchFromIssue(i, ".")
+	}
 	return nil
 }
 
@@ -152,10 +155,10 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 	if err != nil {
 		return err
 	}
-	return j.CreateBranchFromIssue("", issue)
+	return j.CreateBranchFromIssue(issue, ".")
 }
 
-func (j *JIRA) CreateBranchFromIssue(repoDir string, issue *jira.Issue) error {
+func (j *JIRA) CreateBranchFromIssue(issue *jira.Issue, repoDir string) error {
 	core.MustInitGit(repoDir).CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	return nil
 }
