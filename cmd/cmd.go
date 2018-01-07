@@ -32,7 +32,7 @@ func getRegion(environment string, cfg *core.Configuration, c *cli.Context) stri
 	return region
 }
 
-func Init(app *cli.App, cfg *core.Configuration) {
+func InitCmd(app *cli.App, cfg *core.Configuration) {
 	manifest, manifestErr := core.LoadManifest("")
 	manifestCommands := []cli.Command{
 		{
