@@ -66,7 +66,7 @@ func (wf *Workflow) MassStart() error {
 		if err != nil {
 			return err
 		}
-		return wf.JIRA().CreateBranchFromIssue(repo, issue)
+		return wf.JIRA().CreateBranchFromIssue(issue, repo)
 	})
 }
 

@@ -700,7 +700,7 @@ Continue?`
 			Action: func(c *cli.Context) error {
 				core.MustSetupConfig()
 				// Reloading the config
-				cfg = core.LoadConfiguration()
+				cfg, _ := core.LoadConfiguration()
 				aws.MustSetupConfig()
 				atlassian.MustSetupJIRA(cfg)
 				atlassian.MustSetupConfluence(cfg)
@@ -732,12 +732,15 @@ Continue?`
 			Usage: "Edit your bub config",
 			Flags: []cli.Flag{
 				cli.BoolFlag{Name: "show-default", Usage: "Show default config for reference"},
+				cli.BoolFlag{Name: "shared", Usage: "Edit shared config."},
 			},
 			Action: func(c *cli.Context) error {
 				if c.Bool("show-default") {
 					print(core.GetConfigString())
+				} else if c.Bool("shared") {
+					core.EditConfiguration(core.ConfigSharedFile)
 				} else {
-					core.EditConfiguration()
+					core.EditConfiguration(core.ConfigUserFile)
 				}
 				return nil
 			},

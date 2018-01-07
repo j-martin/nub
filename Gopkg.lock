@@ -70,6 +70,12 @@
   revision = "f6a3a2366cc39b8479cadc499d3c735fb10fbdda"
 
 [[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "7fe0c75c13abdee74b09fcacef5ea1c6bba6a874"
+  version = "0.2.4"
+
+[[projects]]
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   revision = "0b12d6b5"
@@ -194,6 +200,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1bc8dcaa567b7103a1393a68ea3dd5bb6995fe0c1e59241b91d177a047532538"
+  inputs-digest = "556b82bea189f0af8d26d8b3250fcac7c6cd11f42cef752cb466e0392756419a"
   solver-name = "gps-cdcl"
   solver-version = 1

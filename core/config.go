@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/benchlabs/bub/utils"
+	"github.com/imdario/mergo"
 	"github.com/manifoldco/promptui"
 	"github.com/tmc/keyring"
 	"gopkg.in/yaml.v2"
@@ -11,6 +12,11 @@ import (
 	"os/user"
 	"path"
 	"strings"
+)
+
+var (
+	ConfigUserFile   = "config.yml"
+	ConfigSharedFile = "shared.yml"
 )
 
 type RDSConfiguration struct {
@@ -124,8 +130,27 @@ func GetConfigString() string {
 	return strings.Replace(config, "\t", "  ", -1)
 }
 
-func LoadConfiguration() *Configuration {
-	cfg := Configuration{}
+func LoadConfiguration() (*Configuration, error) {
+	baseCfg, err := loadConfiguration(ConfigSharedFile)
+	if err != nil && err != utils.FileDoesNotExist {
+		return nil, err
+	}
+	cfg, err := loadConfiguration(ConfigUserFile)
+	if err != nil {
+		return nil, err
+	}
+	err = mergo.Merge(baseCfg, *cfg)
+	if err != nil {
+		return nil, err
+	}
+	if len(cfg.AWS.Regions) == 0 {
+		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
+	}
+	return baseCfg, nil
+}
+
+func loadConfiguration(configFile string) (*Configuration, error) {
+	cfg := &Configuration{}
 
 	usr, err := user.Current()
 	if err != nil {
@@ -133,33 +158,29 @@ func LoadConfiguration() *Configuration {
 	}
 
 	configDir := path.Join(usr.HomeDir, ".config", "bub")
-	configPath := path.Join(configDir, "config.yml")
+	configPath := path.Join(configDir, configFile)
+
+	fileExists, _ := utils.PathExists(configPath)
+	if !fileExists {
+		return cfg, utils.FileDoesNotExist
+	}
 
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Print("No bub configuration found. Please run `bub setup`")
-		return &cfg
+		return cfg, err
 	}
 
 	err = yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		log.Printf("Could not parse yaml file. %v", err)
-		return &cfg
-	}
-
-	if len(cfg.AWS.Regions) == 0 {
-		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
-	}
-
-	return &cfg
+	return cfg, err
 }
 
-func EditConfiguration() {
+func EditConfiguration(configFile string) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
-	configPath := path.Join(usr.HomeDir, ".config", "bub", "config.yml")
+	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
 	utils.CreateAndEdit(configPath, GetConfigString())
 }
 
@@ -169,7 +190,7 @@ func MustSetupConfig() {
 		log.Fatal(err)
 	}
 	utils.Prompt("Setting up the base config. Just save and exit.")
-	utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", "config.yml"), GetConfigString())
+	utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", ConfigUserFile), GetConfigString())
 }
 
 func CheckServerConfig(server string) {

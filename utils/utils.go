@@ -16,6 +16,10 @@ import (
 	"time"
 )
 
+var (
+	FileDoesNotExist = errors.New("file or directory does not exists")
+)
+
 func RunCmd(cmd string, args ...string) error {
 	command := exec.Command(cmd, args...)
 	command.Stdout = os.Stdout
@@ -66,8 +70,8 @@ func GetEnvWithDefault(key string, defaultValue string) string {
 	return val
 }
 
-func PathExists(fpath ...string) (bool, error) {
-	_, err := os.Stat(path.Join(fpath...))
+func PathExists(filePath ...string) (bool, error) {
+	_, err := os.Stat(path.Join(filePath...))
 	if err == nil {
 		return true, nil
 	}
