@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
+	"path"
 	"strings"
 )
 
@@ -241,7 +242,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 		j.logBody(res)
 		return err
 	}
-	log.Printf("%v created.", i.Key)
+	log.Printf("%v created. %v", i.Key, path.Join(j.cfg.JIRA.Server, "browse", i.Key))
 	if transition != "" {
 		if err = j.TransitionIssue(i.Key, transition); err != nil {
 			return err
