@@ -457,7 +457,7 @@ Continue?`
 		Usage:   "Transition issue based on current branch.",
 		Action: func(c *cli.Context) error {
 			var transition string
-			if len(c.Args()) == 0 {
+			if len(c.Args()) > 0 {
 				transition = c.Args().Get(0)
 			}
 			return atlassian.MustInitJIRA(cfg).TransitionIssue("", transition)
