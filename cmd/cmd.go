@@ -423,7 +423,11 @@ Continue?`
 		Aliases: []string{"o"},
 		Usage:   "Open JIRA issue in the browser.",
 		Action: func(c *cli.Context) error {
-			return atlassian.MustInitJIRA(cfg).OpenIssue()
+			var key string
+			if len(c.Args()) > 0 {
+				key = c.Args().Get(0)
+			}
+			return atlassian.MustInitJIRA(cfg).OpenIssue(key)
 		},
 	}
 	jiraClaimIssue := cli.Command{

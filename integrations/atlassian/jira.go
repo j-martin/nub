@@ -294,10 +294,13 @@ func (j *JIRA) OpenIssueFromKey(key string) error {
 	return nil
 }
 
-func (j *JIRA) OpenIssue() error {
-	key, err := j.getIssueKeyFromBranchOrAssigned()
-	if err != nil {
-		return nil
+func (j *JIRA) OpenIssue(key string) error {
+	if key == "" {
+		var err error
+		key, err = j.getIssueKeyFromBranchOrAssigned()
+		if err != nil {
+			return nil
+		}
 	}
 	return j.OpenIssueFromKey(key)
 }
