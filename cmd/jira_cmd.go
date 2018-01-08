@@ -38,6 +38,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 			},
 		},
 		buildJIRAOpenIssueCmd(cfg),
+		buildJIRAListAssignedIssuesCmd(cfg),
 		buildJIRATransitionIssueCmd(cfg),
 	}
 }
@@ -103,6 +104,21 @@ func buildJIRAClaimIssueCmd(cfg *core.Configuration) cli.Command {
 				issueKey = c.Args().Get(0)
 			}
 			return atlassian.MustInitJIRA(cfg).ClaimIssueInActiveSprint(issueKey)
+		},
+	}
+}
+
+func buildJIRAListAssignedIssuesCmd(cfg *core.Configuration) cli.Command {
+	showDescription := "d"
+	return cli.Command{
+		Name:    "assigned",
+		Aliases: []string{"a"},
+		Usage:   "Show assigned issues.",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: showDescription, Usage: "Must use the browser event if Bee is present."},
+		},
+		Action: func(c *cli.Context) error {
+			return atlassian.MustInitJIRA(cfg).ListAssignedIssue(c.Bool(showDescription))
 		},
 	}
 }

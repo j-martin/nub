@@ -142,6 +142,20 @@ func (j *JIRA) logBody(res *jira.Response) {
 	log.Print(string(b))
 }
 
+func (j *JIRA) ListAssignedIssue(showDescription bool) error {
+	issues, err := j.getAssignedIssues()
+	if err != nil {
+		return err
+	}
+	for _, i := range issues {
+		fmt.Printf("%v	%v\n", i.Key, i.Fields.Summary)
+		if showDescription {
+			fmt.Println(i.Fields.Description)
+		}
+	}
+	return nil
+}
+
 func (j *JIRA) PickAssignedIssue() (*jira.Issue, error) {
 	issues, err := j.getAssignedIssues()
 	if err != nil {
