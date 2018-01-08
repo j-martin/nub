@@ -37,7 +37,7 @@ func mustLoadGitHubToken(cfg *core.Configuration) {
 }
 
 func MustSetupGitHub(cfg *core.Configuration) {
-	utils.Prompt("Create a new GitHub Token. Grant 'Full control of private repositories'.")
+	utils.Prompt("Create a new GitHub Token. Grant 'Full control of private repositories'. Continue?")
 	utils.OpenURI("https://github.com/settings/tokens/new")
 	mustLoadGitHubToken(cfg)
 }

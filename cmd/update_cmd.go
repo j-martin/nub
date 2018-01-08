@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-type S3path struct {
+type s3path struct {
 	Region, Bucket, Path string
 }
 
@@ -29,7 +29,7 @@ func buildUpdateCmd(cfg *core.Configuration) cli.Command {
 		Name:  "update",
 		Usage: "Update the bub command to the latest release",
 		Action: func(c *cli.Context) error {
-			path := S3path{
+			path := s3path{
 				Region: cfg.Updates.Region,
 				Bucket: cfg.Updates.Bucket,
 				Path:   cfg.Updates.Prefix,
@@ -44,7 +44,7 @@ func buildUpdateCmd(cfg *core.Configuration) cli.Command {
 	}
 }
 
-func latestRelease(base S3path) (obj *s3.Object, err error) {
+func latestRelease(base s3path) (obj *s3.Object, err error) {
 	s3cfg := aws.GetAWSConfig(base.Region)
 	sess, err := session.NewSession(&s3cfg)
 	if err != nil {
@@ -79,7 +79,7 @@ func latestRelease(base S3path) (obj *s3.Object, err error) {
 	return newestObj, nil
 }
 
-func updateBub(path S3path) error {
+func updateBub(path s3path) error {
 	exe, err := os.Executable()
 	if err != nil {
 		log.Fatalf("Could not get bub's path: %s", err)

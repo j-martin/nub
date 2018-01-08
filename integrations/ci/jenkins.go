@@ -35,7 +35,7 @@ func MustInitJenkins(cfg *core.Configuration, m *core.Manifest) *Jenkins {
 }
 
 func mustLoadJenkinsCredentials(cfg *core.Configuration) {
-	err := core.LoadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password)
+	err := core.LoadCredentials("Jenkins", &cfg.Jenkins.Username, &cfg.Jenkins.Password, cfg.ResetCredentials)
 	if err != nil {
 		log.Fatalf("Failed to set JIRA credentials: %v", err)
 	}
@@ -43,7 +43,7 @@ func mustLoadJenkinsCredentials(cfg *core.Configuration) {
 
 func MustSetupJenkins(cfg *core.Configuration) {
 	utils.Prompt("Log into Jenkins, click on your username (top right corner), go to Configure, click on 'Show API Token...'.\n" +
-		"Theses are you username and password.")
+		"Theses are you username and password. Continue?")
 	utils.OpenURI(cfg.Jenkins.Server)
 	mustLoadJenkinsCredentials(cfg)
 }

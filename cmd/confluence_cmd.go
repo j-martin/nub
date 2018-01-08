@@ -10,6 +10,7 @@ import (
 )
 
 func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
+	noOperation := "noop"
 	return []cli.Command{
 		{
 			Name:    "open",
@@ -24,7 +25,7 @@ func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
 			Usage:   "CQL",
 			Aliases: []string{"s"},
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "noop", Usage: "No Op."},
+				cli.BoolFlag{Name: noOperation, Usage: "No Op."},
 			},
 			Action: func(c *cli.Context) error {
 				if len(c.Args()) == 0 {
@@ -38,7 +39,7 @@ func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
 			Usage:   "CQL OLD_STRING NEW_STRING",
 			Aliases: []string{"r"},
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "noop", Usage: "No Op."},
+				cli.BoolFlag{Name: noOperation, Usage: "No Op."},
 			},
 			Action: func(c *cli.Context) error {
 				if len(c.Args()) != 3 {
@@ -51,7 +52,7 @@ func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
 					c.Args().Get(0),
 					c.Args().Get(1),
 					c.Args().Get(2),
-					c.Bool("noop"),
+					c.Bool(noOperation),
 				)
 			},
 		},

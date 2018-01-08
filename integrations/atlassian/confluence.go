@@ -37,7 +37,7 @@ func MustInitConfluence(cfg *core.Configuration) *Confluence {
 }
 
 func mustLoadConfluenceCredentials(cfg *core.Configuration) {
-	err := core.LoadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password)
+	err := core.LoadCredentials("Confluence", &cfg.Confluence.Username, &cfg.Confluence.Password, cfg.ResetCredentials)
 	if err != nil {
 		log.Fatalf("Failed to set JIRA credentials: %v", err)
 	}

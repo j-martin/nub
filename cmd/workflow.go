@@ -70,11 +70,11 @@ func (wf *Workflow) MassStart() error {
 	})
 }
 
-func (wf *Workflow) MassDone(noop bool) error {
+func (wf *Workflow) MassDone(noOperation bool) error {
 	return core.ForEachRepo(func(repoDir string) error {
 		g := core.MustInitGit(repoDir)
 		if g.ContainedUncommittedChanges() {
-			utils.ConditionalOp("Committing.", noop, func() error {
+			utils.ConditionalOp("Committing.", noOperation, func() error {
 				g.CommitWithBranchName()
 				return nil
 			})
@@ -85,7 +85,7 @@ func (wf *Workflow) MassDone(noop bool) error {
 			return nil
 		}
 
-		utils.ConditionalOp("Pushing", noop, func() error {
+		utils.ConditionalOp("Pushing", noOperation, func() error {
 			g.Push(wf.cfg)
 			wf.GitHub().CreatePR("", "", repoDir)
 			return nil

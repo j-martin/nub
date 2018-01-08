@@ -14,13 +14,18 @@ import (
 )
 
 func buildSetupCmd() cli.Command {
+	resetCredentials := "reset-credentials"
 	return cli.Command{
 		Name:  "setup",
 		Usage: "Setup bub on your machine.",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: resetCredentials, Usage: "Prompt you to re-enter credentials."},
+		},
 		Action: func(c *cli.Context) error {
 			core.MustSetupConfig()
 			// Reloading the config
 			cfg, _ := core.LoadConfiguration()
+			cfg.ResetCredentials = c.Bool(resetCredentials)
 			aws.MustSetupConfig()
 			atlassian.MustSetupJIRA(cfg)
 			atlassian.MustSetupConfluence(cfg)
@@ -33,17 +38,19 @@ func buildSetupCmd() cli.Command {
 }
 
 func buildConfigCmd() cli.Command {
+	showDefaults := "show-default"
+	shared := "shared"
 	return cli.Command{
 		Name:  "config",
 		Usage: "Edit your bub config",
 		Flags: []cli.Flag{
-			cli.BoolFlag{Name: "show-default", Usage: "Show default config for reference"},
-			cli.BoolFlag{Name: "shared", Usage: "Edit shared config."},
+			cli.BoolFlag{Name: showDefaults, Usage: "Show default config for reference"},
+			cli.BoolFlag{Name: shared, Usage: "Edit shared config."},
 		},
 		Action: func(c *cli.Context) error {
-			if c.Bool("show-default") {
+			if c.Bool(showDefaults) {
 				print(core.GetConfigString())
-			} else if c.Bool("shared") {
+			} else if c.Bool(shared) {
 				core.EditConfiguration(core.ConfigSharedFile)
 			} else {
 				core.EditConfiguration(core.ConfigUserFile)
@@ -119,6 +126,9 @@ func buildSplunkCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 }
 
 func buildRepositoryCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
+	slackFormat := "slack-format"
+	noSlackAt := "slack-no-at"
+	noFetch := "no-fetch"
 	return []cli.Command{
 		{
 			Name:  "synchronize",
@@ -144,12 +154,12 @@ Continue?`
 			Aliases: []string{"p"},
 			Usage:   "List diff between the previous version and the next one.",
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "slack-format", Usage: "Format the result for slack."},
-				cli.BoolFlag{Name: "slack-no-at", Usage: "Do not add @person at the end."},
-				cli.BoolFlag{Name: "no-fetch", Usage: "Do not fetch tags."},
+				cli.BoolFlag{Name: slackFormat, Usage: "Format the result for slack."},
+				cli.BoolFlag{Name: noSlackAt, Usage: "Do not add @person at the end."},
+				cli.BoolFlag{Name: noFetch, Usage: "Do not fetch tags."},
 			},
 			Action: func(c *cli.Context) error {
-				if !c.Bool("no-fetch") {
+				if !c.Bool(noFetch) {
 					core.InitGit().FetchTags()
 				}
 				previousVersion := "production"
@@ -160,7 +170,7 @@ Continue?`
 				if len(c.Args()) > 1 {
 					nextVersion = c.Args().Get(1)
 				}
-				core.InitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool("slack-format"), c.Bool("slack-no-at"))
+				core.InitGit().PendingChanges(cfg, manifest, previousVersion, nextVersion, c.Bool(slackFormat), c.Bool(noSlackAt))
 				return nil
 			},
 		},

@@ -12,6 +12,6 @@ func main() {
 	app.Usage = "A tool for all your Bench related needs."
 	app.Version = "0.32.0"
 	app.EnableBashCompletion = true
-	app.Commands = cmd.InitCmds()
+	app.Commands = cmd.BuildCmds()
 	app.Run(os.Args)
 }

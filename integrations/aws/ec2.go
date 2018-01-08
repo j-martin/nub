@@ -238,7 +238,7 @@ func prepareSCPArgs(args []string, host string) []string {
 	return args
 }
 
-func ConnectToInstance(params ConnectionParams) {
+func ConnectToInstance(params ConnectionParams) error {
 	var instances []*ec2.Instance
 
 	channel := make(chan []*ec2.Instance)
@@ -256,22 +256,33 @@ func ConnectToInstance(params ConnectionParams) {
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		connect(instances[0], params)
+		return connect(instances[0], params)
 	} else if params.Output || params.All {
 		for _, i := range instances {
-			connect(i, params)
+			err := connect(i, params)
+			if err != nil {
+				return err
+			}
 		}
-	} else {
+	}
 
-		// The Architecture field is being overwritten
-		// with the instance name tag to make it easier to template.
-		// The alternative was to define a new struct.
-		templates := &promptui.SelectTemplates{
-			Label: "{{ . }}:",
-			Active: "▶ {{ .InstanceId }}	{{ .Architecture }}",
-			Inactive: "  {{ .InstanceId }}	{{ .Architecture }}",
-			Selected: "▶ {{ .InstanceId }}	{{ .Architecture }}",
-			Details: `
+	i, err := pickEC2Instance(instances)
+	if err != nil {
+		log.Fatalf("Failed to pick instance: %v", err)
+	}
+	return connect(i, params)
+}
+
+func pickEC2Instance(instances []*ec2.Instance) (*ec2.Instance, error) {
+	// The Architecture field is being overwritten
+	// with the instance name tag to make it easier to template.
+	// The alternative was to define a new struct.
+	templates := &promptui.SelectTemplates{
+		Label: "{{ . }}:",
+		Active: "▶ {{ .InstanceId }}	{{ .Architecture }}",
+		Inactive: "  {{ .InstanceId }}	{{ .Architecture }}",
+		Selected: "▶ {{ .InstanceId }}	{{ .Architecture }}",
+		Details: `
 --------- Instance ----------
 {{ "Id:" | faint }}	{{ .InstanceId }}
 {{ "Name:" | faint }}	{{ .Architecture }}
@@ -282,33 +293,29 @@ func ConnectToInstance(params ConnectionParams) {
 {{ "PublicIpAddress:" | faint }}	{{ .PublicIpAddress }}
 {{ "PrivateIpAddress:" | faint }}	{{ .PrivateIpAddress }}
 `,
-		}
-
-		searcher := func(input string, index int) bool {
-			i := instances[index]
-			name := strings.Replace(strings.ToLower(*i.Architecture+*i.InstanceId), " ", "", -1)
-			input = strings.Replace(strings.ToLower(input), " ", "", -1)
-
-			return strings.Contains(name, input)
-		}
-
-		for i := range instances {
-			name := getInstanceName(instances[i])
-			instances[i].Architecture = &name
-		}
-
-		prompt := promptui.Select{
-			Size:      20,
-			Label:     "Select an EC2 Instance",
-			Items:     instances,
-			Templates: templates,
-			Searcher:  searcher,
-		}
-
-		i, _, err := prompt.Run()
-		if err != nil {
-			log.Fatalf("Failed to pick instance: %v", err)
-		}
-		connect(instances[i], params)
 	}
+
+	searcher := func(input string, index int) bool {
+		i := instances[index]
+		name := strings.Replace(strings.ToLower(*i.Architecture+*i.InstanceId), " ", "", -1)
+		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+		return strings.Contains(name, input)
+	}
+
+	for i := range instances {
+		name := getInstanceName(instances[i])
+		instances[i].Architecture = &name
+	}
+
+	prompt := promptui.Select{
+		Size:      20,
+		Label:     "Select an EC2 Instance",
+		Items:     instances,
+		Templates: templates,
+		Searcher:  searcher,
+	}
+
+	i, _, err := prompt.Run()
+	return instances[i], err
 }

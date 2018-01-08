@@ -7,6 +7,7 @@ import (
 )
 
 func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
+	maxAge := "max-age"
 	return []cli.Command{
 		{
 			Name:    "repo",
@@ -44,10 +45,10 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Name:  "stale-branches",
 			Usage: "Open repo in your browser.",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "max-age", Value: "30"},
+				cli.StringFlag{Name: maxAge, Value: "30"},
 			},
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).ListBranches(c.Int("max-age"))
+				return integrations.MustInitGitHub(cfg).ListBranches(c.Int(maxAge))
 			},
 		},
 	}

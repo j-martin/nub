@@ -14,9 +14,6 @@ func buildEBCmd(cfg *core.Configuration, manifest *core.Manifest) cli.Command {
 		Name:    "elasticbeanstalk",
 		Usage:   "Elasticbeanstalk actions. If no sub-action specified, lists the environements.",
 		Aliases: []string{"eb"},
-		Flags: []cli.Flag{
-			cli.StringFlag{Name: "region"},
-		},
 		Action: func(c *cli.Context) error {
 			aws.ListEnvironments(cfg)
 			return nil
@@ -26,13 +23,17 @@ func buildEBCmd(cfg *core.Configuration, manifest *core.Manifest) cli.Command {
 }
 
 func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
+	region := "region"
+	reverse := "reverse"
+	all := "all"
+
 	return []cli.Command{
 		{
 			Name:    "environments",
 			Aliases: []string{"env"},
 			Usage:   "List enviroments and their states.",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
+				cli.StringFlag{Name: region},
 			},
 			Action: func(c *cli.Context) error {
 				aws.ListEnvironments(cfg)
@@ -45,8 +46,8 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 			Usage:     "List events for all environments.",
 			UsageText: "[ENVIRONMENT_NAME] Optional filter by environment name.",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
-				cli.BoolFlag{Name: "reverse"},
+				cli.StringFlag{Name: region},
+				cli.BoolFlag{Name: reverse},
 			},
 			Action: func(c *cli.Context) error {
 				environment := ""
@@ -56,7 +57,7 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 					environment = "pro-" + manifest.Name
 					log.Printf("Manifest found. Using '%v'", environment)
 				}
-				aws.ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool("reverse"), true, false)
+				aws.ListEvents(getRegion(environment, cfg, c), environment, time.Time{}, c.Bool(reverse), true, false)
 				return nil
 			},
 		},
@@ -66,7 +67,7 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 			Usage:     "Wait for environment to be ready.",
 			UsageText: "ENVIRONMENT_NAME",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
+				cli.StringFlag{Name: region},
 			},
 			Action: func(c *cli.Context) error {
 				environment := ""
@@ -86,8 +87,8 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 			Usage:     "List Environment settings",
 			UsageText: "ENVIRONMENT_NAME",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
-				cli.BoolFlag{Name: "all", Usage: "Display all settings, not just environment variables."},
+				cli.StringFlag{Name: region},
+				cli.BoolFlag{Name: all, Usage: "Display all settings, not just environment variables."},
 			},
 			Action: func(c *cli.Context) error {
 				environment := ""
@@ -97,7 +98,7 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 					environment = "pro-" + manifest.Name
 					log.Printf("Manifest found. Using '%v'", environment)
 				}
-				aws.DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool("all"))
+				aws.DescribeEnvironment(getRegion(environment, cfg, c), environment, c.Bool(all))
 				return nil
 			},
 		},
@@ -107,7 +108,7 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 			Usage:     "List all versions available.",
 			ArgsUsage: "[APPLICATION_NAME] Optional, limits the versions to the application name.",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
+				cli.StringFlag{Name: region},
 			},
 			Action: func(c *cli.Context) error {
 				application := ""
@@ -128,7 +129,7 @@ func buildEBCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command
 			Usage:     "Deploy version to an environment.",
 			ArgsUsage: "[ENVIRONMENT_NAME] [VERSION]",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "region"},
+				cli.StringFlag{Name: region},
 			},
 			Action: func(c *cli.Context) error {
 				environment := ""

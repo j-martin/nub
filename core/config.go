@@ -64,6 +64,7 @@ type Configuration struct {
 	Ssh struct {
 		ConnectTimeout uint `yaml:"connectTimeout"`
 	}
+	ResetCredentials bool
 }
 
 type ServiceConfiguration struct {
@@ -151,15 +152,12 @@ func LoadConfiguration() (*Configuration, error) {
 
 func loadConfiguration(configFile string) (*Configuration, error) {
 	cfg := &Configuration{}
-
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	configDir := path.Join(usr.HomeDir, ".config", "bub")
-	configPath := path.Join(configDir, configFile)
-
+	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
 	fileExists, _ := utils.PathExists(configPath)
 	if !fileExists {
 		return cfg, utils.FileDoesNotExist
@@ -189,7 +187,7 @@ func MustSetupConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	utils.Prompt("Setting up the base config. Just save and exit.")
+	utils.Prompt("Setting up the base config. Just save and exit. Continue?")
 	utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", ConfigUserFile), GetConfigString())
 }
 
@@ -199,18 +197,18 @@ func CheckServerConfig(server string) {
 	}
 }
 
-func LoadCredentials(item string, username, password *string) (err error) {
-	if err = LoadCredentialItem(item+" Username", username); err != nil {
+func LoadCredentials(item string, username, password *string, resetCredentials bool) (err error) {
+	if err = LoadCredentialItem(item+" Username", username, resetCredentials); err != nil {
 		return err
 	}
-	if err = LoadCredentialItem(item+" Password", password); err != nil {
+	if err = LoadCredentialItem(item+" Password", password, resetCredentials); err != nil {
 		return err
 	}
 	return nil
 }
 
-func LoadCredentialItem(item string, ptr *string) (err error) {
-	if strings.ToLower(os.Getenv("BUB_RESET_PASSWORD")) == "true" {
+func LoadCredentialItem(item string, ptr *string, resetCredentials bool) (err error) {
+	if resetCredentials {
 		return setKeyringItem(item, ptr)
 	}
 	// e.g. "Confluence Username" -> "CONFLUENCE_USERNAME"

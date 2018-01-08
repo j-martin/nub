@@ -29,14 +29,14 @@ func MustInitJIRA(cfg *core.Configuration) *JIRA {
 }
 
 func mustLoadJIRACredentials(cfg *core.Configuration) {
-	err := core.LoadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password)
+	err := core.LoadCredentials("JIRA", &cfg.JIRA.Username, &cfg.JIRA.Password, cfg.ResetCredentials)
 	if err != nil {
 		log.Fatalf("Failed to set JIRA credentials: %v", err)
 	}
 }
 
 func MustSetupJIRA(cfg *core.Configuration) {
-	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username.")
+	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username. Continue?")
 	utils.OpenURI(cfg.JIRA.Server, "secure/ViewProfile.jspa")
 	mustLoadJIRACredentials(cfg)
 }

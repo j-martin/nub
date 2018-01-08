@@ -84,7 +84,7 @@ func buildManifestCmds(cfg *core.Configuration) []cli.Command {
 				cli.StringFlag{Name: "artifact-version"},
 			},
 			Action: func(c *cli.Context) error {
-				manifest, err := core.LoadManifest("")
+				manifest, err := core.LoadManifest()
 				if err != nil {
 					log.Fatal(err)
 					os.Exit(1)
@@ -100,7 +100,7 @@ func buildManifestCmds(cfg *core.Configuration) []cli.Command {
 			Usage:   "Validates the manifest.",
 			Action: func(c *cli.Context) error {
 				//TODO: Build proper validation
-				manifest, err := core.LoadManifest("")
+				manifest, err := core.LoadManifest()
 				if err != nil {
 					log.Fatal(err)
 					os.Exit(1)

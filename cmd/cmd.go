@@ -6,12 +6,13 @@ import (
 	"log"
 )
 
-func InitCmds() []cli.Command {
+func BuildCmds() []cli.Command {
 	cfg, err := core.LoadConfiguration()
 	if err != nil {
-		log.Printf("The configuration failed to load...")
+		log.Fatalf("The configuration failed to load... %v", err)
 	}
-	manifest, _ := core.LoadManifest("")
+
+	manifest, _ := core.LoadManifest()
 
 	return []cli.Command{
 		buildSetupCmd(),

@@ -85,7 +85,7 @@ func (e Manifests) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func LoadManifest(version string) (*Manifest, error) {
+func LoadManifest() (*Manifest, error) {
 	m := &Manifest{}
 
 	if !utils.InRepository() {
@@ -125,7 +125,6 @@ func LoadManifest(version string) (*Manifest, error) {
 	m.LastUpdate = time.Now().Unix()
 	m.Repository = InitGit().GetCurrentRepositoryName()
 	m.Branch = InitGit().GetCurrentBranch()
-	m.Version = version
 
 	readme, _ := ioutil.ReadFile("README.md")
 	m.Readme = string(readme)

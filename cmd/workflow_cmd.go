@@ -10,6 +10,8 @@ import (
 )
 
 func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
+	transition := "t"
+	noOperation := "noop"
 	return []cli.Command{
 		buildJIRAOpenBoardCmd(cfg),
 		buildJIRAClaimIssueCmd(cfg),
@@ -47,7 +49,7 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 			Aliases: []string{"pr"},
 			Usage:   "Creates a PR for the current branch.",
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "t", Usage: "Transition the issue to review."},
+				cli.BoolFlag{Name: transition, Usage: "Transition the issue to review."},
 			},
 			Action: func(c *cli.Context) error {
 				var title, body string
@@ -90,13 +92,13 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 					Aliases: []string{"d"},
 					Usage:   "Commit changes and create PRs. To be used after running '... start' and you made your changes.",
 					Flags: []cli.Flag{
-						cli.BoolFlag{Name: "noop", Usage: "Do not do any actions."},
+						cli.BoolFlag{Name: noOperation, Usage: "Do not do any actions."},
 					},
 					Action: func(c *cli.Context) error {
 						if !utils.AskForConfirmation("You will lose existing changes.") {
 							os.Exit(1)
 						}
-						return MustInitWorkflow(cfg, manifest).MassDone(c.Bool("noop"))
+						return MustInitWorkflow(cfg, manifest).MassDone(c.Bool(noOperation))
 					},
 				},
 				{

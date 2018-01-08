@@ -17,7 +17,7 @@ func MustSetupConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	utils.Prompt("You will have to enter your AWS credentials next. Ask an AWS Admin for your credentials.")
+	utils.Prompt("You will have to enter your AWS credentials next. Ask an AWS Admin for your credentials. Continue?")
 
 	awsCredentials := `[default]
 output=json
