@@ -42,8 +42,8 @@ type Configuration struct {
 		NoVerify bool `yaml:"noVerify"`
 	}
 	GitHub struct {
-		Organization, Token string
-		Reviewers           []string
+		Organization, Username, Token string
+		Reviewers                     []string
 	}
 	Users []User
 	JIRA  struct {

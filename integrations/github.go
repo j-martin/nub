@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2"
 	"log"
 	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"text/tabwriter"
 	"time"
 )
 
@@ -30,7 +34,11 @@ func MustInitGitHub(cfg *core.Configuration) *GitHub {
 }
 
 func mustLoadGitHubToken(cfg *core.Configuration) {
-	err := core.LoadKeyringItem("GitHub Token", &cfg.GitHub.Token)
+	err := core.LoadKeyringItem("GitHub User", &cfg.GitHub.Username)
+	if err != nil {
+		log.Fatalf("Failed to set GitHub User: %v", err)
+	}
+	err = core.LoadKeyringItem("GitHub Token", &cfg.GitHub.Token)
 	if err != nil {
 		log.Fatalf("Failed to set GitHub Token: %v", err)
 	}
@@ -171,5 +179,33 @@ func (gh *GitHub) ListBranches(maxAge int) error {
 			fmt.Printf("https://github.com/%v/%v/branches/yours %v %v\n", org, b.Repository, b.Branch, b.PRURL)
 		}
 	}
+	return nil
+}
+
+func (gh *GitHub) SearchIssues(issueType, role string, closed, openAll bool) error {
+	ctx := context.Background()
+	if issueType == "" {
+		issueType = "pr"
+	}
+	if role == "" {
+		role = "author"
+	}
+	state := "open"
+	if closed {
+		state = "closed"
+	}
+	prs, _, err := gh.client.Search.Issues(ctx, fmt.Sprintf("type:%v state:%v %v:%v", issueType, state, role, gh.cfg.GitHub.Username), &github.SearchOptions{Sort: "author-date"})
+	if err != nil {
+		return err
+	}
+	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(table, "#\tTitle\tURL")
+	for _, pr := range prs.Issues {
+		fmt.Fprintln(table, strings.Join([]string{strconv.Itoa(*pr.Number), *pr.Title, *pr.HTMLURL}, "\t"))
+		if openAll {
+			utils.OpenURI(*pr.HTMLURL)
+		}
+	}
+	table.Flush()
 	return nil
 }

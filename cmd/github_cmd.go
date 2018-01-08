@@ -8,6 +8,9 @@ import (
 
 func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
 	maxAge := "max-age"
+	closed := "closed"
+	role := "role"
+	openAll := "open-all"
 	return []cli.Command{
 		{
 			Name:    "repo",
@@ -39,6 +42,30 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Usage:   "Open Pull Request list in your browser.",
 			Action: func(c *cli.Context) error {
 				return integrations.MustInitGitHub(cfg).OpenPage(manifest, "pulls")
+			},
+		},
+		{
+			Name:    "list-pr",
+			Aliases: []string{"l"},
+			Usage:   "List PR assigned to you.",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: closed, Usage: "Show closed PRs."},
+				cli.StringFlag{Name: role, Usage: "Filter by role. E.g. 'involved', 'review-requested', etc. Default: 'author'"},
+				cli.BoolFlag{Name: openAll, Usage: "Open all PRs in the browser."},
+			},
+			Action: func(c *cli.Context) error {
+				return integrations.MustInitGitHub(cfg).SearchIssues("pr", c.String(role), c.Bool(closed), c.Bool(openAll))
+			},
+		},
+		{
+			Name:    "list-pr-reviews",
+			Aliases: []string{"lr"},
+			Usage:   "List PR assigned to you.",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: openAll, Usage: "Open all PRs in the browser."},
+			},
+			Action: func(c *cli.Context) error {
+				return integrations.MustInitGitHub(cfg).SearchIssues("pr", "review-requested", false, c.Bool(openAll))
 			},
 		},
 		{
