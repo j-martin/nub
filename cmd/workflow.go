@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations"
 	"github.com/benchlabs/bub/integrations/atlassian"
+	"github.com/benchlabs/bub/integrations/github"
 	"github.com/benchlabs/bub/utils"
 	"log"
 )
@@ -12,7 +12,7 @@ import (
 type Workflow struct {
 	cfg      *core.Configuration
 	git      *core.Git
-	github   *integrations.GitHub
+	github   *github.GitHub
 	jira     *atlassian.JIRA
 	manifest *core.Manifest
 }
@@ -21,7 +21,7 @@ func MustInitWorkflow(cfg *core.Configuration, manifest *core.Manifest) *Workflo
 	return &Workflow{
 		cfg:      cfg,
 		git:      core.InitGit(),
-		github:   integrations.MustInitGitHub(cfg),
+		github:   github.MustInitGitHub(cfg),
 		jira:     atlassian.MustInitJIRA(cfg),
 		manifest: manifest,
 	}
@@ -34,9 +34,9 @@ func (wf *Workflow) Git() *core.Git {
 	return wf.git
 }
 
-func (wf *Workflow) GitHub() *integrations.GitHub {
+func (wf *Workflow) GitHub() *github.GitHub {
 	if wf.github == nil {
-		wf.github = integrations.MustInitGitHub(wf.cfg)
+		wf.github = github.MustInitGitHub(wf.cfg)
 	}
 	return wf.github
 }

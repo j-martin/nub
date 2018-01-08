@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations"
+	"github.com/benchlabs/bub/integrations/github"
 	"github.com/urfave/cli"
 )
 
@@ -17,7 +17,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Aliases: []string{"r"},
 			Usage:   "Open repo in your browser.",
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).OpenPage(manifest)
+				return github.MustInitGitHub(cfg).OpenPage(manifest)
 			},
 		},
 		{
@@ -25,7 +25,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Aliases: []string{"i"},
 			Usage:   "Open issues list in your browser.",
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).OpenPage(manifest, "issues")
+				return github.MustInitGitHub(cfg).OpenPage(manifest, "issues")
 			},
 		},
 		{
@@ -33,7 +33,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Aliases: []string{"b"},
 			Usage:   "Open branches list in your browser.",
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).OpenPage(manifest, "branches")
+				return github.MustInitGitHub(cfg).OpenPage(manifest, "branches")
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Aliases: []string{"p"},
 			Usage:   "Open Pull Request list in your browser.",
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).OpenPage(manifest, "pulls")
+				return github.MustInitGitHub(cfg).OpenPage(manifest, "pulls")
 			},
 		},
 		{
@@ -54,7 +54,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 				cli.BoolFlag{Name: openAll, Usage: "Open all PRs in the browser."},
 			},
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).SearchIssues("pr", c.String(role), c.Bool(closed), c.Bool(openAll))
+				return github.MustInitGitHub(cfg).SearchIssues("pr", c.String(role), c.Bool(closed), c.Bool(openAll))
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 				cli.BoolFlag{Name: openAll, Usage: "Open all PRs in the browser."},
 			},
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).SearchIssues("pr", "review-requested", false, c.Bool(openAll))
+				return github.MustInitGitHub(cfg).SearchIssues("pr", "review-requested", false, c.Bool(openAll))
 			},
 		},
 		{
@@ -75,7 +75,7 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 				cli.StringFlag{Name: maxAge, Value: "30"},
 			},
 			Action: func(c *cli.Context) error {
-				return integrations.MustInitGitHub(cfg).ListBranches(c.Int(maxAge))
+				return github.MustInitGitHub(cfg).ListBranches(c.Int(maxAge))
 			},
 		},
 	}
