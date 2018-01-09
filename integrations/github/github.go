@@ -52,7 +52,7 @@ func MustSetupGitHub(cfg *core.Configuration) {
 
 func (gh *GitHub) CreatePR(title, body, repoDir string) error {
 	g := core.MustInitGit(repoDir)
-	g.Push(gh.cfg)
+	g.MustPush(gh.cfg)
 	g.Fetch()
 	branch := g.GetCurrentBranch()
 	base := "master"
@@ -116,8 +116,12 @@ func (gh *GitHub) OpenCommit(m *core.Manifest, commit *core.GitCommit) error {
 	return gh.OpenPage(m, "commit", commit.Hash)
 }
 
-func (gh *GitHub) OpenCompare(m *core.Manifest, commit *core.GitCommit, ref string) error {
+func (gh *GitHub) OpenCompareCommitsPage(m *core.Manifest, commit *core.GitCommit, ref string) error {
 	return gh.OpenPage(m, "compare", commit.Hash+"..."+ref)
+}
+
+func (gh *GitHub) OpenCompareBranchPage(m *core.Manifest) error {
+	return gh.OpenPage(m, "compare", "master..."+m.Branch)
 }
 
 func (gh *GitHub) ListBranches(maxAge int) error {

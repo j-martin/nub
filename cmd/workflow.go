@@ -86,7 +86,7 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 		}
 
 		utils.ConditionalOp("Pushing", noOperation, func() error {
-			g.Push(wf.cfg)
+			g.MustPush(wf.cfg)
 			wf.GitHub().CreatePR("", "", repoDir)
 			return nil
 		})
@@ -122,7 +122,7 @@ func (wf *Workflow) OpenCommit(c *core.GitCommit) error {
 			return wf.GitHub().OpenCommit(wf.manifest, c)
 		},
 		"GitHub Compare with Master": func() error {
-			return wf.GitHub().OpenCompare(wf.manifest, c, "master")
+			return wf.GitHub().OpenCompareCommitsPage(wf.manifest, c, "master")
 		},
 	}
 	if len(pr) > 2 && pr[2] != "" {

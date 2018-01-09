@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/atlassian"
+	"github.com/benchlabs/bub/integrations/github"
 	"github.com/benchlabs/bub/utils"
 	"github.com/urfave/cli"
 	"log"
@@ -12,6 +13,7 @@ import (
 func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
 	transition := "t"
 	noOperation := "noop"
+	compare := "compare-only"
 	return []cli.Command{
 		buildJIRAOpenBoardCmd(cfg),
 		buildJIRAClaimIssueCmd(cfg),
@@ -50,9 +52,14 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 			Aliases: []string{"pr"},
 			Usage:   "Creates a PR for the current branch.",
 			Flags: []cli.Flag{
+				cli.BoolFlag{Name: compare, Usage: "Open only the compare page (PR creation page)."},
 				cli.BoolFlag{Name: transition, Usage: "Transition the issue to review."},
 			},
 			Action: func(c *cli.Context) error {
+				if c.Bool(compare) {
+					core.MustInitGit(".").MustPush(cfg)
+					return github.MustInitGitHub(cfg).OpenCompareBranchPage(manifest)
+				}
 				var title, body string
 				if len(c.Args()) > 0 {
 					title = c.Args().Get(0)

@@ -97,7 +97,7 @@ func (g *Git) Clone() error {
 	return utils.RunCmd("git", "clone", "git@github.com:benchlabs/"+g.dir+".git")
 }
 
-func (g *Git) Push(cfg *Configuration) {
+func (g *Git) MustPush(cfg *Configuration) {
 	args := []string{"push", "--set-upstream", "origin", g.GetCurrentBranch()}
 	if cfg.Git.NoVerify {
 		args = append(args, "--no-verify")
