@@ -299,9 +299,14 @@ func (g *Git) extractIssueKeyFromName(name string) string {
 	return g.GetIssueRegex().FindString(name)
 }
 
-func (g *Git) CreateBranch(name string) {
+func (g *Git) CreateBranch(name string) error {
 	name = g.sanitizeBranchName(name)
-	g.MustRunGit("checkout", "-b", name)
+	return g.RunGit("checkout", "-b", name, "origin/master")
+}
+
+func (g *Git) ForceCreateBranch(name string) error {
+	name = g.sanitizeBranchName(name)
+	return g.RunGit("checkout", "-B", name, "origin/master")
 }
 
 func (g *Git) CheckoutBranch() error {

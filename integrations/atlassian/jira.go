@@ -173,7 +173,15 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 }
 
 func (j *JIRA) CreateBranchFromIssue(issue *jira.Issue, repoDir string) error {
-	core.MustInitGit(repoDir).CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	git := core.MustInitGit(repoDir)
+	git.Fetch()
+	err := git.CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	if err != nil {
+		if !utils.AskForConfirmation("Failed to create branch. Force/overwrite?") {
+			return nil
+		}
+		return git.ForceCreateBranch(issue.Key + " " + issue.Fields.Summary)
+	}
 	return nil
 }
 
