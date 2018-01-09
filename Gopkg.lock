@@ -121,6 +121,12 @@
   revision = "257f7b9a7d87427c8d7f89469a5958d57f8abd7c"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-wordwrap"
+  packages = ["."]
+  revision = "ad45545899c7b13c020ea92b2072220eefad42b8"
+
+[[projects]]
   name = "github.com/paetzke/godot"
   packages = ["godot"]
   revision = "d6291c463cf5c9b21dab4a66e12d693c2bb9f202"
@@ -200,6 +206,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "556b82bea189f0af8d26d8b3250fcac7c6cd11f42cef752cb466e0392756419a"
+  inputs-digest = "a323627b92f4d93fbd5b3add8fd4315933e33317a2c6dea8eea2805b316ef370"
   solver-name = "gps-cdcl"
   solver-version = 1

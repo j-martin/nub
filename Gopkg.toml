@@ -73,3 +73,7 @@
 [[constraint]]
   name = "github.com/imdario/mergo"
   version = "0.2.4"
+
+[[constraint]]
+  name = "github.com/mitchellh/go-wordwrap"
+  revision = "ad45545899c7b13c020ea92b2072220eefad42b8"

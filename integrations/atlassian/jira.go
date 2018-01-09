@@ -331,6 +331,9 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 		log.Printf("%v %v only available", issue.Key, issue.Fields.Summary)
 		return &issue, nil
 	}
+	maps := promptui.FuncMap
+	maps["wordWrap"] = utils.WordWrap
+
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
 		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
@@ -343,8 +346,10 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 {{ "Reporter:" | faint }}	{{ .Fields.Reporter.DisplayName }}
 {{ "Status:" | faint }}	{{ .Fields.Status.Name }}
 {{ "Summary:" | faint }}	{{ .Fields.Summary }}
-{{ "Description:" | faint }}	{{ .Fields.Description }}
+{{ "Description:" | faint }}
+{{ .Fields.Description | wordWrap }}
 `,
+		FuncMap: maps,
 	}
 
 	searcher := func(input string, index int) bool {

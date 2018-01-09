@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/manifoldco/promptui"
@@ -19,44 +18,6 @@ import (
 var (
 	FileDoesNotExist = errors.New("file or directory does not exists")
 )
-
-func RunCmd(cmd string, args ...string) error {
-	command := exec.Command(cmd, args...)
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	return command.Run()
-}
-
-func RunCmdWithStdout(cmd string, args ...string) (string, error) {
-	command := exec.Command(cmd, args...)
-	command.Stderr = os.Stderr
-	output, err := command.Output()
-	return string(output), err
-}
-
-func Prompt(message string) {
-	fmt.Println("\n" + message)
-	fmt.Print("Press 'Enter' to continue...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
-}
-
-func AskForConfirmation(s string) bool {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Printf("%s [y/n]: ", s)
-		response, err := reader.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" {
-			return true
-		} else if response == "n" || response == "no" {
-			return false
-		}
-	}
-}
 
 func CurrentTimeForFilename() string {
 	return time.Now().Format("2006-01-02T15-04-05Z")
