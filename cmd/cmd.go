@@ -4,12 +4,16 @@ import (
 	"github.com/benchlabs/bub/core"
 	"github.com/urfave/cli"
 	"log"
+	"os"
 )
 
 func BuildCmds() []cli.Command {
 	cfg, err := core.LoadConfiguration()
 	if err != nil {
-		log.Fatalf("The configuration failed to load... %v", err)
+		log.Printf("The configuration failed to load... %v", err)
+		core.MustSetupConfig()
+		log.Print("Run 'bub setup' to complete the setup.")
+		os.Exit(0)
 	}
 
 	manifest, _ := core.LoadManifest()
