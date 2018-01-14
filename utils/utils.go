@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"github.com/manifoldco/promptui"
 	"io/ioutil"
 	"log"
@@ -78,7 +77,7 @@ func CreateAndEdit(filePath string, content string) {
 		ioutil.WriteFile(filePath, []byte(content), 0700)
 	}
 
-	fmt.Printf("Editing %s.", filePath)
+	log.Printf("Editing %s.", filePath)
 	EditFile(filePath)
 }
 

@@ -54,6 +54,7 @@ func buildConfigCmd() cli.Command {
 			} else if c.Bool(shared) {
 				core.EditConfiguration(core.ConfigSharedFile)
 			} else {
+				log.Printf("Use 'bub config --shared' to edit the shared config.")
 				core.EditConfiguration(core.ConfigUserFile)
 			}
 			return nil

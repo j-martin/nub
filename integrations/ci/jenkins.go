@@ -44,7 +44,9 @@ func mustLoadJenkinsCredentials(cfg *core.Configuration) {
 func MustSetupJenkins(cfg *core.Configuration) {
 	utils.Prompt("Log into Jenkins, click on your username (top right corner), go to Configure, click on 'Show API Token...'.\n" +
 		"Theses are you username and password. Continue?")
-	utils.OpenURI(cfg.Jenkins.Server)
+	if utils.AskForConfirmation("Open the GitHub new token page?") {
+		utils.OpenURI(cfg.Jenkins.Server)
+	}
 	mustLoadJenkinsCredentials(cfg)
 }
 
