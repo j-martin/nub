@@ -4,7 +4,9 @@ DEP		= ./.dep
 DEP_VERSION	= 0.3.2
 OUTPUT		= bin/bub
 
-.PHONY: dev deps test clean release fmt
+.PHONY: all dev deps test clean release fmt
+
+all: clean deps test darwin linux
 
 dev:
 	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"

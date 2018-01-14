@@ -74,6 +74,8 @@ type ServiceConfiguration struct {
 }
 
 var config = `---
+# use 'bub config --shared' to edit the shared config.
+
 aws:
 	regions:
 		- us-east-1
@@ -94,7 +96,7 @@ aws:
 		- prefix: staging
 			jumphost: jump.example.com
 			region: us-west-2
-		# if not prefix, act as a catch all.
+		# if there is no prefix the last entry act as a catch all.
 		- jumphost: jump.example.com
 			region: us-east-1
 
