@@ -36,7 +36,7 @@ func BuildCmds() []cli.Command {
 		},
 		buildEC2Cmd(cfg, manifest),
 		buildRDSCmd(cfg),
-		buildR53Cmd(cfg),
+		buildR53Cmd(),
 		buildEBCmd(cfg, manifest),
 		{
 			Name:        "github",
