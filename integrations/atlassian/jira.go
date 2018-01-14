@@ -336,6 +336,36 @@ func (j *JIRA) OpenIssue(key string, browser bool) error {
 	return j.OpenIssueFromKey(key, browser)
 }
 
+func (j *JIRA) ViewIssue(key string) error {
+	if key == "" {
+		var err error
+		key, err = j.getIssueKeyFromBranchOrAssigned()
+		if err != nil {
+			return nil
+		}
+	}
+	i, res, err := j.client.Issue.Get(key, &jira.GetQueryOptions{})
+	if err != nil {
+		j.logBody(res)
+		return err
+	}
+	fmt.Printf("%v %v\n\n", i.Key, i.Fields.Summary)
+	fmt.Printf("Status: %v\nAssignee: %v\n\n", i.Fields.Status.Name, i.Fields.Assignee.DisplayName)
+	fmt.Printf("%v\n", i.Fields.Description)
+	if len(i.Fields.Comments.Comments) == 0 {
+		return nil
+	}
+	fmt.Printf("\nComments:\n")
+	for _, c := range i.Fields.Comments.Comments {
+		date := c.Created
+		if date != c.Updated {
+			date += " / " + c.Updated
+		}
+		fmt.Printf("%v (%v)\n%v\n\n", c.Author.DisplayName, date, c.Body)
+	}
+	return nil
+}
+
 func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 	if len(issues) == 0 {
 		return nil, errors.New("no issue to pick")

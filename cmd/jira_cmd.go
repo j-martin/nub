@@ -38,6 +38,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 			},
 		},
 		buildJIRAOpenIssueCmd(cfg),
+		buildJIRAViewIssueCmd(cfg),
 		buildJIRAListAssignedIssuesCmd(cfg),
 		buildJIRATransitionIssueCmd(cfg),
 	}
@@ -89,6 +90,21 @@ func buildJIRAOpenIssueCmd(cfg *core.Configuration) cli.Command {
 				key = c.Args().Get(0)
 			}
 			return atlassian.MustInitJIRA(cfg).OpenIssue(key, c.Bool(browse))
+		},
+	}
+}
+
+func buildJIRAViewIssueCmd(cfg *core.Configuration) cli.Command {
+	return cli.Command{
+		Name:    "view",
+		Aliases: []string{"v"},
+		Usage:   "View JIRA issue in the terminal.",
+		Action: func(c *cli.Context) error {
+			var key string
+			if len(c.Args()) > 0 {
+				key = c.Args().Get(0)
+			}
+			return atlassian.MustInitJIRA(cfg).ViewIssue(key)
 		},
 	}
 }
