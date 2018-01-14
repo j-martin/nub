@@ -13,6 +13,8 @@ import (
 
 const manifestFile = ".bench.yml"
 
+type Ownership map[string][]User
+
 type Manifest struct {
 	Name          string
 	Active        bool
@@ -32,7 +34,7 @@ type Manifest struct {
 	Readme        string
 	ChangeLog     string
 	Page          string
-	Owners        map[string][]User
+	Owners        Ownership
 }
 
 type Dependency struct {

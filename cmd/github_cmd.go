@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/github"
 	"github.com/urfave/cli"
@@ -76,6 +77,20 @@ func buildGitHubCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			},
 			Action: func(c *cli.Context) error {
 				return github.MustInitGitHub(cfg).ListBranches(c.Int(maxAge))
+			},
+		},
+		{
+			Name:  "list-reviewers",
+			Usage: "List reviewer based on the current changes.",
+			Action: func(c *cli.Context) error {
+				reviewers, err := github.MustInitGitHub(cfg).ListReviewers()
+				if err != nil {
+					return err
+				}
+				for _, r := range reviewers {
+					fmt.Println(r)
+				}
+				return nil
 			},
 		},
 	}

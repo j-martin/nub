@@ -276,6 +276,10 @@ func (g *Git) LogNotInMasterBody() string {
 	return g.MustRunGitWithStdout("log", "HEAD", "--not", "origin/master", "--no-merges", "--pretty=format:-> %B")
 }
 
+func (g *Git) ListFileChanged() []string {
+	return strings.Split(g.MustRunGitWithStdout("diff", "HEAD", "--not", "origin/master", "--name-only"), "\n")
+}
+
 func (g *Git) GetIssueKeyFromBranch() string {
 	return g.extractIssueKeyFromName(g.GetCurrentBranch())
 }

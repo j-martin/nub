@@ -88,7 +88,10 @@ func (gh *GitHub) CreatePR(title, body, repoDir string) error {
 		return err
 	}
 
-	reviewers := gh.cfg.GitHub.Reviewers
+	reviewers, err := gh.ListReviewers()
+	if err != nil {
+		return err
+	}
 	if len(reviewers) > 0 {
 		reviewersRequest := github.ReviewersRequest{Reviewers: reviewers}
 		pr, _, err = gh.client.PullRequests.RequestReviewers(ctx, org, repo, *pr.Number, reviewersRequest)

@@ -4,6 +4,7 @@ import (
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/utils"
 	"io/ioutil"
+	"log"
 	"path"
 	"regexp"
 	"strings"
@@ -12,15 +13,24 @@ import (
 type OwnerMap map[string][]string
 
 func (gh *GitHub) PopulateOwners(m *core.Manifest) error {
-	owners, err := gh.GetCodeOwners()
+	owners, err := gh.ListCodeOwners()
 	if err != nil {
 		return err
 	}
+	m.Owners = owners
+	return nil
+}
 
-	m.Owners = make(map[string][]core.User)
-	for fPath, o := range owners {
+func (gh *GitHub) ListCodeOwners() (core.Ownership, error) {
+	owners, err := gh.GetCodeOwners()
+	if err != nil {
+		return nil, err
+	}
+
+	ownerMap := make(core.Ownership)
+	for fPath, pathOwners := range owners {
 		var ownerList []core.User
-		for _, user := range o {
+		for _, user := range pathOwners {
 			u := core.User{}
 			if strings.HasPrefix(user, "@") {
 				u.GitHub = strings.TrimLeft(user, "@")
@@ -30,9 +40,47 @@ func (gh *GitHub) PopulateOwners(m *core.Manifest) error {
 			gh.cfg.PopulateUser(&u)
 			ownerList = append(ownerList, u)
 		}
-		m.Owners[fPath] = ownerList
+		ownerMap[fPath] = ownerList
 	}
-	return nil
+	return ownerMap, nil
+}
+
+type Reviewers []string
+
+func (gh *GitHub) ListReviewers() (reviewers Reviewers, err error) {
+	log.Printf("%v", reviewers)
+	owners, err := gh.ListCodeOwners()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, filename := range core.MustInitGit("").ListFileChanged() {
+		for rule, o := range owners {
+			if matchesCodeOwnerRules(rule, filename) {
+				for _, owner := range o {
+					if owner.GitHub == gh.cfg.GitHub.Username {
+						continue
+					}
+					reviewers = append(reviewers, owner.GitHub)
+				}
+			}
+		}
+	}
+	return utils.RemoveDuplicatesUnordered(reviewers), nil
+}
+
+func matchesCodeOwnerRules(rule, filename string) bool {
+	if rule == "*" {
+		return true
+	}
+	if strings.HasPrefix(rule, "*") {
+		return strings.HasSuffix(filename, rule[1:])
+	}
+	if strings.HasSuffix(rule, "*") && strings.HasPrefix(filename, rule[0:len(rule)-1]) {
+		// If 'something/*', only the file on that level are included.
+		return !strings.Contains(strings.TrimPrefix(filename, rule), "/")
+	}
+	return strings.HasPrefix(filename, rule)
 }
 
 func (gh *GitHub) GetCodeOwners() (owners OwnerMap, err error) {
