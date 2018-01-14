@@ -37,9 +37,10 @@ func mustLoadJIRACredentials(cfg *core.Configuration) {
 }
 
 func MustSetupJIRA(cfg *core.Configuration) {
-	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username. " +
-		"You may have to ask to reset your password if you never used GSuite or Okta to login to JIRA. Continue?")
-	if utils.AskForConfirmation("Open the profile page?") {
+	if utils.AskForConfirmation(
+		"Enter your Atlassian credentials. Refer to your profile page to see your username. " +
+			"You may have to ask to reset your password if you never used GSuite or Okta to login to JIRA.\n" +
+			"Open the profile page?") {
 		utils.OpenURI(cfg.JIRA.Server, "secure/ViewProfile.jspa")
 	}
 	mustLoadJIRACredentials(cfg)

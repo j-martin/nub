@@ -44,8 +44,10 @@ func mustLoadConfluenceCredentials(cfg *core.Configuration) {
 }
 
 func MustSetupConfluence(cfg *core.Configuration) {
-	utils.Prompt("Enter your Atlassian credentials. Refer to your profile page to see your username.")
-	if utils.AskForConfirmation("Open the profile page?") {
+	if utils.AskForConfirmation(
+		"Enter your Atlassian credentials. " +
+			"Refer to your profile page to see your username.\n" +
+			"Open the profile page?") {
 		utils.OpenURI(cfg.Confluence.Server, "users/viewmyprofile.action")
 	}
 	mustLoadConfluenceCredentials(cfg)

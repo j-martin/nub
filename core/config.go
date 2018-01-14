@@ -127,7 +127,8 @@ updates:
 
 ssh:
 	connectTimeout: 3
-sharedConfigPath: /keybase/team/yourteam/bub/shared.yml
+
+sharedConfiguration: /keybase/team/yourteam/bub/shared.yml
 `
 
 func GetConfigString() string {
