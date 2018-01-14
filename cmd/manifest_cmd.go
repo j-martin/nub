@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/atlassian"
+	"github.com/benchlabs/bub/integrations/github"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	"log"
@@ -89,6 +90,7 @@ func buildManifestCmds(cfg *core.Configuration) []cli.Command {
 					log.Fatal(err)
 					os.Exit(1)
 				}
+				github.MustInitGitHub(cfg).PopulateOwners(manifest)
 				manifest.Version = c.String("artifact-version")
 				core.GetManifestRepository().StoreManifest(manifest)
 				return atlassian.MustInitConfluence(cfg).UpdateDocumentation(manifest)
@@ -106,6 +108,10 @@ func buildManifestCmds(cfg *core.Configuration) []cli.Command {
 					os.Exit(1)
 				}
 				manifest.Version = c.String("artifact-version")
+				err = github.MustInitGitHub(cfg).PopulateOwners(manifest)
+				if err != nil {
+					log.Print(err)
+				}
 				yml, _ := yaml.Marshal(manifest)
 				log.Println(string(yml))
 				return nil

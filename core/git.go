@@ -87,6 +87,10 @@ func (g *Git) GetCurrentBranch() string {
 	return strings.Trim(string(result), "\n ")
 }
 
+func (g *Git) GetRepositoryRootPath() (string, error) {
+	return g.RunGitWithStdout("rev-parse", "--show-toplevel")
+}
+
 func (g *Git) GetTitleFromBranchName() string {
 	branch := g.GetCurrentBranch()
 	return strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)

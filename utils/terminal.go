@@ -50,7 +50,7 @@ func RunCmdWithStdout(cmd string, args ...string) (string, error) {
 	command := exec.Command(cmd, args...)
 	command.Stderr = os.Stderr
 	output, err := command.Output()
-	return string(output), err
+	return strings.Trim(string(output), "\n"), err
 }
 
 func Prompt(message string) {

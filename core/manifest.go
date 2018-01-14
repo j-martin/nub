@@ -32,6 +32,7 @@ type Manifest struct {
 	Readme        string
 	ChangeLog     string
 	Page          string
+	Owners        map[string][]User
 }
 
 type Dependency struct {

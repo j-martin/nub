@@ -29,7 +29,8 @@ type Environment struct {
 }
 
 type User struct {
-	Name, Slack string
+	Name, Slack, Email string
+	GitHub             string `yaml:"github"`
 }
 
 type Configuration struct {
@@ -290,4 +291,19 @@ func setKeyringItem(item string, ptr *string) (err error) {
 		return err
 	}
 	return LoadKeyringItem(item, ptr)
+}
+
+func equalAndNotEmpty(a, b string) bool {
+	return a != "" && a == b
+}
+
+func (cfg *Configuration) PopulateUser(u *User) error {
+	for _, userCfg := range cfg.Users {
+		if equalAndNotEmpty(u.GitHub, userCfg.GitHub) ||
+			equalAndNotEmpty(u.Name, userCfg.Name) ||
+			equalAndNotEmpty(u.Slack, userCfg.Slack) {
+			return mergo.Merge(u, userCfg)
+		}
+	}
+	return nil
 }
