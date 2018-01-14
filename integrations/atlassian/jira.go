@@ -7,6 +7,7 @@ import (
 	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
+	"github.com/trivago/tgo/tcontainer"
 	"io/ioutil"
 	"log"
 	"path"
@@ -263,6 +264,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 	if reactive {
 		fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
 		fields.Labels = []string{"reactive"}
+		fields.Unknowns = tcontainer.MarshalMap{"customfield_10100": 1}
 	}
 
 	i, res, err := j.client.Issue.Create(&jira.Issue{Fields: &fields})
