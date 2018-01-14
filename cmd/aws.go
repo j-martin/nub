@@ -51,13 +51,23 @@ func buildEC2Cmd(cfg *core.Configuration, manifest *core.Manifest) cli.Command {
 
 func buildRDSCmd(cfg *core.Configuration) cli.Command {
 	return cli.Command{
-
 		Name:    "rds",
 		Usage:   "RDS actions.",
 		Aliases: []string{"r"},
 		Action: func(c *cli.Context) error {
 			aws.GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
 			return nil
+		},
+	}
+}
+
+func buildR53Cmd() cli.Command {
+	return cli.Command{
+		Name:    "route53",
+		Usage:   "R53 actions.",
+		Aliases: []string{"r53"},
+		Action: func(c *cli.Context) error {
+			return aws.ListAllRecords()
 		},
 	}
 }

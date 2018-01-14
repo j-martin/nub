@@ -12,7 +12,7 @@ import (
 func buildEBCmd(cfg *core.Configuration, manifest *core.Manifest) cli.Command {
 	return cli.Command{
 		Name:    "elasticbeanstalk",
-		Usage:   "Elasticbeanstalk actions. If no sub-action specified, lists the environements.",
+		Usage:   "Elasticbeanstalk actions. If no sub-command specified, lists the environements.",
 		Aliases: []string{"eb"},
 		Action: func(c *cli.Context) error {
 			aws.ListEnvironments(cfg)

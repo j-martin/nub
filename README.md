@@ -42,7 +42,7 @@ features. Adding your Jenkins credentials makes bub super userful.
 
 ## Usage
 
-To be expanded, when in doubt, `-h` with any action/sub-actions should give you
+To be expanded, when in doubt, `-h` with any command/sub-command should give you
 an idea of what you can do.
 
     # from any directory

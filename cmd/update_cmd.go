@@ -27,7 +27,7 @@ type s3path struct {
 func buildUpdateCmd(cfg *core.Configuration) cli.Command {
 	return cli.Command{
 		Name:  "update",
-		Usage: "Update the bub command to the latest release",
+		Usage: "Update the bub command to the latest release.",
 		Action: func(c *cli.Context) error {
 			path := s3path{
 				Region: cfg.Updates.Region,

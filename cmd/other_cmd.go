@@ -44,7 +44,7 @@ func buildConfigCmd(cfg *core.Configuration) cli.Command {
 	syncSharedConfig := "sync-shared-config"
 	return cli.Command{
 		Name:  "config",
-		Usage: "Edit your bub config",
+		Usage: "Edit your bub config.",
 		Flags: []cli.Flag{
 			cli.BoolFlag{Name: showDefaults, Usage: "Show default config for reference"},
 			cli.BoolFlag{Name: shared, Usage: "Edit shared config."},
