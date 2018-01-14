@@ -4,18 +4,16 @@ DEP		= ./.dep
 DEP_VERSION	= 0.3.2
 OUTPUT		= bin/bub
 
-.PHONY: all deps test clean release fmt
+.PHONY: dev deps test clean release fmt
 
-all: deps test darwin linux
+dev:
+	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"
 
 darwin:
 	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)"
 
 linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)"
-
-dev:
-	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"
 
 $(DEP):
 	curl --silent "https://s3.amazonaws.com/s3bucket/libs/golang/dep-$(PLATFORM)-amd64-$(DEP_VERSION).gz" \

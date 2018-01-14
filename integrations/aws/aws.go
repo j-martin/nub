@@ -25,5 +25,8 @@ region=us-east-1
 aws_access_key_id = CHANGE_ME
 aws_secret_access_key = CHANGE_ME`
 
-	utils.CreateAndEdit(path.Join(usr.HomeDir, ".aws", "credentials"), awsCredentials)
+	err = utils.CreateAndEdit(path.Join(usr.HomeDir, ".aws", "credentials"), awsCredentials)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

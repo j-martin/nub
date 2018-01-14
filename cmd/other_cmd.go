@@ -38,26 +38,31 @@ func buildSetupCmd() cli.Command {
 	}
 }
 
-func buildConfigCmd() cli.Command {
+func buildConfigCmd(cfg *core.Configuration) cli.Command {
 	showDefaults := "show-default"
 	shared := "shared"
+	syncSharedConfig := "sync-shared-config"
 	return cli.Command{
 		Name:  "config",
 		Usage: "Edit your bub config",
 		Flags: []cli.Flag{
 			cli.BoolFlag{Name: showDefaults, Usage: "Show default config for reference"},
 			cli.BoolFlag{Name: shared, Usage: "Edit shared config."},
+			cli.BoolFlag{Name: syncSharedConfig, Usage: "Sync shared config to your config."},
 		},
 		Action: func(c *cli.Context) error {
 			if c.Bool(showDefaults) {
 				print(core.GetConfigString())
-			} else if c.Bool(shared) {
-				core.EditConfiguration(core.ConfigSharedFile)
-			} else {
-				log.Printf("Use 'bub config --shared' to edit the shared config.")
-				core.EditConfiguration(core.ConfigUserFile)
+				return nil
 			}
-			return nil
+			if c.Bool(shared) {
+				return core.EditConfiguration(core.ConfigSharedFile)
+			}
+			if c.Bool(syncSharedConfig) {
+				return core.SyncSharedConfig(cfg)
+			}
+			log.Printf("Use 'bub config --shared' to edit the shared config.")
+			return core.EditConfiguration(core.ConfigUserFile)
 		},
 	}
 }

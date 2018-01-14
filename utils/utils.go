@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"github.com/manifoldco/promptui"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -41,7 +42,30 @@ func PathExists(filePath ...string) (bool, error) {
 	return true, err
 }
 
-func EditFile(filePath string) {
+// Copy the src file to dst. Any existing file will be overwritten and will not
+// Copy file attributes.
+// From https://stackoverflow.com/questions/21060945/simple-way-to-copy-a-file-in-golang
+func Copy(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Close()
+}
+
+func EditFile(filePath string) error {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vim"
@@ -50,13 +74,10 @@ func EditFile(filePath string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	return cmd.Run()
 }
 
-func CreateAndEdit(filePath string, content string) {
+func CreateAndEdit(filePath string, content string) error {
 	directory := path.Dir(filePath)
 	dirExists, err := PathExists(directory)
 	if err != nil {
@@ -78,7 +99,7 @@ func CreateAndEdit(filePath string, content string) {
 	}
 
 	log.Printf("Editing %s.", filePath)
-	EditFile(filePath)
+	return EditFile(filePath)
 }
 
 func JoinStringPointers(ptrs []*string, joinStr string) string {

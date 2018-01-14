@@ -64,7 +64,8 @@ type Configuration struct {
 	Ssh struct {
 		ConnectTimeout uint `yaml:"connectTimeout"`
 	}
-	ResetCredentials bool
+	ResetCredentials    bool
+	SharedConfiguration string `yaml:"sharedConfiguration"`
 }
 
 type ServiceConfiguration struct {
@@ -125,6 +126,7 @@ updates:
 
 ssh:
 	connectTimeout: 3
+sharedConfigPath: /keybase/team/yourteam/bub/shared.yml
 `
 
 func GetConfigString() string {
@@ -150,14 +152,22 @@ func LoadConfiguration() (*Configuration, error) {
 	return baseCfg, nil
 }
 
-func loadConfiguration(configFile string) (*Configuration, error) {
-	cfg := &Configuration{}
+func getConfigPath(configFile string) (string, error) {
 	usr, err := user.Current()
 	if err != nil {
-		log.Fatal(err)
+		return "", nil
 	}
 
 	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
+	return configPath, nil
+}
+
+func loadConfiguration(configFile string) (*Configuration, error) {
+	cfg := &Configuration{}
+	configPath, err := getConfigPath(configFile)
+	if err != nil {
+		return cfg, err
+	}
 	fileExists, _ := utils.PathExists(configPath)
 	if !fileExists {
 		return cfg, utils.FileDoesNotExist
@@ -173,13 +183,13 @@ func loadConfiguration(configFile string) (*Configuration, error) {
 	return cfg, err
 }
 
-func EditConfiguration(configFile string) {
+func EditConfiguration(configFile string) error {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
 	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
-	utils.CreateAndEdit(configPath, GetConfigString())
+	return utils.CreateAndEdit(configPath, GetConfigString())
 }
 
 func MustSetupConfig() {
@@ -188,7 +198,33 @@ func MustSetupConfig() {
 		log.Fatal(err)
 	}
 	utils.Prompt("Setting up the base config. Just save and exit. Continue?")
-	utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", ConfigUserFile), GetConfigString())
+	err = utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", ConfigUserFile), GetConfigString())
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func SyncSharedConfig(cfg *Configuration) error {
+	configPath, err := getConfigPath("shared.yml")
+	if err != nil {
+		return err
+	}
+	exists, err := utils.PathExists(configPath)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = os.Remove(configPath)
+		if err != nil {
+			return err
+		}
+	}
+	err = utils.Copy(cfg.SharedConfiguration, configPath)
+	if err != nil {
+		return err
+	}
+	log.Printf("Copied '%v' to '%v'.", cfg.SharedConfiguration, configPath)
+	return nil
 }
 
 func CheckServerConfig(server string) {

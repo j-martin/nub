@@ -21,7 +21,7 @@ func BuildCmds() []cli.Command {
 	return []cli.Command{
 		buildSetupCmd(),
 		buildUpdateCmd(cfg),
-		buildConfigCmd(),
+		buildConfigCmd(cfg),
 		{
 			Name:        "repository",
 			Usage:       "Repository related commands.",
