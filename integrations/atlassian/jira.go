@@ -10,8 +10,10 @@ import (
 	"github.com/trivago/tgo/tcontainer"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"strings"
+	"text/template"
 )
 
 type JIRA struct {
@@ -349,21 +351,32 @@ func (j *JIRA) ViewIssue(key string) error {
 		j.logBody(res)
 		return err
 	}
-	fmt.Printf("%v %v\n\n", i.Key, i.Fields.Summary)
-	fmt.Printf("Status: %v\nAssignee: %v\n\n", i.Fields.Status.Name, i.Fields.Assignee.DisplayName)
-	fmt.Printf("%v\n", i.Fields.Description)
-	if len(i.Fields.Comments.Comments) == 0 {
-		return nil
+	details := `{{ "Key:" | faint }}		{{ .Key }}
+{{ "Summary:" | faint }}	{{ .Fields.Summary }}
+{{ "Assignee:" | faint }}	{{ if .Fields.Assignee }}{{ .Fields.Assignee.DisplayName }}{{ end }}
+{{ "Reporter:" | faint }}	{{ .Fields.Reporter.DisplayName }}
+{{ "Status:" | faint }}		{{ .Fields.Status.Name }}
+{{ "Created:" | faint }}	{{ .Fields.Created }}
+{{ "Updated:" | faint }}	{{ .Fields.Updated }}
+
+{{ "Description:" | faint }}
+{{ "-----------------------" | faint }}
+{{ .Fields.Description | wordWrap }}
+
+{{ "Comments:" | faint }}
+{{ "-----------------------" | faint }}
+{{ range $comment := .Fields.Comments.Comments }}{{ $comment.Body | wordWrap }}
+{{ "↪" | faint }} {{ $comment.Author.DisplayName | faint }} {{ "(" | faint }}{{ $comment.Created | faint }}{{ ")" | faint }}
+
+{{ end }}
+`
+	funcMaps := promptui.FuncMap
+	funcMaps["wordWrap"] = utils.WordWrap
+	t, err := template.New("records").Funcs(funcMaps).Parse(details)
+	if err != nil {
+		return err
 	}
-	fmt.Printf("\nComments:\n")
-	for _, c := range i.Fields.Comments.Comments {
-		date := c.Created
-		if date != c.Updated {
-			date += " / " + c.Updated
-		}
-		fmt.Printf("%v (%v)\n%v\n\n", c.Author.DisplayName, date, c.Body)
-	}
-	return nil
+	return t.Execute(os.Stdout, i)
 }
 
 func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
@@ -375,8 +388,8 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 		log.Printf("%v %v only available", issue.Key, issue.Fields.Summary)
 		return &issue, nil
 	}
-	maps := promptui.FuncMap
-	maps["wordWrap"] = utils.WordWrap
+	funcMaps := promptui.FuncMap
+	funcMaps["wordWrap"] = utils.WordWrap
 
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
@@ -386,14 +399,14 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 		Details: `
 --------- Issue ----------
 {{ "Key:" | faint }}	{{ .Key }}
+{{ "Summary:" | faint }}	{{ .Fields.Summary }}
 {{ "Assignee:" | faint }}	{{ if .Fields.Assignee }}{{ .Fields.Assignee.DisplayName }}{{ end }}
 {{ "Reporter:" | faint }}	{{ .Fields.Reporter.DisplayName }}
 {{ "Status:" | faint }}	{{ .Fields.Status.Name }}
-{{ "Summary:" | faint }}	{{ .Fields.Summary }}
 {{ "Description:" | faint }}
 {{ .Fields.Description | wordWrap }}
 `,
-		FuncMap: maps,
+		FuncMap: funcMaps,
 	}
 
 	searcher := func(input string, index int) bool {
