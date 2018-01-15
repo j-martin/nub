@@ -17,7 +17,7 @@ type RecordSet struct {
 	RecordSet *route53.ResourceRecordSet
 }
 
-func GetAllRecords() (records []RecordSet, err error) {
+func SearchRecords(filter string) (records []RecordSet, err error) {
 	sess, err := session.NewSession()
 	if err != nil {
 		return nil, err
@@ -39,8 +39,10 @@ func GetAllRecords() (records []RecordSet, err error) {
 				return err
 			}
 			var r []RecordSet
-			for _, r2 := range recordSets.ResourceRecordSets {
-				r = append(r, RecordSet{Zone: z, RecordSet: r2})
+			for _, recordSet := range recordSets.ResourceRecordSets {
+				if strings.Contains(*recordSet.Name, filter) {
+					r = append(r, RecordSet{Zone: z, RecordSet: recordSet})
+				}
 			}
 			lock.Lock()
 			records = append(records, r...)
@@ -53,8 +55,8 @@ func GetAllRecords() (records []RecordSet, err error) {
 	return records, nil
 }
 
-func ListAllRecords() error {
-	records, err := GetAllRecords()
+func ListAllRecords(filter string) error {
+	records, err := SearchRecords(filter)
 	if err != nil {
 		return err
 	}
@@ -65,8 +67,7 @@ func ListAllRecords() error {
 {{ "Alias:" | faint }} {{ if .RecordSet.AliasTarget }}{{ .RecordSet.AliasTarget }}{{ end }}
 {{ "Value(s):" | faint }}
 {{ range $record := .RecordSet.ResourceRecords }}{{ $record.Value }}
-{{ end }}
-`
+{{ end }}`
 	templates := &promptui.SelectTemplates{
 		Label: "{{ . }}:",
 		Active: "▶ {{ .RecordSet.Name }}	{{ .RecordSet.Type }}",

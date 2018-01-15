@@ -67,7 +67,7 @@ func buildR53Cmd() cli.Command {
 		Usage:   "R53 actions.",
 		Aliases: []string{"53"},
 		Action: func(c *cli.Context) error {
-			return aws.ListAllRecords()
+			return aws.ListAllRecords(c.Args().First())
 		},
 	}
 }
