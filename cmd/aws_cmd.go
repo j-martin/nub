@@ -65,7 +65,7 @@ func buildR53Cmd() cli.Command {
 	return cli.Command{
 		Name:    "route53",
 		Usage:   "R53 actions.",
-		Aliases: []string{"r53"},
+		Aliases: []string{"53"},
 		Action: func(c *cli.Context) error {
 			return aws.ListAllRecords()
 		},
