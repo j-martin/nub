@@ -218,6 +218,7 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 			return err
 		}
 	}
+	log.Printf("%v to be transitioned.", key)
 	transition, err := j.matchTransition(key, transitionName)
 	if err != nil {
 		return err
