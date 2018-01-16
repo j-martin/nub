@@ -4,7 +4,6 @@ import (
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/utils"
 	"io/ioutil"
-	"log"
 	"path"
 	"regexp"
 	"strings"
@@ -48,7 +47,7 @@ func (gh *GitHub) ListCodeOwners() (core.Ownership, error) {
 type Reviewers []string
 
 func (gh *GitHub) ListReviewers() (reviewers Reviewers, err error) {
-	log.Printf("%v", reviewers)
+	reviewers = gh.cfg.GitHub.Reviewers
 	owners, err := gh.ListCodeOwners()
 	if err != nil {
 		return nil, err

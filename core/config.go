@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/benchlabs/bub/utils"
 	"github.com/imdario/mergo"
 	"github.com/manifoldco/promptui"
@@ -206,6 +207,12 @@ func MustSetupConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func ShowConfig(cfg *Configuration) error {
+	yml, _ := yaml.Marshal(cfg)
+	fmt.Println(string(yml))
+	return nil
 }
 
 func SyncSharedConfig(cfg *Configuration) error {
