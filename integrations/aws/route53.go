@@ -61,6 +61,7 @@ func ListAllRecords(filter string) error {
 		return err
 	}
 	details := `{{ "Zone:" | faint }} {{ .Zone.Name }}
+{{ "Private:" | faint }} {{ .Zone.Config.PrivateZone }} 
 {{ "Name:" | faint }} {{ .RecordSet.Name }} 
 {{ "Type:" | faint }} {{ .RecordSet.Type }}
 {{ "TTL:" | faint }} {{ if .RecordSet.TTL }}{{ .RecordSet.TTL }}s{{ end }}
