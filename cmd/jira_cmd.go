@@ -39,6 +39,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 		},
 		buildJIRAOpenIssueCmd(cfg),
 		buildJIRAViewIssueCmd(cfg),
+		buildJIRACommentOnIssuesCmd(cfg),
 		buildJIRAListAssignedIssuesCmd(cfg),
 		buildJIRATransitionIssueCmd(cfg),
 	}
@@ -135,6 +136,21 @@ func buildJIRAListAssignedIssuesCmd(cfg *core.Configuration) cli.Command {
 		},
 		Action: func(c *cli.Context) error {
 			return atlassian.MustInitJIRA(cfg).ListAssignedIssue(c.Bool(showDescription))
+		},
+	}
+}
+
+func buildJIRACommentOnIssuesCmd(cfg *core.Configuration) cli.Command {
+	return cli.Command{
+		Name:    "comment",
+		Aliases: []string{"co"},
+		Usage:   "COMMENT [ISSUE-KEY] Add comment to issue.",
+		Action: func(c *cli.Context) error {
+			key := ""
+			if len(c.Args()) > 1 {
+				key = c.Args()[1]
+			}
+			return atlassian.MustInitJIRA(cfg).CommentOnIssue(key, c.Args().First())
 		},
 	}
 }

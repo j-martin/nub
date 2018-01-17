@@ -19,6 +19,7 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 		buildJIRAClaimIssueCmd(cfg),
 		buildJIRAOpenIssueCmd(cfg),
 		buildJIRAViewIssueCmd(cfg),
+		buildJIRACommentOnIssuesCmd(cfg),
 		buildJIRAListAssignedIssuesCmd(cfg),
 		{
 			Name:    "new-branch",

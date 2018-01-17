@@ -329,14 +329,35 @@ func (j *JIRA) OpenIssueFromKey(key string, forceBrowser bool) error {
 }
 
 func (j *JIRA) OpenIssue(key string, browser bool) error {
+	key, err := j.getIssueIfNotSet(key)
+	if err != nil {
+		return err
+	}
+	return j.OpenIssueFromKey(key, browser)
+}
+
+func (j *JIRA) getIssueIfNotSet(key string) (string, error) {
 	if key == "" {
 		var err error
 		key, err = j.getIssueKeyFromBranchOrAssigned()
 		if err != nil {
-			return nil
+			return "", err
 		}
 	}
-	return j.OpenIssueFromKey(key, browser)
+	return key, nil
+}
+
+func (j *JIRA) CommentOnIssue(key, body string) error {
+	key, err := j.getIssueIfNotSet(key)
+	if err != nil {
+		return err
+	}
+	_, res, err := j.client.Issue.AddComment(key, &jira.Comment{Body: body})
+	if err != nil {
+		j.logBody(res)
+		return err
+	}
+	return err
 }
 
 func (j *JIRA) ViewIssue(key string) error {
