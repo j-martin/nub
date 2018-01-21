@@ -70,7 +70,9 @@ func EditFile(filePath string) error {
 	if editor == "" {
 		editor = "vim"
 	}
-	cmd := exec.Command(editor, filePath)
+	editorCmd := strings.Split(editor, " ")
+	editorArgs := append(editorCmd[1:], filePath)
+	cmd := exec.Command(editorCmd[0], editorArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
@@ -205,4 +207,15 @@ func RemoveDuplicatesUnordered(elements []string) []string {
 		result = append(result, key)
 	}
 	return result
+}
+
+// TimeTrack measure the excution time of a method
+// func factorial(n *big.Int) (result *big.Int) {
+//		// defer timeTrack(time.Now(), "factorial")
+//		// ... do some things, maybe even return under some condition
+//		return n
+// }
+func TimeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }
