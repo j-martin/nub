@@ -9,8 +9,8 @@ import (
 func buildJenkinsCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {
 	return []cli.Command{
 		{
-			Name:    "console",
-			Aliases: []string{"c"},
+			Name:    "master",
+			Aliases: []string{"m"},
 			Usage:   "Opens the master build..",
 			Action: func(c *cli.Context) error {
 				return ci.MustInitJenkins(cfg, manifest).OpenPage()
