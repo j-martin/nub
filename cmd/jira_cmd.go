@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const jiraBeeDesc = "Must use the browser event if Bee is present."
+
 func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 	reactive := "reactive"
 	project := "project"
@@ -17,6 +19,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 	return []cli.Command{
 		buildJIRAOpenBoardCmd(cfg),
 		buildJIRASearchIssueCmd(cfg),
+		buildJIRAOpenRecentlyAccessedIssuesCmd(cfg),
 		buildJIRAClaimIssueCmd(cfg),
 		{
 			Name:      "create",
@@ -60,7 +63,7 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 			cli.BoolFlag{Name: all, Usage: "Use all projects."},
 			cli.BoolFlag{Name: resolved, Usage: "Include resolved issues."},
 			cli.StringFlag{Name: project, Usage: "Specify the project."},
-			cli.BoolFlag{Name: browse, Usage: "Must open the issue with the browser."},
+			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
 			cli.BoolFlag{Name: jql, Usage: "Query with JQL instead of text search."},
 		},
 		Action: func(c *cli.Context) error {
@@ -81,6 +84,22 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 	}
 }
 
+func buildJIRAOpenRecentlyAccessedIssuesCmd(cfg *core.Configuration) cli.Command {
+	browse := "b"
+
+	return cli.Command{
+		Name:    "recent",
+		Aliases: []string{"r"},
+		Usage:   "Pick and open issue that you recently interacted with.",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
+		},
+		Action: func(c *cli.Context) error {
+			return atlassian.MustInitJIRA(cfg).OpenRecentlyAccessedIssues(c.Bool(browse))
+		},
+	}
+}
+
 func buildJIRAOpenIssueCmd(cfg *core.Configuration) cli.Command {
 	browse := "b"
 
@@ -89,7 +108,7 @@ func buildJIRAOpenIssueCmd(cfg *core.Configuration) cli.Command {
 		Aliases: []string{"o"},
 		Usage:   "Open JIRA issue in the browser.",
 		Flags: []cli.Flag{
-			cli.BoolFlag{Name: browse, Usage: "Must use the browser event if Bee is present."},
+			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
 		},
 		Action: func(c *cli.Context) error {
 			var key string
@@ -138,10 +157,10 @@ func buildJIRAListAssignedIssuesCmd(cfg *core.Configuration) cli.Command {
 		Aliases: []string{"a"},
 		Usage:   "Show assigned issues.",
 		Flags: []cli.Flag{
-			cli.BoolFlag{Name: showDescription, Usage: "Must use the browser event if Bee is present."},
+			cli.BoolFlag{Name: showDescription, Usage: jiraBeeDesc},
 		},
 		Action: func(c *cli.Context) error {
-			return atlassian.MustInitJIRA(cfg).ListAssignedIssue(c.Bool(showDescription))
+			return atlassian.MustInitJIRA(cfg).ListAssignedIssues(c.Bool(showDescription))
 		},
 	}
 }

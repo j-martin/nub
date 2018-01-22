@@ -90,6 +90,10 @@ func (j *JIRA) pickAndOpenIssue(is []jira.Issue, forceBrowser bool) error {
 	return j.openIssue(i, forceBrowser)
 }
 
+func (j *JIRA) OpenRecentlyAccessedIssues(forceBrowser bool) error {
+	jql := "assignee was currentUser() or reporter was currentUser() or issuekey in issueHistory() order by updatedDate"
+	return j.SearchIssueJQL(jql, forceBrowser)
+}
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
 	jql := fmt.Sprintf("text ~ \"%v\" ORDER BY createdDate", text)
 	if project != "" {
@@ -162,7 +166,7 @@ func (j *JIRA) logBody(res *jira.Response) {
 	log.Print(string(b))
 }
 
-func (j *JIRA) ListAssignedIssue(showDescription bool) error {
+func (j *JIRA) ListAssignedIssues(showDescription bool) error {
 	issues, err := j.getAssignedIssues()
 	if err != nil {
 		return err
