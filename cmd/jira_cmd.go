@@ -50,6 +50,7 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 	resolved := "resolved"
 	project := "p"
 	browse := "b"
+	jql := "jql"
 
 	return cli.Command{
 		Name:    "search",
@@ -60,14 +61,19 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 			cli.BoolFlag{Name: resolved, Usage: "Include resolved issues."},
 			cli.StringFlag{Name: project, Usage: "Specify the project."},
 			cli.BoolFlag{Name: browse, Usage: "Must open the issue with the browser."},
+			cli.BoolFlag{Name: jql, Usage: "Query with JQL instead of text search."},
 		},
 		Action: func(c *cli.Context) error {
 			project := c.String("pr")
 			if !c.Bool(all) {
 				project = cfg.JIRA.Project
 			}
+			query := strings.Join(c.Args(), " ")
+			if c.Bool(jql) {
+				return atlassian.MustInitJIRA(cfg).SearchIssueJQL(query, c.Bool(browse))
+			}
 			return atlassian.MustInitJIRA(cfg).SearchIssueText(
-				strings.Join(c.Args(), " "),
+				query,
 				project,
 				c.Bool(resolved),
 				c.Bool(browse))

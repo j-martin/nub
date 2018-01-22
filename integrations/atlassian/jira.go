@@ -66,11 +66,23 @@ func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
 	return j.search("resolution = null AND assignee=currentUser() ORDER BY Rank")
 }
 
+func (j *JIRA) SearchIssueJQL(jql string, forceBrowser bool) error {
+	is, err := j.search(jql)
+	if err != nil {
+		return err
+	}
+	return j.pickAndOpenIssue(is, forceBrowser)
+}
+
 func (j *JIRA) SearchIssueText(text, project string, resolved, forceBrowser bool) error {
 	is, err := j.SearchText(text, project, resolved)
 	if err != nil {
 		return err
 	}
+	return j.pickAndOpenIssue(is, forceBrowser)
+}
+
+func (j *JIRA) pickAndOpenIssue(is []jira.Issue, forceBrowser bool) error {
 	i, err := j.pickIssue(is)
 	if err != nil {
 		return err
