@@ -2,18 +2,19 @@ package atlassian
 
 import (
 	"fmt"
-	"github.com/andygrunwald/go-jira"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
-	"github.com/manifoldco/promptui"
-	"github.com/pkg/errors"
-	"github.com/trivago/tgo/tcontainer"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
 	"text/template"
+
+	"github.com/andygrunwald/go-jira"
+	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/utils"
+	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
+	"github.com/trivago/tgo/tcontainer"
 )
 
 type JIRA struct {
@@ -289,6 +290,9 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 		}
 		j.client.Sprint.MoveIssuesToSprint(sp.ID, []string{i.Key})
 		log.Printf("%v moved to the active sprint.", i.Key)
+		if utils.InRepository() && utils.AskForConfirmation("Checkout branch?") {
+			return j.CreateBranchFromIssue(i, "")
+		}
 	}
 	return nil
 }
