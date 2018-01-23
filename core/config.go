@@ -63,6 +63,9 @@ type Configuration struct {
 	Updates struct {
 		Region, Bucket, Prefix string
 	}
+	Vault struct {
+		AuthMethod, Server, Username, Password string
+	}
 	Ssh struct {
 		ConnectTimeout uint `yaml:"connectTimeout"`
 	}

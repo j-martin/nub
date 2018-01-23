@@ -5,15 +5,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/benchlabs/bub/core"
+	"github.com/benchlabs/bub/integrations/ssh"
+	"github.com/benchlabs/bub/integrations/vault"
 	"github.com/benchlabs/bub/utils"
 	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
 	"log"
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"sort"
 	"strings"
-	"time"
 )
 
 type RDS struct {
@@ -43,7 +46,7 @@ func GetRDS(cfg *core.Configuration) *RDS {
 	return &RDS{cfg: cfg}
 }
 
-func (r *RDS) ConnectToRDSInstance(filter string, args []string) {
+func (r *RDS) ConnectToRDSInstance(filter string, args []string) error {
 	channel := make(chan []*rds.DBInstance)
 	regions := r.cfg.AWS.Regions
 	for _, region := range regions {
@@ -75,15 +78,14 @@ func (r *RDS) ConnectToRDSInstance(filter string, args []string) {
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
-		r.connectToRDSInstance(instances[0], args)
-	} else {
-
-		instance, err := r.pickRDSInstance(instances)
-		if err != nil {
-			log.Fatalf("Failed to pick instance: %v", err)
-		}
-		r.connectToRDSInstance(instance, args)
+		return r.connectToRDSInstance(instances[0], args)
 	}
+
+	instance, err := r.pickRDSInstance(instances)
+	if err != nil {
+		log.Fatalf("Failed to pick instance: %v", err)
+	}
+	return r.connectToRDSInstance(instance, args)
 }
 
 func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, error) {
@@ -139,7 +141,6 @@ func (r *RDS) getRDSConfig(endpoint string) core.RDSConfiguration {
 			return i
 		}
 	}
-	log.Fatalf("No RDS Configuration found for %s, please check your configuration. Run 'bub config'.", endpoint)
 	return core.RDSConfiguration{}
 }
 
@@ -179,29 +180,49 @@ func (r *RDS) setBackground(endpoint string) {
 	}
 }
 
-func (r *RDS) rdsCleanup(tunnel *exec.Cmd) {
+func (r *RDS) rdsCleanup(tunnel *ssh.Tunnel) error {
 	// green for safe
 	print("\033]Ph103010\033\\")
-	tunnel.Process.Kill()
+	return tunnel.Close()
 }
-func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
+
+func (r *RDS) fetchConfigFromVault(endpoint string, tunnel *ssh.Tunnel, rdsConfig *core.RDSConfiguration) error {
+	log.Print("Fetching credentials from Vault...")
+	application := endpoint
+	segments := strings.Split(application, "-")
+	if len(segments) > 1 {
+		application = strings.Split(segments[1], ".")[0]
+	}
+	secretPath := path.Join("secret", "service", application, "db")
+	secret, err := vault.MustInitVault(r.cfg, tunnel).Read(secretPath)
+	if err != nil {
+		return err
+	}
+	rdsConfig.User = secret.Data["username"]
+	rdsConfig.Password = secret.Data["password"]
+	rdsConfig.Database = secret.Data["database"]
+	if rdsConfig.Database == "" || rdsConfig.User == "" || rdsConfig.Password == "" {
+		return errors.New("the rds configuration is empty ")
+	}
+	return nil
+}
+
+func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) error {
 	endpoint := *instance.Endpoint.Address
 	jump := r.getEnvironment(endpoint).JumpHost
 	rdsConfig := r.getRDSConfig(endpoint)
 	port := utils.Random(40000, 60000)
 	engine := r.getEngineConfiguration(*instance.Engine)
 
-	tunnelPath := fmt.Sprintf("%v:%v:%v", port, endpoint, engine.Port)
-	log.Printf("Connecting to %s through %s", tunnelPath, jump)
-	tunnel := exec.Command("ssh", "-NL", tunnelPath, jump)
-	tunnel.Stderr = os.Stderr
-	err := tunnel.Start()
+	tunnel, err := ssh.Connect(r.cfg, jump, endpoint, port, engine.Port)
+	if err != nil {
+		return err
+	}
 
-	log.Print("Waiting for tunnel...")
-	for {
-		time.Sleep(100 * time.Millisecond)
-		if r.tunnelIsReady(port) {
-			break
+	if rdsConfig.Database == "" {
+		err = r.fetchConfigFromVault(endpoint, tunnel, &rdsConfig)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -266,5 +287,5 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) {
 		r.rdsCleanup(tunnel)
 		log.Fatal(err)
 	}
-	r.rdsCleanup(tunnel)
+	return r.rdsCleanup(tunnel)
 }
