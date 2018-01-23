@@ -188,11 +188,7 @@ func (r *RDS) rdsCleanup(tunnel *ssh.Tunnel) error {
 
 func (r *RDS) fetchConfigFromVault(endpoint string, tunnel *ssh.Tunnel, rdsConfig *core.RDSConfiguration) error {
 	log.Print("Fetching credentials from Vault...")
-	application := endpoint
-	segments := strings.Split(application, "-")
-	if len(segments) > 1 {
-		application = strings.Split(segments[1], ".")[0]
-	}
+	application := extractApplicationName(endpoint)
 	secretPath := path.Join("secret", "service", application, "db")
 	secret, err := vault.MustInitVault(r.cfg, tunnel).Read(secretPath)
 	if err != nil {
@@ -205,6 +201,16 @@ func (r *RDS) fetchConfigFromVault(endpoint string, tunnel *ssh.Tunnel, rdsConfi
 		return errors.New("the rds configuration is empty ")
 	}
 	return nil
+}
+
+// E.g. `dev-platter.safafjlk... will be `platter
+func extractApplicationName(endpoint string) string {
+	application := endpoint
+	segments := strings.Split(application, "-")
+	if len(segments) > 1 {
+		application = strings.Split(segments[1], ".")[0]
+	}
+	return application
 }
 
 func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) error {

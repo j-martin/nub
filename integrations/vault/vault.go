@@ -5,7 +5,12 @@ import (
 	"errors"
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/integrations/ssh"
+	"github.com/benchlabs/bub/utils"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/user"
+	"path"
 	"strings"
 )
 
@@ -18,9 +23,10 @@ type Vault struct {
 func MustInitVault(cfg *core.Configuration, t *ssh.Tunnel) *Vault {
 	mustLoadVaultCredentials(cfg)
 	v := &Vault{cfg: cfg, tunnel: t}
-	err := v.setTokenFromAuth()
+	err := v.loadToken()
 	if err != nil {
-		log.Fatalf("Failed to authenticate: %v", err)
+		log.Printf("Authentication Failure. Run 'BUB_UPDATE_CREDENTIALS=1 %v' to update your credentials.", strings.Join(os.Args, " "))
+		log.Fatalf("Error: %v", err)
 	}
 	return v
 }
@@ -39,6 +45,36 @@ func mustLoadVaultCredentials(cfg *core.Configuration) {
 	}
 }
 
+func (v *Vault) getTokenPath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", nil
+	}
+
+	configPath := path.Join(usr.HomeDir, ".config", "bub", "token-"+strings.Replace(v.tunnel.Server.Host, ".", "-", -1))
+	return configPath, nil
+}
+
+func (v *Vault) loadToken() error {
+	filePath, err := v.getTokenPath()
+	if err != nil {
+		return err
+	}
+	exists, err := utils.PathExists(filePath)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return v.setTokenFromAuth()
+	}
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	v.token = string(content)
+	return nil
+}
+
 func (v *Vault) setTokenFromAuth() error {
 	token, err := v.tunnel.CommandWithStrOutput(
 		"vault",
@@ -55,7 +91,11 @@ func (v *Vault) setTokenFromAuth() error {
 		return errors.New("failed to get authenticated and get Vault token")
 	}
 	v.token = token
-	return err
+	tokenPath, err := v.getTokenPath()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(tokenPath, []byte(token), 0600)
 }
 
 type Secret struct {
@@ -67,7 +107,7 @@ type Secret struct {
 	Warnings      interface{}       `json:"warnings"`
 }
 
-func (v *Vault) Read(path string) (*Secret, error) {
+func (v *Vault) read(path string, retry int) (*Secret, error) {
 	reader, err := v.tunnel.CommandWithOutput(
 		"VAULT_TOKEN="+v.token,
 		"vault",
@@ -75,9 +115,19 @@ func (v *Vault) Read(path string) (*Secret, error) {
 		"-format=json",
 		path,
 	)
-	if err != nil {
+
+	// Super Naive re-auth...
+	if err != nil && err.Error() == "Process exited with status 1" && retry > 0 {
+		log.Print("Trying to renew token...")
+		v.setTokenFromAuth()
+		return v.read(path, retry-1)
+	} else if err != nil {
 		return nil, err
 	}
 	secret := new(Secret)
 	return secret, json.NewDecoder(reader).Decode(secret)
+}
+
+func (v *Vault) Read(path string) (*Secret, error) {
+	return v.read(path, 1)
 }

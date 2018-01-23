@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var (
+const (
 	ConfigUserFile   = "config.yml"
 	ConfigSharedFile = "shared.yml"
 )
@@ -156,6 +156,10 @@ func LoadConfiguration() (*Configuration, error) {
 	}
 	if len(cfg.AWS.Regions) == 0 {
 		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
+	}
+	resetCredentials := os.Getenv("BUB_UPDATE_CREDENTIALS")
+	if resetCredentials != "" {
+		baseCfg.ResetCredentials = true
 	}
 	return baseCfg, nil
 }
