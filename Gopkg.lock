@@ -8,7 +8,7 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/dynamodb","service/dynamodb/dynamodbattribute","service/ec2","service/elasticbeanstalk","service/rds","service/route53","service/s3","service/s3/s3iface","service/s3/s3manager","service/sts"]
+  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/ec2query","private/protocol/json/jsonutil","private/protocol/jsonrpc","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/dynamodb","service/dynamodb/dynamodbattribute","service/ec2","service/elasticbeanstalk","service/rds","service/s3","service/s3/s3iface","service/s3/s3manager","service/sts"]
   revision = "82ad808f2307df0776c038bfd7ea85440a35c02e"
   version = "v1.12.53"
 
@@ -92,11 +92,6 @@
   revision = "35c59b9e0fe275705a71bf5d58ee293f27efbbc4"
 
 [[projects]]
-  name = "github.com/kevinburke/ssh_config"
-  packages = ["."]
-  revision = "802051befeb51da415c46972b5caf36e7c33c53d"
-
-[[projects]]
   branch = "master"
   name = "github.com/lunixbochs/vtclean"
   packages = ["."]
@@ -126,6 +121,7 @@
   revision = "257f7b9a7d87427c8d7f89469a5958d57f8abd7c"
 
 [[projects]]
+  branch = "master"
   name = "github.com/mitchellh/go-wordwrap"
   packages = ["."]
   revision = "ad45545899c7b13c020ea92b2072220eefad42b8"
@@ -134,12 +130,6 @@
   name = "github.com/paetzke/godot"
   packages = ["godot"]
   revision = "d6291c463cf5c9b21dab4a66e12d693c2bb9f202"
-
-[[projects]]
-  name = "github.com/pelletier/go-buffruneio"
-  packages = ["."]
-  revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
-  version = "v0.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -186,11 +176,6 @@
   revision = "88ae7af8d41d3842891a319ca21e867c490bcb0b"
 
 [[projects]]
-  name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh"]
-  revision = "13931e22f9e72ea58bb73048bc752b48c6d4d4ac"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
@@ -221,6 +206,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "443661afb1dc802d0d4ca47c48376ffdc21ce376a6431d5522841b148d3b174c"
+  inputs-digest = "a323627b92f4d93fbd5b3add8fd4315933e33317a2c6dea8eea2805b316ef370"
   solver-name = "gps-cdcl"
   solver-version = 1

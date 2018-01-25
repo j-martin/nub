@@ -7,7 +7,6 @@ import (
 	"github.com/benchlabs/bub/integrations/aws"
 	"github.com/benchlabs/bub/integrations/ci"
 	"github.com/benchlabs/bub/integrations/github"
-	"github.com/benchlabs/bub/integrations/vault"
 	"github.com/benchlabs/bub/utils"
 	"github.com/urfave/cli"
 	"log"
@@ -33,7 +32,6 @@ func buildSetupCmd() cli.Command {
 			atlassian.MustSetupConfluence(cfg)
 			github.MustSetupGitHub(cfg)
 			ci.MustSetupJenkins(cfg)
-			vault.MustSetupVault(cfg)
 			log.Println("Done.")
 			return nil
 		},
