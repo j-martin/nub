@@ -77,11 +77,3 @@
 [[constraint]]
   name = "github.com/mitchellh/go-wordwrap"
   revision = "ad45545899c7b13c020ea92b2072220eefad42b8"
-
-[[constraint]]
-  name = "github.com/kevinburke/ssh_config"
-  revision = "802051befeb51da415c46972b5caf36e7c33c53d"
-
-[[constraint]]
-  name = "golang.org/x/crypto"
-  revision = "13931e22f9e72ea58bb73048bc752b48c6d4d4ac"
