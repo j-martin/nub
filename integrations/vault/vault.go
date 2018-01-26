@@ -112,15 +112,19 @@ func (v *Vault) setTokenFromAuth() error {
 	return ioutil.WriteFile(tokenPath, []byte(token), 0600)
 }
 
-func (v *Vault) Read(path string) (*api.Secret, error) {
+func (v *Vault) read(path string, retries int) (*api.Secret, error) {
 	secret, err := v.client.Logical().Read(path)
-	if err != nil {
+	if err != nil && retries >= 0 {
 		_, err := v.client.Auth().Token().LookupSelf()
 		if err != nil {
 			log.Print("Trying to renew token...")
 			v.setTokenFromAuth()
-			return v.Read(path)
 		}
+		return v.read(path, retries-1)
 	}
 	return secret, err
+}
+
+func (v *Vault) Read(path string) (*api.Secret, error) {
+	return v.read(path, 2)
 }
