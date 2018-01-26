@@ -144,7 +144,7 @@ func PickItem(label string, items []string) (string, error) {
 }
 
 func Random(min, max int) int {
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min
 }
 
