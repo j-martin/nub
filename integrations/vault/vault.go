@@ -116,7 +116,7 @@ func (v *Vault) read(path string, retries int) (*api.Secret, error) {
 	secret, err := v.client.Logical().Read(path)
 	if err != nil && retries >= 0 {
 		_, err := v.client.Auth().Token().LookupSelf()
-		if strings.Contains(err.Error(), "Code: 403.") {
+		if err != nil && strings.Contains(err.Error(), "Code: 403.") {
 			log.Print("Trying to renew token...")
 			v.setTokenFromAuth()
 		} else if err != nil {
