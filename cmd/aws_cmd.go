@@ -55,8 +55,7 @@ func buildRDSCmd(cfg *core.Configuration) cli.Command {
 		Usage:   "RDS actions.",
 		Aliases: []string{"r"},
 		Action: func(c *cli.Context) error {
-			aws.GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
-			return nil
+			return aws.GetRDS(cfg).ConnectToRDSInstance(c.Args().First(), c.Args().Tail())
 		},
 	}
 }

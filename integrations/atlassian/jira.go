@@ -94,6 +94,7 @@ func (j *JIRA) OpenRecentlyAccessedIssues(forceBrowser bool) error {
 	jql := "assignee was currentUser() or reporter was currentUser() or issuekey in issueHistory() order by updatedDate"
 	return j.SearchIssueJQL(jql, forceBrowser)
 }
+
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
 	jql := fmt.Sprintf("text ~ \"%v\" ORDER BY createdDate", text)
 	if project != "" {

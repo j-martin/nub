@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var (
+const (
 	ConfigUserFile   = "config.yml"
 	ConfigSharedFile = "shared.yml"
 )
@@ -25,8 +25,8 @@ type RDSConfiguration struct {
 }
 
 type Environment struct {
-	Prefix, Region string
-	JumpHost       string `yaml:"jumphost"`
+	Prefix, Region, Domain string
+	JumpHost               string `yaml:"jumphost"`
 }
 
 type User struct {
@@ -62,6 +62,9 @@ type Configuration struct {
 	}
 	Updates struct {
 		Region, Bucket, Prefix string
+	}
+	Vault struct {
+		AuthMethod, Server, Username, Password string
 	}
 	Ssh struct {
 		ConnectTimeout uint `yaml:"connectTimeout"`
@@ -153,6 +156,10 @@ func LoadConfiguration() (*Configuration, error) {
 	}
 	if len(cfg.AWS.Regions) == 0 {
 		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
+	}
+	resetCredentials := os.Getenv("BUB_UPDATE_CREDENTIALS")
+	if resetCredentials != "" {
+		baseCfg.ResetCredentials = true
 	}
 	return baseCfg, nil
 }
