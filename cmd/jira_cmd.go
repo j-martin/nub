@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const jiraBeeDesc = "Must use the browser event if Bee is present."
+const jiraBeeDesc = "Open with Bee, if present."
 
 func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 	reactive := "reactive"
@@ -52,7 +52,7 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 	all := "all"
 	resolved := "resolved"
 	project := "p"
-	browse := "b"
+	bee := "b"
 	jql := "jql"
 
 	return cli.Command{
@@ -63,7 +63,7 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 			cli.BoolFlag{Name: all, Usage: "Use all projects."},
 			cli.BoolFlag{Name: resolved, Usage: "Include resolved issues."},
 			cli.StringFlag{Name: project, Usage: "Specify the project."},
-			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
+			cli.BoolFlag{Name: bee, Usage: jiraBeeDesc},
 			cli.BoolFlag{Name: jql, Usage: "Query with JQL instead of text search."},
 		},
 		Action: func(c *cli.Context) error {
@@ -73,49 +73,49 @@ func buildJIRASearchIssueCmd(cfg *core.Configuration) cli.Command {
 			}
 			query := strings.Join(c.Args(), " ")
 			if c.Bool(jql) {
-				return atlassian.MustInitJIRA(cfg).SearchIssueJQL(query, c.Bool(browse))
+				return atlassian.MustInitJIRA(cfg).SearchIssueJQL(query, c.Bool(bee))
 			}
 			return atlassian.MustInitJIRA(cfg).SearchIssueText(
 				query,
 				project,
 				c.Bool(resolved),
-				c.Bool(browse))
+				c.Bool(bee))
 		},
 	}
 }
 
 func buildJIRAOpenRecentlyAccessedIssuesCmd(cfg *core.Configuration) cli.Command {
-	browse := "b"
+	bee := "b"
 
 	return cli.Command{
 		Name:    "recent",
 		Aliases: []string{"r"},
 		Usage:   "Pick and open issue that you recently interacted with.",
 		Flags: []cli.Flag{
-			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
+			cli.BoolFlag{Name: bee, Usage: jiraBeeDesc},
 		},
 		Action: func(c *cli.Context) error {
-			return atlassian.MustInitJIRA(cfg).OpenRecentlyAccessedIssues(c.Bool(browse))
+			return atlassian.MustInitJIRA(cfg).OpenRecentlyAccessedIssues(c.Bool(bee))
 		},
 	}
 }
 
 func buildJIRAOpenIssueCmd(cfg *core.Configuration) cli.Command {
-	browse := "b"
+	bee := "b"
 
 	return cli.Command{
 		Name:    "open",
 		Aliases: []string{"o"},
 		Usage:   "Open JIRA issue in the browser.",
 		Flags: []cli.Flag{
-			cli.BoolFlag{Name: browse, Usage: jiraBeeDesc},
+			cli.BoolFlag{Name: bee, Usage: jiraBeeDesc},
 		},
 		Action: func(c *cli.Context) error {
 			var key string
 			if len(c.Args()) > 0 {
 				key = c.Args().Get(0)
 			}
-			return atlassian.MustInitJIRA(cfg).OpenIssue(key, c.Bool(browse))
+			return atlassian.MustInitJIRA(cfg).OpenIssue(key, c.Bool(bee))
 		},
 	}
 }
@@ -198,7 +198,7 @@ func buildJIRATransitionIssueCmd(cfg *core.Configuration) cli.Command {
 func buildJIRAOpenBoardCmd(cfg *core.Configuration) cli.Command {
 	return cli.Command{
 		Name:    "board",
-		Aliases: []string{"b"},
+		Aliases: []string{"bo"},
 		Usage:   "Open your JIRA board.",
 		Action: func(c *cli.Context) error {
 			return utils.OpenURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)

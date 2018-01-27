@@ -66,33 +66,33 @@ func (j *JIRA) getAssignedIssues() ([]jira.Issue, error) {
 	return j.search("resolution = null AND assignee=currentUser() ORDER BY Rank")
 }
 
-func (j *JIRA) SearchIssueJQL(jql string, forceBrowser bool) error {
+func (j *JIRA) SearchIssueJQL(jql string, useBee bool) error {
 	is, err := j.search(jql)
 	if err != nil {
 		return err
 	}
-	return j.pickAndOpenIssue(is, forceBrowser)
+	return j.pickAndOpenIssue(is, useBee)
 }
 
-func (j *JIRA) SearchIssueText(text, project string, resolved, forceBrowser bool) error {
+func (j *JIRA) SearchIssueText(text, project string, resolved, useBee bool) error {
 	is, err := j.SearchText(text, project, resolved)
 	if err != nil {
 		return err
 	}
-	return j.pickAndOpenIssue(is, forceBrowser)
+	return j.pickAndOpenIssue(is, useBee)
 }
 
-func (j *JIRA) pickAndOpenIssue(is []jira.Issue, forceBrowser bool) error {
+func (j *JIRA) pickAndOpenIssue(is []jira.Issue, useBee bool) error {
 	i, err := j.pickIssue(is)
 	if err != nil {
 		return err
 	}
-	return j.openIssue(i, forceBrowser)
+	return j.openIssue(i, useBee)
 }
 
-func (j *JIRA) OpenRecentlyAccessedIssues(forceBrowser bool) error {
+func (j *JIRA) OpenRecentlyAccessedIssues(useBee bool) error {
 	jql := "assignee was currentUser() or reporter was currentUser() or issuekey in issueHistory() order by updatedDate"
-	return j.SearchIssueJQL(jql, forceBrowser)
+	return j.SearchIssueJQL(jql, useBee)
 }
 
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
@@ -332,16 +332,16 @@ func (j *JIRA) getActiveSprint() (jira.Sprint, error) {
 	return empty, errors.New("no active sprint found")
 }
 
-func (j *JIRA) openIssue(issue *jira.Issue, forceBrowser bool) error {
-	return j.OpenIssueFromKey(issue.Key, forceBrowser)
+func (j *JIRA) openIssue(issue *jira.Issue, useBee bool) error {
+	return j.OpenIssueFromKey(issue.Key, useBee)
 }
 
-func (j *JIRA) OpenIssueFromKey(key string, forceBrowser bool) error {
+func (j *JIRA) OpenIssueFromKey(key string, useBee bool) error {
 	beeInstalled, err := utils.PathExists("/Applications/Bee.app")
 	if err != nil {
 		return nil
 	}
-	if !forceBrowser && beeInstalled {
+	if useBee && beeInstalled {
 		utils.OpenURI("bee://item?id=" + key)
 		return nil
 	}

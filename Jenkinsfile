@@ -1,7 +1,7 @@
 library 'bench-pipeline'
 
 common {
-  commonNode.withWorkspace {
+  node('macos') {
     checkoutRepository()
     def env = [
       "GOPATH=${env.WORKSPACE}",

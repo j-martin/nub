@@ -31,7 +31,7 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 		},
 		{
 			Name:    "checkout-branch",
-			Aliases: []string{"ch", "br"},
+			Aliases: []string{"b"},
 			Usage:   "Checkout an existing branch.",
 			Action: func(c *cli.Context) error {
 				return core.InitGit().CheckoutBranch()
