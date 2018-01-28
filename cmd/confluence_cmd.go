@@ -11,6 +11,7 @@ import (
 
 func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
 	noOperation := "noop"
+	cql := "cql"
 	return []cli.Command{
 		{
 			Name:    "open",
@@ -22,16 +23,16 @@ func buildConfluenceCmds(cfg *core.Configuration) []cli.Command {
 		},
 		{
 			Name:    "search",
-			Usage:   "CQL",
+			Usage:   "Text search.",
 			Aliases: []string{"s"},
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: noOperation, Usage: "No Op."},
+				cli.BoolFlag{Name: cql, Usage: "Query as CQL"},
 			},
 			Action: func(c *cli.Context) error {
 				if len(c.Args()) == 0 {
 					return errors.New("not enough args")
 				}
-				return atlassian.MustInitConfluence(cfg).SearchAndOpen(c.Args()...)
+				return atlassian.MustInitConfluence(cfg).SearchAndOpen(c.Bool(cql), c.Args()...)
 			},
 		},
 		{

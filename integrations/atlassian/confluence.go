@@ -414,8 +414,11 @@ func (c *Confluence) SearchAndReplace(cql, old, new string, noop bool) error {
 	return nil
 }
 
-func (c *Confluence) SearchAndOpen(cql ...string) error {
+func (c *Confluence) SearchAndOpen(isCQL bool, cql ...string) error {
 	query := strings.Join(cql, " ")
+	if !isCQL {
+		query = fmt.Sprintf("text ~ '%v'", query)
+	}
 	page, err := c.pickPage(c.Search(query))
 	if err != nil {
 		return err
