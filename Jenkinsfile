@@ -4,8 +4,7 @@ common {
   node('macos') {
     checkoutRepository()
     def env = [
-      "GOPATH=${env.WORKSPACE}",
-      "PATH=${env.PATH}:/usr/local/go/bin:/${env.HOME}/.go/bin"
+      "GOPATH=${pwd()}"
     ]
     withCredentials([string(credentialsId: 'bub-bucket', variable: 'S3_BUCKET')]) {
       withEnv(env) {
