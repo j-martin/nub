@@ -26,6 +26,7 @@ deps: $(DEP)
 	$(DEP) ensure --vendor-only
 
 test:
+	echo $(S3_BUCKET)
 	go test ./...
 
 clean:
@@ -36,7 +37,7 @@ release: all
 	git tag $(version)
 	find bin -type f -exec gzip --keep {} \;
 	find bin -type f -name *.gz \
-		| sed -e "p;s#bin/bub#s3://s3bucket/contrib/$(version)#" \
+		| sed -e "p;s#bin/bub#s3://$(S3_BUCKET)/contrib/$(version)#" \
 		| xargs -n2 aws s3 cp
 	find bin -type f -name *.gz -exec shasum -a 256 {} \;
 
