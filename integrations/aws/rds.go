@@ -160,20 +160,8 @@ func (r *RDS) getEngineConfiguration(engine string) EngineConfiguration {
 	return EngineConfiguration{5432, "pgcli", "psql"}
 }
 
-// Escape codes for iTerm2
-func (r *RDS) setBackground(endpoint string) {
-	if strings.HasPrefix(endpoint, "pro") {
-		// red for production
-		print("\033]Ph501010\033\\")
-	} else {
-		// yellow for staging
-		print("\033]Ph403010\033\\")
-	}
-}
-
 func (r *RDS) rdsCleanup(tunnel ssh.Connection) error {
-	// green for safe
-	print("\033]Ph103010\033\\")
+	utils.ResetIterm()
 	return tunnel.Close()
 }
 
@@ -280,7 +268,7 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) erro
 	}
 
 	log.Printf("Running: %s %s", command, strings.Join(args, " "))
-	r.setBackground(endpoint)
+	go utils.ConfigureTerminal(strings.Split(endpoint, ".")[0])
 	cmd := exec.Command(command, args...)
 	cmd.Env = env
 	cmd.Stdout = os.Stdout

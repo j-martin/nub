@@ -113,6 +113,7 @@ func connect(i *ec2.Instance, params ConnectionParams) error {
 		scpJumpHostArgs = []string{"-o", fmt.Sprintf("ProxyCommand ssh %v nc %%h %%p", jumpHost)}
 	}
 
+	go utils.ConfigureTerminal(*i.Architecture)
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + hostname
 		if isSCP(params) {
@@ -125,6 +126,7 @@ func connect(i *ec2.Instance, params ConnectionParams) error {
 			break
 		}
 	}
+	utils.ResetIterm()
 	return nil
 }
 
@@ -196,7 +198,7 @@ func prepareSSHArgs(params ConnectionParams) []string {
 		case "tmux":
 			arg := ""
 			usr, _ := user.Current()
-			if os.Getenv("TERM_PROGRAM") == "iTerm.app" && os.Getenv("TMUX") == "" {
+			if utils.IsIterm() && os.Getenv("TMUX") == "" {
 				arg = "-CC"
 			}
 
@@ -253,6 +255,11 @@ func ConnectToInstance(params ConnectionParams) error {
 	}
 	close(channel)
 
+	for i := range instances {
+		name := getInstanceName(instances[i])
+		instances[i].Architecture = &name
+	}
+
 	if len(instances) == 0 {
 		log.Fatal("No instances found.")
 	} else if len(instances) == 1 {
@@ -301,11 +308,6 @@ func pickEC2Instance(instances []*ec2.Instance) (*ec2.Instance, error) {
 		input = strings.Replace(strings.ToLower(input), " ", "", -1)
 
 		return strings.Contains(name, input)
-	}
-
-	for i := range instances {
-		name := getInstanceName(instances[i])
-		instances[i].Architecture = &name
 	}
 
 	prompt := promptui.Select{

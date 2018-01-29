@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
 	"log"
@@ -75,4 +76,46 @@ func AskForConfirmation(s string) bool {
 			return false
 		}
 	}
+}
+
+func IsIterm() bool {
+	return strings.HasPrefix(os.Getenv("TERM_PROGRAM"), "iTerm")
+}
+
+func SetBadge(name string) {
+	if !IsIterm() {
+		return
+	}
+	encoded := base64.StdEncoding.EncodeToString([]byte(name))
+	// TODO: Find the proper escape code for setting badge title and use `print` instead.
+	// https://www.iterm2.com/documentation-badges.html
+	cmd := fmt.Sprintf(`printf "\e]1337;SetBadgeFormat=%v\a"`, encoded)
+	command := exec.Command("sh", "-c", cmd)
+	command.Stdout = os.Stdout
+	command.Run()
+}
+
+func ConfigureTerminal(hostname string) {
+	if !IsIterm() {
+		return
+	}
+	// Set escape codes for iTerm2
+	// https://www.iterm2.com/documentation-escape-codes.html
+	SetBadge(hostname)
+	if strings.HasPrefix(hostname, "pro") {
+		// red for production
+		print("\033]Ph501010\033\\")
+	} else {
+		// yellow for staging
+		print("\033]Ph403010\033\\")
+	}
+}
+func ResetIterm() {
+	if !IsIterm() {
+		return
+	}
+	hostname, _ := os.Hostname()
+	SetBadge(hostname)
+	// green for safe
+	print("\033]Ph103010\033\\")
 }
