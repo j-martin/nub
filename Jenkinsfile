@@ -4,7 +4,8 @@ common {
   node('macos') {
     checkoutRepository()
     def env = [
-      "GOPATH=${pwd()}"
+      "PATH=/usr/local/bin/:${env.PATH}",
+      "GOPATH=/private${pwd()}"
     ]
     withCredentials([string(credentialsId: 'bub-bucket', variable: 'S3_BUCKET')]) {
       withEnv(env) {
@@ -15,6 +16,7 @@ common {
           sh "find . -mindepth 1 -maxdepth 1 -not -name src -not -name pkg -not -name '.git' -exec cp -r '{}' '${workDir}' \\;"
           dir(workDir) {
             sh 'make release'
+            stash includes: 'bin/*', name: 'binaries'
           }
         }
       }
