@@ -99,7 +99,7 @@ func (wf *Workflow) CreatePR(title, body string, review bool) error {
 	if err != nil {
 		return err
 	}
-	if review {
+	if review || utils.AskForConfirmation("Transition issue?") {
 		return wf.JIRA().TransitionIssue("", "review")
 	}
 	return nil
