@@ -51,6 +51,7 @@ type Configuration struct {
 	JIRA  struct {
 		Server, Username, Password string
 		Project, Board             string
+		Transitions                []JIRATransition
 	}
 	Jenkins ServiceConfiguration
 	Splunk  struct {
@@ -71,6 +72,10 @@ type Configuration struct {
 	}
 	ResetCredentials    bool
 	SharedConfiguration string `yaml:"sharedConfiguration"`
+}
+
+type JIRATransition struct {
+	Name, Alias string
 }
 
 type ServiceConfiguration struct {

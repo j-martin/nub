@@ -217,15 +217,20 @@ func (j *JIRA) sanitizeTransitionName(tr string) string {
 
 func (j *JIRA) matchTransition(key, transitionName string) (jira.Transition, error) {
 	trs, _, err := j.client.Issue.GetTransitions(key)
+	transitionName = j.sanitizeTransitionName(transitionName)
 	if err != nil {
 		return jira.Transition{}, err
 	}
+	for _, tr := range j.cfg.JIRA.Transitions {
+		if j.sanitizeTransitionName(tr.Alias) == transitionName {
+			transitionName = tr.Name
+		}
+	}
 	for _, tr := range trs {
-		if j.sanitizeTransitionName(tr.Name) == j.sanitizeTransitionName(transitionName) {
+		if j.sanitizeTransitionName(tr.Name) == transitionName {
 			return tr, nil
 		}
 	}
-
 	return j.pickTransition(trs)
 }
 
