@@ -12,39 +12,43 @@ import (
 const jiraBeeDesc = "Open with Bee, if present."
 
 func buildJIRACmds(cfg *core.Configuration) []cli.Command {
-	reactive := "reactive"
-	project := "project"
-	transition := "transition"
-
 	return []cli.Command{
 		buildJIRAOpenBoardCmd(cfg),
 		buildJIRASearchIssueCmd(cfg),
 		buildJIRAOpenRecentlyAccessedIssuesCmd(cfg),
 		buildJIRAClaimIssueCmd(cfg),
-		{
-			Name:      "create",
-			Aliases:   []string{"c"},
-			Usage:     "Creates a JIRA issue.",
-			ArgsUsage: "SUMMARY DESCRIPTION ... [ARGS]",
-			Flags: []cli.Flag{
-				cli.BoolFlag{Name: reactive, Usage: "The issue will be added to the current sprint."},
-				cli.StringFlag{Name: project, Usage: "Sets project, uses the default project is not set."},
-				cli.StringFlag{Name: transition, Usage: "Set the issue transition. e.g. Done."},
-			},
-			Action: func(c *cli.Context) error {
-				if len(c.Args()) < 2 {
-					log.Fatal("The summary (title) and description must be passed.")
-				}
-				summary := c.Args().Get(0)
-				desc := c.Args().Get(1)
-				return atlassian.MustInitJIRA(cfg).CreateIssue(c.String(project), summary, desc, c.String(transition), c.Bool(reactive))
-			},
-		},
+		buildJIRACreateIssueCmd(cfg),
 		buildJIRAOpenIssueCmd(cfg),
 		buildJIRAViewIssueCmd(cfg),
 		buildJIRACommentOnIssuesCmd(cfg),
 		buildJIRAListAssignedIssuesCmd(cfg),
 		buildJIRATransitionIssueCmd(cfg),
+	}
+}
+
+func buildJIRACreateIssueCmd(cfg *core.Configuration) cli.Command {
+	reactive := "reactive"
+	project := "project"
+	transition := "transition"
+
+	return cli.Command{
+		Name:      "create",
+		Aliases:   []string{"c"},
+		Usage:     "Creates a JIRA issue.",
+		ArgsUsage: "SUMMARY DESCRIPTION ... [ARGS]",
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: reactive, Usage: "The issue will be added to the current sprint."},
+			cli.StringFlag{Name: project, Usage: "Sets project, uses the default project is not set."},
+			cli.StringFlag{Name: transition, Usage: "Set the issue transition. e.g. Done."},
+		},
+		Action: func(c *cli.Context) error {
+			if len(c.Args()) < 2 {
+				log.Fatal("The summary (title) and description must be passed.")
+			}
+			summary := c.Args().Get(0)
+			desc := c.Args().Get(1)
+			return atlassian.MustInitJIRA(cfg).CreateIssue(c.String(project), summary, desc, c.String(transition), c.Bool(reactive))
+		},
 	}
 }
 

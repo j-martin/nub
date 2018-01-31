@@ -308,6 +308,10 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 		j.client.Sprint.MoveIssuesToSprint(sp.ID, []string{i.Key})
 		log.Printf("%v moved to the active sprint.", i.Key)
 		if utils.InRepository() && utils.AskForConfirmation("Checkout branch?") {
+			i, _, err = j.client.Issue.Get(i.Key, &jira.GetQueryOptions{})
+			if err != nil {
+				return err
+			}
 			return j.CreateBranchFromIssue(i, "")
 		}
 	}
