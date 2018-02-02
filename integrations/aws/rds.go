@@ -89,12 +89,18 @@ func (r *RDS) ConnectToRDSInstance(filter string, args []string) error {
 
 func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, error) {
 	type rdsInstance struct {
-		Name, Address, Engine string
+		Name, Address, Engine, Class string
 	}
 	var rdsInstances []rdsInstance
 	for _, instance := range instances {
 		name := strings.Split(*instance.Endpoint.Address, ".")[0]
-		rdsInstances = append(rdsInstances, rdsInstance{Name: name, Address: *instance.Endpoint.Address, Engine: *instance.Engine})
+		i := rdsInstance{
+			Name:    name,
+			Address: *instance.Endpoint.Address,
+			Engine:  *instance.Engine,
+			Class:   *instance.DBInstanceClass,
+		}
+		rdsInstances = append(rdsInstances, i)
 	}
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}:",
@@ -106,6 +112,7 @@ func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, err
 {{ "Name:" | faint }}	{{ .Name }}
 {{ "Address:" | faint }}	{{ .Address }}
 {{ "Engine:" | faint }}	{{ .Engine }}
+{{ "Class:" | faint }}	{{ .Class }}
 `,
 	}
 
