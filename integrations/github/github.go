@@ -7,9 +7,11 @@ import (
 	"github.com/benchlabs/bub/utils"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -73,6 +75,23 @@ func (gh *GitHub) CreatePR(title, body, repoDir string) error {
 		body = g.LogNotInMasterBody()
 	}
 
+	root, err := g.GetRepositoryRootPath()
+	if err != nil {
+		return err
+	}
+	prTemplateFile := path.Join(root, ".github", "PULL_REQUEST_TEMPLATE.md")
+	exists, err := utils.PathExists(prTemplateFile)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		content, err := ioutil.ReadFile(prTemplateFile)
+		if err != nil {
+			return err
+		}
+		body = body + "\n\n" + string(content)
+	}
 	ctx := context.Background()
 	org := gh.cfg.GitHub.Organization
 	repo := g.GetCurrentRepositoryName()
