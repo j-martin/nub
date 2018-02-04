@@ -311,11 +311,12 @@ func pickEC2Instance(instances []*ec2.Instance) (*ec2.Instance, error) {
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Select an EC2 Instance",
-		Items:     instances,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Select an EC2 Instance",
+		Items:             instances,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 
 	i, _, err := prompt.Run()

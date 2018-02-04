@@ -132,11 +132,12 @@ func PickItem(label string, items []string) (string, error) {
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     label,
-		Items:     items,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             label,
+		Items:             items,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 
 	i, _, err := prompt.Run()

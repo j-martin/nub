@@ -244,11 +244,12 @@ func (g *Git) PickCommit(commits []*GitCommit) (*GitCommit, error) {
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Pick commit",
-		Items:     commits,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Pick commit",
+		Items:             commits,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 	i, _, err := prompt.Run()
 	return commits[i], err

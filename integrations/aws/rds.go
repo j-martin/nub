@@ -125,11 +125,12 @@ func (r *RDS) pickRDSInstance(instances []*rds.DBInstance) (*rds.DBInstance, err
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Select a RDS Instance",
-		Items:     rdsInstances,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Select a RDS Instance",
+		Items:             rdsInstances,
+		Templates:         templates,
+		StartInSearchMode: true,
+		Searcher:          searcher,
 	}
 	i, _, err := prompt.Run()
 	return instances[i], err

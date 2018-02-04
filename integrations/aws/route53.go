@@ -90,11 +90,12 @@ func ListAllRecords(filter string) error {
 		return err
 	}
 	prompt := promptui.Select{
-		Size:      int(y) - 30,
-		Label:     "Pick a record",
-		Items:     records,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              int(y) - 30,
+		Label:             "Pick a record",
+		Items:             records,
+		Templates:         templates,
+		StartInSearchMode: true,
+		Searcher:          searcher,
 	}
 
 	i, _, err := prompt.Run()

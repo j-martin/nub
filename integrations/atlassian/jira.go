@@ -470,11 +470,12 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Pick an issue",
-		Items:     issues,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Pick an issue",
+		Items:             issues,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 	i, _, err := prompt.Run()
 	return &issues[i], err
@@ -504,11 +505,12 @@ func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, e
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Pick an transition",
-		Items:     transitions,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Pick an transition",
+		Items:             transitions,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 	i, _, err := prompt.Run()
 	return transitions[i], err

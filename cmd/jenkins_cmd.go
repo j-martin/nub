@@ -11,7 +11,7 @@ func buildJenkinsCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Co
 		{
 			Name:    "master",
 			Aliases: []string{"m"},
-			Usage:   "Opens the master build..",
+			Usage:   "Opens the (web) master build.",
 			Action: func(c *cli.Context) error {
 				return ci.MustInitJenkins(cfg, manifest).OpenPage()
 			},

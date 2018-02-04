@@ -450,11 +450,12 @@ func (c *Confluence) pickPage(results []SearchResult) (SearchResult, error) {
 	}
 
 	prompt := promptui.Select{
-		Size:      20,
-		Label:     "Pick an page",
-		Items:     results,
-		Templates: templates,
-		Searcher:  searcher,
+		Size:              20,
+		Label:             "Pick an page",
+		Items:             results,
+		Templates:         templates,
+		Searcher:          searcher,
+		StartInSearchMode: true,
 	}
 	i, _, err := prompt.Run()
 	return results[i], err

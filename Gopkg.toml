@@ -56,7 +56,7 @@
 
 [[constraint]]
   name = "github.com/manifoldco/promptui"
-  version = "0.2.0"
+  revision = "8debffa8c66b4342872ef0465eee2aa01481849d"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
