@@ -101,13 +101,16 @@ aws:
 	environments:
 		- prefix: staging2
 			jumphost: jump.staging2.example.com
+			domain: staging2.internal.example.com
 			region: us-west-2
 		- prefix: staging
 			jumphost: jump.example.com
 			region: us-west-2
+			domain: staging.internal.example.com
 		# if there is no prefix the last entry act as a catch all.
 		- jumphost: jump.example.com
 			region: us-east-1
+			domain: production.internal.example.com
 
 github:
 	organization: benchlabs
