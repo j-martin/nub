@@ -18,8 +18,9 @@ linux:
 	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)"
 
 $(DEP):
-	curl --silent "https://s3.amazonaws.com/s3bucket/libs/golang/dep-$(PLATFORM)-amd64-$(DEP_VERSION).gz" \
-		| gzip -d > "$(DEP)"
+	curl --fail --silent --location \
+		"https://github.com/golang/dep/releases/download/v$(DEP_VERSION)/dep-$(PLATFORM)-amd64" \
+		--output "$(DEP)"
 	chmod +x "$(DEP)"
 
 deps: $(DEP)
