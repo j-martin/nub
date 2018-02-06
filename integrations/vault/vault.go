@@ -25,7 +25,7 @@ func GetVaultTunnelConfiguration(env *core.Environment) ssh.Tunnel {
 	return ssh.Tunnel{RemoteHost: "vault." + env.Domain, LocalPort: ssh.GetPort(), RemotePort: 8200}
 }
 
-func MustInitVault(cfg *core.Configuration, s ssh.Connection) *Vault {
+func MustInitVault(cfg *core.Configuration, s *ssh.Connection) *Vault {
 	mustLoadVaultCredentials(cfg)
 	tunnel := s.Tunnels["vault"]
 	v := &Vault{cfg: cfg, tokenName: "token." + tunnel.RemoteHost}
@@ -76,7 +76,7 @@ func (v *Vault) loadToken() error {
 		return err
 	}
 	if !exists {
-		return v.setTokenFromAuth()
+		return v.Auth()
 	}
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -86,7 +86,7 @@ func (v *Vault) loadToken() error {
 	return nil
 }
 
-func (v *Vault) setTokenFromAuth() error {
+func (v *Vault) Auth() error {
 	urlPath := strings.ToLower(fmt.Sprintf("auth/%s/login/%s", v.cfg.Vault.AuthMethod, v.cfg.Vault.Username))
 	data := map[string]interface{}{
 		"password": v.cfg.Vault.Password,
@@ -115,12 +115,9 @@ func (v *Vault) setTokenFromAuth() error {
 func (v *Vault) read(path string, retries int) (*api.Secret, error) {
 	secret, err := v.client.Logical().Read(path)
 	if err != nil && retries >= 0 {
-		_, err := v.client.Auth().Token().LookupSelf()
-		if err != nil && strings.Contains(err.Error(), "Code: 403.") {
-			log.Print("Trying to renew token...")
-			v.setTokenFromAuth()
-		} else if err != nil {
-			return secret, err
+		err = v.maybeReAuth()
+		if err != nil {
+			return nil, err
 		}
 		return v.read(path, retries-1)
 	}
@@ -128,5 +125,31 @@ func (v *Vault) read(path string, retries int) (*api.Secret, error) {
 }
 
 func (v *Vault) Read(path string) (*api.Secret, error) {
+	log.Printf("%v from %v", path, v.client.Address())
 	return v.read(path, 2)
+}
+
+func (v *Vault) maybeReAuth() error {
+	_, err := v.client.Auth().Token().LookupSelf()
+	if err != nil && strings.Contains(err.Error(), "Code: 403.") {
+		log.Print("Trying to renew token...")
+		return v.Auth()
+	}
+	return err
+}
+
+func (v *Vault) write(path string, data map[string]interface{}, retries int) (*api.Secret, error) {
+	secret, err := v.client.Logical().Write(path, data)
+	if err != nil && retries >= 0 {
+		err = v.maybeReAuth()
+		if err != nil {
+			return nil, err
+		}
+		return v.read(path, retries-1)
+	}
+	return secret, err
+}
+
+func (v *Vault) Write(path string, data map[string]interface{}) (*api.Secret, error) {
+	return v.write(path, data, 2)
 }

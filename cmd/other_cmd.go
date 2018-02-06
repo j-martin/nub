@@ -12,7 +12,6 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
-	"strings"
 )
 
 func buildSetupCmd() cli.Command {
@@ -38,54 +37,6 @@ func buildSetupCmd() cli.Command {
 			return nil
 		},
 	}
-}
-
-func buildConfigCmd(cfg *core.Configuration) cli.Command {
-	showDefaults := "show-default"
-	shared := "shared"
-	syncSharedConfig := "sync-shared-config"
-	preview := "preview"
-	return cli.Command{
-		Name:  "config",
-		Usage: "Edit your bub config.",
-		Flags: []cli.Flag{
-			cli.BoolFlag{Name: showDefaults, Usage: "Show default config for reference"},
-			cli.BoolFlag{Name: shared, Usage: "Edit shared config."},
-			cli.BoolFlag{Name: syncSharedConfig, Usage: "Sync shared config to your config."},
-			cli.BoolFlag{Name: preview, Usage: "Show/preview the final config."},
-		},
-		Action: func(c *cli.Context) error {
-			if c.Bool(showDefaults) {
-				print(core.GetConfigString())
-				return nil
-			}
-			if c.Bool(shared) {
-				return core.EditConfiguration(core.ConfigSharedFile)
-			}
-			if c.Bool(syncSharedConfig) {
-				return core.SyncSharedConfig(cfg)
-			}
-			if c.Bool(preview) {
-				return core.ShowConfig(cfg)
-			}
-			log.Printf("Use 'bub config --shared' to edit the shared config.")
-			return core.EditConfiguration(core.ConfigUserFile)
-		},
-	}
-}
-
-func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
-	region := c.String("region")
-	if region == "" {
-		prefix := strings.Split(environment, "-")[0]
-		for _, i := range cfg.AWS.Environments {
-			if i.Prefix == prefix {
-				return i.Region
-			}
-		}
-		return cfg.AWS.Regions[0]
-	}
-	return region
 }
 
 func buildCircleCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Command {

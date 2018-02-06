@@ -6,8 +6,23 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
+
+func getRegion(environment string, cfg *core.Configuration, c *cli.Context) string {
+	region := c.String("region")
+	if region == "" {
+		prefix := strings.Split(environment, "-")[0]
+		for _, i := range cfg.AWS.Environments {
+			if i.Prefix == prefix {
+				return i.Region
+			}
+		}
+		return cfg.AWS.Regions[0]
+	}
+	return region
+}
 
 func buildEBCmd(cfg *core.Configuration, manifest *core.Manifest) cli.Command {
 	return cli.Command{

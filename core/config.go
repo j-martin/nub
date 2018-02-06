@@ -65,13 +65,12 @@ type Configuration struct {
 		Region, Bucket, Prefix string
 	}
 	Vault struct {
-		AuthMethod, Server, Username, Password string
+		AuthMethod, Server, Username, Password, Path string
 	}
 	Ssh struct {
 		ConnectTimeout uint `yaml:"connectTimeout"`
 	}
-	ResetCredentials    bool
-	SharedConfiguration string `yaml:"sharedConfiguration"`
+	ResetCredentials bool
 }
 
 type JIRATransition struct {
@@ -120,6 +119,10 @@ github:
 jenkins:
 	server: "https://jenkins.example..com"
 
+vault:
+	server: "https://vault.example..com"
+	path: "/secret/tool/bub"
+
 confluence:
 	server: "https://example.atlassian.net/wiki"
 
@@ -141,8 +144,6 @@ updates:
 
 ssh:
 	connectTimeout: 3
-
-sharedConfiguration: /keybase/team/yourteam/bub/shared.yml
 `
 
 func GetConfigString() string {
@@ -204,21 +205,20 @@ func loadConfiguration(configFile string) (*Configuration, error) {
 }
 
 func EditConfiguration(configFile string) error {
+	return utils.CreateAndEdit(GetConfigPath(configFile), GetConfigString())
+}
+
+func GetConfigPath(configFile string) string {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
-	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
-	return utils.CreateAndEdit(configPath, GetConfigString())
+	return path.Join(usr.HomeDir, ".config", "bub", configFile)
 }
 
 func MustSetupConfig() {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
 	utils.Prompt("Setting up the base config. Just save and exit. Continue?")
-	err = utils.CreateAndEdit(path.Join(usr.HomeDir, ".config", "bub", ConfigUserFile), GetConfigString())
+	err := utils.CreateAndEdit(GetConfigPath(ConfigUserFile), GetConfigString())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -227,29 +227,6 @@ func MustSetupConfig() {
 func ShowConfig(cfg *Configuration) error {
 	yml, _ := yaml.Marshal(cfg)
 	fmt.Println(string(yml))
-	return nil
-}
-
-func SyncSharedConfig(cfg *Configuration) error {
-	configPath, err := getConfigPath("shared.yml")
-	if err != nil {
-		return err
-	}
-	exists, err := utils.PathExists(configPath)
-	if err != nil {
-		return err
-	}
-	if exists {
-		err = os.Remove(configPath)
-		if err != nil {
-			return err
-		}
-	}
-	err = utils.Copy(cfg.SharedConfiguration, configPath)
-	if err != nil {
-		return err
-	}
-	log.Printf("Copied '%v' to '%v'.", cfg.SharedConfiguration, configPath)
 	return nil
 }
 

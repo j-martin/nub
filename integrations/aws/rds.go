@@ -173,31 +173,27 @@ func (r *RDS) rdsCleanup(tunnel ssh.Connection) error {
 	return tunnel.Close()
 }
 
-func (r *RDS) fetchConfigFromVault(endpoint string, rdsConfig *core.RDSConfiguration, t ssh.Connection) error {
+func (r *RDS) fetchConfigFromVault(endpoint string, rdsConfig *core.RDSConfiguration, t *ssh.Connection) error {
 	log.Print("Fetching credentials from Vault...")
-	application := extractApplicationName(endpoint)
-	secretPath := path.Join("secret", "service", application, "db")
+	application := strings.Split(endpoint, ".")[0]
+	secretPath := path.Join(r.cfg.Vault.Path, "db", application)
 	secret, err := vault.MustInitVault(r.cfg, t).Read(secretPath)
 	if err != nil {
 		return err
 	}
-	rdsConfig.User = secret.Data["username"].(string)
-	rdsConfig.Password = secret.Data["password"].(string)
-	rdsConfig.Database = secret.Data["database"].(string)
+	if data, ok := secret.Data["username"]; ok {
+		rdsConfig.User = data.(string)
+	}
+	if data, ok := secret.Data["password"]; ok {
+		rdsConfig.Password = data.(string)
+	}
+	if data, ok := secret.Data["database"]; ok {
+		rdsConfig.Database = data.(string)
+	}
 	if rdsConfig.Database == "" || rdsConfig.User == "" || rdsConfig.Password == "" {
 		return errors.New("the rds configuration is empty ")
 	}
 	return nil
-}
-
-// E.g. `dev-platter.safafjlk... will be `platter
-func extractApplicationName(endpoint string) string {
-	application := endpoint
-	segments := strings.Split(application, "-")
-	if len(segments) > 1 {
-		application = strings.Split(segments[1], ".")[0]
-	}
-	return application
 }
 
 func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) error {
@@ -220,7 +216,7 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) erro
 		return err
 	}
 	if rdsConfig.Database == "" {
-		err = r.fetchConfigFromVault(endpoint, &rdsConfig, tunnel)
+		err = r.fetchConfigFromVault(endpoint, &rdsConfig, &tunnel)
 		if err != nil {
 			return err
 		}
