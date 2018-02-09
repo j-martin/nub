@@ -96,6 +96,9 @@ func storeSharedConfig(cfg *core.Configuration) error {
 }
 
 func loadSharedConfig(cfg *core.Configuration) error {
+	if cfg.Vault.Path == "" {
+		return errors.New("the path configuration for vault is missing")
+	}
 	tunnel, err := prepareTunnel(cfg, "dev")
 	if err != nil {
 		return err
@@ -103,6 +106,9 @@ func loadSharedConfig(cfg *core.Configuration) error {
 	secret, err := vault.MustInitVault(cfg, tunnel).Read(cfg.Vault.Path)
 	if err != nil {
 		return err
+	}
+	if secret == nil {
+		return errors.New("no secret found")
 	}
 	if data, ok := secret.Data["shared"]; ok {
 		configPath := core.GetConfigPath(core.ConfigSharedFile)
