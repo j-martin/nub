@@ -58,8 +58,14 @@ func MustSetupGitHub(cfg *core.Configuration) {
 
 func (gh *GitHub) CreatePR(title, body, repoDir string) error {
 	g := core.MustInitGit(repoDir)
-	g.MustPush(gh.cfg)
-	g.Fetch()
+	err := g.Push(gh.cfg)
+	if err != nil {
+		return err
+	}
+	err = g.Fetch()
+	if err != nil {
+		return err
+	}
 	branch := g.GetCurrentBranch()
 	base := "master"
 	if title == "" {

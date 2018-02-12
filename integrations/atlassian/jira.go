@@ -317,7 +317,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 			if err != nil {
 				return err
 			}
-			return j.CreateBranchFromIssue(i, "")
+			return j.CreateBranchFromIssue(i, ".")
 		}
 	}
 	return nil

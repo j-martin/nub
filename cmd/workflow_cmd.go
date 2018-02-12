@@ -58,7 +58,10 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 			},
 			Action: func(c *cli.Context) error {
 				if c.Bool(compare) {
-					core.MustInitGit(".").MustPush(cfg)
+					err := core.MustInitGit("").Push(cfg)
+					if err != nil {
+						return err
+					}
 					return github.MustInitGitHub(cfg).OpenCompareBranchPage(manifest)
 				}
 				var title, body string

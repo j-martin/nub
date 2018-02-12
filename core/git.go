@@ -31,8 +31,8 @@ func InitGit() *Git {
 }
 
 func MustInitGit(repoDir string) *Git {
-	if repoDir != "" {
-		log.Printf("Initiating: %v", repoDir)
+	if repoDir == "" {
+		repoDir = "."
 	}
 	return &Git{dir: repoDir}
 }
@@ -43,13 +43,6 @@ func (g *Git) RunGit(args ...string) error {
 	}
 	log.Printf("Running: 'git %v'", strings.Join(args, " "))
 	return utils.RunCmd("git", args...)
-}
-
-func (g *Git) MustRunGit(args ...string) {
-	err := g.RunGit(args...)
-	if err != nil {
-		log.Fatalf("Git failed: %v", err)
-	}
 }
 
 func (g *Git) RunGitWithStdout(args ...string) (string, error) {
@@ -101,12 +94,12 @@ func (g *Git) Clone() error {
 	return utils.RunCmd("git", "clone", "git@github.com:benchlabs/"+g.dir+".git")
 }
 
-func (g *Git) MustPush(cfg *Configuration) {
+func (g *Git) Push(cfg *Configuration) error {
 	args := []string{"push", "--set-upstream", "origin", g.GetCurrentBranch()}
 	if cfg.Git.NoVerify {
 		args = append(args, "--no-verify")
 	}
-	g.MustRunGit(args...)
+	return g.RunGit(args...)
 }
 
 func (g *Git) Sync(unStash bool) error {
@@ -255,12 +248,12 @@ func (g *Git) PickCommit(commits []*GitCommit) (*GitCommit, error) {
 	return commits[i], err
 }
 
-func (g *Git) FetchTags() {
-	g.MustRunGit("fetch", "--tags")
+func (g *Git) FetchTags() error {
+	return g.RunGit("fetch", "--tags")
 }
 
-func (g *Git) Fetch() {
-	g.MustRunGit("fetch")
+func (g *Git) Fetch() error {
+	return g.RunGit("fetch")
 }
 
 func (g *Git) sanitizeBranchName(name string) string {
@@ -285,8 +278,8 @@ func (g *Git) GetIssueKeyFromBranch() string {
 	return g.extractIssueKeyFromName(g.GetCurrentBranch())
 }
 
-func (g *Git) CommitWithBranchName() {
-	g.MustRunGit("commit", "-m", g.GetTitleFromBranchName(), "--all")
+func (g *Git) CommitWithBranchName() error {
+	return g.RunGit("commit", "-m", g.GetTitleFromBranchName(), "--all")
 }
 
 func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) error {
@@ -313,8 +306,7 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 		args = append(args, "--no-verify")
 	}
 	args = append(args, extraArgs...)
-	g.MustRunGit(args...)
-	return nil
+	return g.RunGit(args...)
 }
 
 func (g *Git) extractIssueKeyFromName(name string) string {
@@ -336,8 +328,7 @@ func (g *Git) CheckoutBranch() error {
 	if err != nil {
 		return err
 	}
-	g.MustRunGit("checkout", item)
-	return nil
+	return g.RunGit("checkout", item)
 }
 
 func ForEachRepo(fn RepoOperation) error {

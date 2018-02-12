@@ -125,7 +125,10 @@ Continue?`
 			},
 			Action: func(c *cli.Context) error {
 				if !c.Bool(noFetch) {
-					core.InitGit().FetchTags()
+					err := core.InitGit().FetchTags()
+					if err != nil {
+						return err
+					}
 				}
 				previousVersion := "production"
 				if len(c.Args()) > 0 {
