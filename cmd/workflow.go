@@ -95,14 +95,13 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 }
 
 func (wf *Workflow) CreatePR(title, body string, review bool) error {
-	err := wf.GitHub().CreatePR(title, body, "")
-	if err != nil {
-		return err
-	}
 	if review || utils.AskForConfirmation("Transition issue?") {
-		return wf.JIRA().TransitionIssue("", "review")
+		err := wf.JIRA().TransitionIssue("", "review")
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return wf.GitHub().CreatePR(title, body, "")
 }
 
 func (wf *Workflow) Log() error {
