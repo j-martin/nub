@@ -168,19 +168,11 @@ func ConditionalOp(message string, noop bool, fn func() error) error {
 }
 
 func InRepository() bool {
-	result, err := PathExists(".git")
-	if err != nil {
-		return false
-	}
-	return result
+	return IsRepository(".")
 }
 
 func IsRepository(repoDir string) bool {
-	result, err := PathExists(repoDir, ".git")
-	if err != nil {
-		return false
-	}
-	return result
+	return exec.Command("git", "-C", repoDir, "status").Run() == nil
 }
 
 func OpenURI(uriSegments ...string) error {

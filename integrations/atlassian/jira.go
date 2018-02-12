@@ -257,7 +257,10 @@ func (j *JIRA) TransitionIssue(key, transitionName string) (err error) {
 }
 
 func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
-	key := core.InitGit().GetIssueKeyFromBranch()
+	var key string
+	if utils.InRepository() {
+		key = core.InitGit().GetIssueKeyFromBranch()
+	}
 	if key == "" {
 		log.Print("No issue key found in branch name. Fetching assigned issue(s).")
 		is, err := j.getAssignedIssues()
