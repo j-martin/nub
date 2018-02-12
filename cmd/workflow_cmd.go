@@ -6,7 +6,6 @@ import (
 	"github.com/benchlabs/bub/integrations/github"
 	"github.com/benchlabs/bub/utils"
 	"github.com/urfave/cli"
-	"log"
 	"os"
 )
 
@@ -42,11 +41,11 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 			Aliases: []string{"c"},
 			Usage:   "MESSAGE [OPTS]...",
 			Action: func(c *cli.Context) error {
-				if len(c.Args()) < 1 {
-					log.Fatal("Must pass commit message.")
+				message := ""
+				if len(c.Args()) > 0 {
+					message = c.Args().Get(0)
 				}
-				core.InitGit().CommitWithIssueKey(cfg, c.Args().Get(0), c.Args().Tail())
-				return nil
+				return core.InitGit().CommitWithIssueKey(cfg, message, c.Args().Tail())
 			},
 		},
 		{

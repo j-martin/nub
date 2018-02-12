@@ -289,9 +289,20 @@ func (g *Git) CommitWithBranchName() {
 	g.MustRunGit("commit", "-m", g.GetTitleFromBranchName(), "--all")
 }
 
-func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) {
+func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) error {
 	issueKey := g.GetIssueKeyFromBranch()
+	if message == "" {
+		title := g.GetTitleFromBranchName()
+		pos := strings.Index(title, " ")
+		if pos < 0 {
+			return errors.New("commit message could not be inferred from branch name")
+		}
+		message = title[pos:]
+	}
 	message = strings.Trim(message, " ")
+	if len(message) == 0 {
+		return errors.New("no commit message passed or could not be inferred from branch name")
+	}
 	if issueKey != "" {
 		message = issueKey + " " + message
 	}
@@ -303,7 +314,9 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 	}
 	args = append(args, extraArgs...)
 	g.MustRunGit(args...)
+	return nil
 }
+
 func (g *Git) extractIssueKeyFromName(name string) string {
 	return g.GetIssueRegex().FindString(name)
 }
