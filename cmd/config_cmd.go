@@ -92,7 +92,11 @@ func storeSharedConfig(cfg *core.Configuration) error {
 	payload["shared"] = string(data)
 
 	_, err = vault.MustInitVault(cfg, tunnel).Write(cfg.Vault.Path, payload)
-	return err
+	if err != nil {
+		return err
+	}
+	log.Println("The shared config has been updated.")
+	return nil
 }
 
 func loadSharedConfig(cfg *core.Configuration) error {

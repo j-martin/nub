@@ -125,7 +125,7 @@ func (v *Vault) read(path string, retries int) (*api.Secret, error) {
 }
 
 func (v *Vault) Read(path string) (*api.Secret, error) {
-	log.Printf("%v from %v", path, v.client.Address())
+	log.Printf("Reading from '%v' on '%v'", path, v.client.Address())
 	return v.read(path, 2)
 }
 
@@ -145,11 +145,12 @@ func (v *Vault) write(path string, data map[string]interface{}, retries int) (*a
 		if err != nil {
 			return nil, err
 		}
-		return v.read(path, retries-1)
+		return v.write(path, data, retries-1)
 	}
 	return secret, err
 }
 
 func (v *Vault) Write(path string, data map[string]interface{}) (*api.Secret, error) {
+	log.Printf("Writing to '%v' on '%v'", path, v.client.Address())
 	return v.write(path, data, 2)
 }
