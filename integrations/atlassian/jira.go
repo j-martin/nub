@@ -156,6 +156,10 @@ func (j *JIRA) claimIssue(i *jira.Issue) error {
 		return err
 	}
 	log.Printf("%v claimed.", key)
+	err = j.MoveIssueToCurrentSprint(i)
+	if err != nil {
+		return err
+	}
 	if utils.IsRepository(".") && utils.AskForConfirmation("Create the branch for this issue?") {
 		j.CreateBranchFromIssue(i, ".")
 	}
@@ -276,6 +280,19 @@ func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
 	return key, nil
 }
 
+func (j JIRA) MoveIssueToCurrentSprint(i *jira.Issue) error {
+	sp, err := j.getActiveSprint()
+	if err != nil {
+		return err
+	}
+	_, err = j.client.Sprint.MoveIssuesToSprint(sp.ID, []string{i.Key})
+	if err != nil {
+		return err
+	}
+	log.Printf("%v moved to the active sprint.", i.Key)
+	return nil
+}
+
 func (j JIRA) CreateIssue(project, summary, description, transition string, reactive bool) error {
 	if project == "" && j.cfg.JIRA.Project != "" {
 		project = j.cfg.JIRA.Project
@@ -309,12 +326,10 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 		}
 	}
 	if reactive {
-		sp, err := j.getActiveSprint()
+		err = j.MoveIssueToCurrentSprint(i)
 		if err != nil {
 			return err
 		}
-		j.client.Sprint.MoveIssuesToSprint(sp.ID, []string{i.Key})
-		log.Printf("%v moved to the active sprint.", i.Key)
 		if utils.InRepository() && utils.AskForConfirmation("Checkout branch?") {
 			i, _, err = j.client.Issue.Get(i.Key, &jira.GetQueryOptions{})
 			if err != nil {
