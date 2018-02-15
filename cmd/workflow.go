@@ -48,30 +48,37 @@ func (wf *Workflow) JIRA() *atlassian.JIRA {
 	return wf.jira
 }
 
-func (wf *Workflow) MassUpdate() error {
-	return core.ForEachRepo(func(repoDir string) error {
-		return core.MustInitGit(repoDir).Sync(true)
+func (wf *Workflow) MassUpdate(unstash bool) error {
+	return core.ForEachRepo(func(repoDir string) (string, error) {
+		return core.MustInitGit(repoDir).Sync(unstash)
 	})
 }
 
-func (wf *Workflow) MassStart() error {
+func (wf *Workflow) MassStart(unstash bool) error {
 	issue, err := wf.JIRA().PickAssignedIssue()
 	if err != nil {
 		return err
 	}
 
-	return core.ForEachRepo(func(repo string) error {
+	return core.ForEachRepo(func(repo string) (string, error) {
 		g := core.MustInitGit(repo)
-		err := g.Sync(true)
+		output, err := g.Sync(unstash)
 		if err != nil {
-			return err
+			return output, err
 		}
-		return wf.JIRA().CreateBranchFromIssue(issue, repo)
+		return "", wf.JIRA().CreateBranchFromIssue(issue, repo, true)
+	})
+}
+
+func (wf *Workflow) MassDiff() error {
+	return core.ForEachRepo(func(repo string) (string, error) {
+		g := core.MustInitGit(repo)
+		return g.Diff()
 	})
 }
 
 func (wf *Workflow) MassDone(noOperation bool) error {
-	return core.ForEachRepo(func(repoDir string) error {
+	return core.ForEachRepo(func(repoDir string) (string, error) {
 		g := core.MustInitGit(repoDir)
 		if g.ContainedUncommittedChanges() {
 			utils.ConditionalOp("Committing.", noOperation, func() error {
@@ -81,7 +88,7 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 
 		if !g.IsDifferentFromMaster() {
 			log.Printf("No commits. Skipping.")
-			return nil
+			return "", nil
 		}
 
 		utils.ConditionalOp("Pushing", noOperation, func() error {
@@ -91,7 +98,7 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 			}
 			return wf.GitHub().CreatePR("", "", repoDir)
 		})
-		return nil
+		return "", nil
 	})
 }
 

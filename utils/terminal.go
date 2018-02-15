@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"github.com/mitchellh/go-wordwrap"
@@ -52,6 +53,15 @@ func RunCmdWithStdout(cmd string, args ...string) (string, error) {
 	command.Stderr = os.Stderr
 	output, err := command.Output()
 	return strings.Trim(string(output), "\n"), err
+}
+
+func RunCmdWithFullOutput(cmd string, args ...string) (string, error) {
+	command := exec.Command(cmd, args...)
+	var buf bytes.Buffer
+	command.Stderr = &buf
+	command.Stdout = &buf
+	err := command.Run()
+	return strings.Join(args, " ") + "\n" + strings.Trim(string(buf.String()), "\n"), err
 }
 
 func Prompt(message string) {

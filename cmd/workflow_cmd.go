@@ -13,6 +13,8 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 	transition := "t"
 	noOperation := "noop"
 	compare := "compare-only"
+	unstash := "unstash"
+	unstashDesc := "Unstash changes at the end of the update."
 	return []cli.Command{
 		buildJIRAOpenBoardCmd(cfg),
 		buildJIRAClaimIssueCmd(cfg),
@@ -89,25 +91,34 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 			Usage:   "Mass repo changes. EXPERIMENTAL",
 			Subcommands: []cli.Command{
 				{
-					Name:    "start",
-					Aliases: []string{"s"},
-					Usage:   "Clean the repository, checkout master, pull and create new branch.",
+					Name:  "start",
+					Usage: "Clean the repository, checkout master, pull and create new branch.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: unstash, Usage: unstashDesc},
+					},
 					Action: func(c *cli.Context) error {
 						if !utils.AskForConfirmation("You will lose existing changes.") {
 							os.Exit(1)
 						}
-						return MustInitWorkflow(cfg, manifest).MassStart()
+						return MustInitWorkflow(cfg, manifest).MassStart(c.Bool(unstash))
 					},
 				},
 				{
-					Name:    "done",
+					Name:    "diff",
 					Aliases: []string{"d"},
-					Usage:   "Commit changes and create PRs. To be used after running '... start' and you made your changes.",
+					Usage:   "Shows the diff of all repos.",
+					Action: func(c *cli.Context) error {
+						return MustInitWorkflow(cfg, manifest).MassDiff()
+					},
+				},
+				{
+					Name:  "done",
+					Usage: "Commit changes and create PRs. To be used after running '... start' and you made your changes.",
 					Flags: []cli.Flag{
 						cli.BoolFlag{Name: noOperation, Usage: "Do not do any actions."},
 					},
 					Action: func(c *cli.Context) error {
-						if !utils.AskForConfirmation("You will lose existing changes.") {
+						if !utils.AskForConfirmation("You will create a PR for every changes made to the repo. Use `--noop` to check first. Continue?") {
 							os.Exit(1)
 						}
 						return MustInitWorkflow(cfg, manifest).MassDone(c.Bool(noOperation))
@@ -117,11 +128,14 @@ func buildWorkflowCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.C
 					Name:    "update",
 					Aliases: []string{"u"},
 					Usage:   "Clean the repository, checkout master and pull.",
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: unstash, Usage: unstashDesc},
+					},
 					Action: func(c *cli.Context) error {
 						if !utils.AskForConfirmation("You will lose existing changes.") {
 							os.Exit(1)
 						}
-						return MustInitWorkflow(cfg, manifest).MassUpdate()
+						return MustInitWorkflow(cfg, manifest).MassUpdate(c.Bool(unstash))
 					},
 				},
 			},

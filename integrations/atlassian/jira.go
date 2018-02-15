@@ -161,7 +161,7 @@ func (j *JIRA) claimIssue(i *jira.Issue) error {
 		return err
 	}
 	if utils.IsRepository(".") && utils.AskForConfirmation("Create the branch for this issue?") {
-		j.CreateBranchFromIssue(i, ".")
+		j.CreateBranchFromIssue(i, ".", false)
 	}
 	return nil
 }
@@ -198,18 +198,18 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 	if err != nil {
 		return err
 	}
-	return j.CreateBranchFromIssue(issue, ".")
+	return j.CreateBranchFromIssue(issue, ".", false)
 }
 
-func (j *JIRA) CreateBranchFromIssue(issue *jira.Issue, repoDir string) error {
+func (j *JIRA) CreateBranchFromIssue(issue *jira.Issue, repoDir string, forceNewBranch bool) error {
 	git := core.MustInitGit(repoDir)
 	git.Fetch()
 	err := git.CreateBranch(issue.Key + " " + issue.Fields.Summary)
 	if err != nil {
-		if !utils.AskForConfirmation("Failed to create branch. Force/overwrite?") {
-			return nil
+		if forceNewBranch || utils.AskForConfirmation("Failed to create branch. Force/overwrite?") {
+			return git.ForceCreateBranch(issue.Key + " " + issue.Fields.Summary)
 		}
-		return git.ForceCreateBranch(issue.Key + " " + issue.Fields.Summary)
+		return nil
 	}
 	return nil
 }
@@ -335,7 +335,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 			if err != nil {
 				return err
 			}
-			return j.CreateBranchFromIssue(i, ".")
+			return j.CreateBranchFromIssue(i, ".", false)
 		}
 	}
 	return nil

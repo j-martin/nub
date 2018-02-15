@@ -24,7 +24,7 @@ type GitCommit struct {
 	Hash, Committer, Subject, Body string
 }
 
-type RepoOperation func(string) error
+type RepoOperation func(string) (string, error)
 
 func InitGit() *Git {
 	return &Git{}
@@ -50,6 +50,13 @@ func (g *Git) RunGitWithStdout(args ...string) (string, error) {
 		args = append([]string{"-C", g.dir}, args...)
 	}
 	return utils.RunCmdWithStdout("git", args...)
+}
+
+func (g *Git) RunGitWithFullOutput(args ...string) (string, error) {
+	if g.dir != "" {
+		args = append([]string{"-C", g.dir}, args...)
+	}
+	return utils.RunCmdWithFullOutput("git", args...)
 }
 
 func (g *Git) MustRunGitWithStdout(args ...string) string {
@@ -89,9 +96,9 @@ func (g *Git) GetTitleFromBranchName() string {
 	return strings.Replace(strings.Replace(strings.Replace(branch, "-", "_", 1), "-", " ", -1), "_", "-", -1)
 }
 
-func (g *Git) Clone() error {
+func (g *Git) Clone() (string, error) {
 	log.Printf("Cloning: %v", g.dir)
-	return utils.RunCmd("git", "clone", "git@github.com:benchlabs/"+g.dir+".git")
+	return utils.RunCmdWithFullOutput("git", "clone", "git@github.com:benchlabs/"+g.dir+".git")
 }
 
 func (g *Git) Push(cfg *Configuration) error {
@@ -102,24 +109,34 @@ func (g *Git) Push(cfg *Configuration) error {
 	return g.RunGit(args...)
 }
 
-func (g *Git) Sync(unStash bool) error {
+func (g *Git) Sync(unStash bool) (string, error) {
 	commands := [][]string{
-		{"stash", "save", "pre-update-" + utils.CurrentTimeForFilename()},
-		{"clean", "-fd"},
+		{"reset", "HEAD", g.dir},
+	}
+	dirtyTree := g.RunGit("diff-index", "--quiet", "HEAD", "--") != nil
+	if dirtyTree {
+		commands = append(commands, [][]string{
+			{"checkout", "master", "-f"},
+			{"stash", "save", "pre-update-" + utils.CurrentTimeForFilename()},
+		}...)
+	}
+	commands = append(commands, [][]string{
 		{"checkout", "master", "-f"},
+		{"clean", "-fd"},
+		{"checkout", "master", "."},
 		{"pull"},
 		{"pull", "--tags"},
-	}
-	if unStash {
+	}...)
+	if dirtyTree && unStash {
 		commands = append(commands, []string{"stash", "apply"})
 	}
 	for _, cmd := range commands {
-		err := g.RunGit(cmd...)
+		out, err := g.RunGitWithFullOutput(cmd...)
 		if err != nil {
-			return err
+			return out, err
 		}
 	}
-	return nil
+	return "", nil
 }
 
 func SyncRepositories() error {
@@ -128,35 +145,40 @@ func SyncRepositories() error {
 	for _, m := range manifests {
 		repos = append(repos, m.Repository)
 	}
-	return ConcurrentRepositoryOperations(repos, func(repo string) error {
+	return ConcurrentRepositoryOperations(repos, func(repo string) (string, error) {
 		return MustInitGit(repo).syncRepository()
 	})
 }
 
-type ConcurrentErrors map[string]error
+type ConcurrentResult struct {
+	Output string
+	Err    error
+}
+type ConcurrentResults map[string]ConcurrentResult
 
 func ConcurrentRepositoryOperations(repos []string, fn RepoOperation) error {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
-	errs := ConcurrentErrors{}
+	errs := ConcurrentResults{}
 	for _, r := range repos {
 		log.Printf("Sync: %v", r)
 		wg.Add(1)
 		go func(repo string) {
 			defer wg.Done()
-			err := fn(repo)
+			output, err := fn(repo)
 			mutex.Lock()
-			errs[repo] = err
+			errs[repo] = ConcurrentResult{Output: output, Err: err}
 			mutex.Unlock()
 			log.Printf("%v: done.", repo)
 		}(r)
 	}
 	wg.Wait()
 	errorCount := 0
-	for repo, err := range errs {
-		if err != nil {
+	for repo, result := range errs {
+		fmt.Println(result.Output)
+		if result.Err != nil {
 			errorCount++
-			log.Printf("%v failed to be updated: %v", repo, err)
+			log.Printf("%v failed to be updated: %v", repo, result.Err)
 		}
 	}
 	if errorCount > 0 {
@@ -167,7 +189,7 @@ func ConcurrentRepositoryOperations(repos []string, fn RepoOperation) error {
 	return nil
 }
 
-func (g *Git) syncRepository() error {
+func (g *Git) syncRepository() (string, error) {
 	repositoryExists, _ := utils.PathExists(g.dir)
 	if repositoryExists {
 		return g.Sync(true)
@@ -393,4 +415,15 @@ func (g *Git) ContainedUncommittedChanges() bool {
 
 func (g *Git) IsDifferentFromMaster() bool {
 	return utils.HasNonEmptyLines(g.LogNotInMasterSubjects())
+}
+
+func (g *Git) ISDirty() bool {
+	return g.RunGit("diff-index", "--quiet", "HEAD", "--") != nil
+}
+
+func (g *Git) Diff() (string, error) {
+	if !g.IsDifferentFromMaster() {
+		return "", nil
+	}
+	return g.RunGitWithFullOutput("--no-pager", "diff")
 }
