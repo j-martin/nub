@@ -12,17 +12,6 @@ project is properly update.
 
 ## Installation
 
-### From Brew (macOS only)
-    $ brew install benchlabs/tools/bub
-
-To use ssh key for authentication instead of the default https+basic auth and
-avoid requirements for 2FA, add this to your `~/.gitconfig`:
-
-```
-[url "git@github.com:"]
-  insteadOf = "https://github.com/"
-```
-
 ### From source
 
 Install prereqs below.
