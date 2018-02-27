@@ -65,7 +65,7 @@ func isSuccess(b *circleci.Build) error {
 		log.Printf("The build succeeded! %v", b.BuildURL)
 		return nil
 	} else {
-		return errors.New(fmt.Sprintf("the b failed: %s, %s", b.Outcome, b.BuildURL))
+		return errors.New(fmt.Sprintf("the build failed: %s, %s", b.Outcome, b.BuildURL))
 	}
 }
 
