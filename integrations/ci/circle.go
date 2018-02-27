@@ -20,7 +20,7 @@ type Circle struct {
 func MustInitCircle(cfg *core.Configuration) *Circle {
 	token := os.Getenv("CIRCLE_TOKEN")
 	if token == "" && cfg.Circle.Token == "" {
-		log.Fatal("Please set the CircleCi token in your keychain or set with the CIRCLE_TOKEN environment variable.")
+		log.Fatal("Please set the CircleCI token in your keychain or set with the CIRCLE_TOKEN environment variable.")
 	} else if cfg.Circle.Token != "" {
 		token = cfg.Circle.Token
 	}
