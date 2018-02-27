@@ -212,3 +212,13 @@ func TimeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	log.Printf("%s took %s", name, elapsed)
 }
+
+// Contains returns a boolean whether a string is contained in a series of strings
+func Contains(str string, haystack ...string) bool {
+	for _, i := range haystack {
+		if str == i {
+			return true
+		}
+	}
+	return false
+}

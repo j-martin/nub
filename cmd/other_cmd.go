@@ -46,8 +46,15 @@ func buildCircleCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 			Usage:   "Trigger the current branch of the current repo and wait for success.",
 			Aliases: []string{"t"},
 			Action: func(c *cli.Context) error {
-				ci.TriggerAndWaitForSuccess(cfg, manifest)
-				return nil
+				return ci.MustInitCircle(cfg).TriggerAndWaitForSuccess(manifest)
+			},
+		},
+		{
+			Name:    "check",
+			Usage:   "Check the build status of the current commit.",
+			Aliases: []string{"c"},
+			Action: func(c *cli.Context) error {
+				return ci.MustInitCircle(cfg).CheckBuildStatus(manifest)
 			},
 		},
 		{
