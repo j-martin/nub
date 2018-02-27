@@ -37,35 +37,40 @@ func OpenCircle(cfg *core.Configuration, m *core.Manifest, getBranch bool) error
 }
 
 func (c *Circle) TriggerAndWaitForSuccess(m *core.Manifest) error {
-	build, err := c.client.Build(c.cfg.GitHub.Organization, m.Repository, m.Branch)
+	b, err := c.client.Build(c.cfg.GitHub.Organization, m.Repository, m.Branch)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Triggered build: %s", build.BuildURL)
-
+	log.Printf("Triggered b: %s", b.BuildURL)
 	time.Sleep(1 * time.Second)
 
 	for {
-		build, err = c.client.GetBuild(c.cfg.GitHub.Organization, m.Repository, build.BuildNum)
+		b, err = c.client.GetBuild(c.cfg.GitHub.Organization, m.Repository, b.BuildNum)
 		if err != nil {
 			return err
 		}
 
-		if build.Lifecycle == "finished" || build.Status == "not_run" || build.Lifecycle == "not_running" {
+		if isFinished(b) {
 			break
 		}
-
-		log.Printf("Current lifecycle state: %s, waiting 20s...", build.Lifecycle)
+		log.Printf("Current lifecycle state: %s, waiting 20s...", b.Lifecycle)
 		time.Sleep(20 * time.Second)
 	}
+	return isSuccess(b)
+}
 
-	if build.Outcome == "success" {
-		log.Print("The build succeeded!")
+func isSuccess(b *circleci.Build) error {
+	if b.Outcome == "success" {
+		log.Printf("The build succeeded! %v", b.BuildURL)
 		return nil
 	} else {
-		return errors.New(fmt.Sprintf("the build failed: %s, %s", build.Outcome, build.BuildURL))
+		return errors.New(fmt.Sprintf("the b failed: %s, %s", b.Outcome, b.BuildURL))
 	}
+}
+
+func isFinished(build *circleci.Build) bool {
+	return utils.Contains(build.Lifecycle, "finished", "not_run")
 }
 
 func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
@@ -74,22 +79,20 @@ func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
 		return err
 	}
 	log.Printf("Commit: %v", head)
+	var b *circleci.Build
 	for {
-		b, err := c.checkBuildStatus(head, m)
+		b, err = c.checkBuildStatus(head, m)
 		if err != nil {
 			return err
 		}
-		if utils.Contains(b.Status, "success", "fixed", "no_tests") {
-			log.Printf("Status: '%v', The build is done. %v", b.Status, b.BuildURL)
-			return nil
-		}
-		if utils.Contains(b.Status, "failed", "canceled", "infrastructure_fail", "timedout") {
-			log.Fatalf("Status: '%v'. Aborting. %v", b.Status, b.BuildURL)
+		if isFinished(b) {
+			break
 		}
 		log.Printf("Status: '%v', waiting 10s. %v", b.Status, b.BuildURL)
 		time.Sleep(10 * time.Second)
 	}
-	return nil
+
+	return isSuccess(b)
 }
 
 func (c *Circle) checkBuildStatus(head string, m *core.Manifest) (*circleci.Build, error) {
