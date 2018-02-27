@@ -51,7 +51,7 @@ func buildCircleCmds(cfg *core.Configuration, manifest *core.Manifest) []cli.Com
 		},
 		{
 			Name:    "check",
-			Usage:   "Check the status of the current commitj.",
+			Usage:   "Check the build status of the current commit.",
 			Aliases: []string{"c"},
 			Action: func(c *cli.Context) error {
 				return ci.MustInitCircle(cfg).CheckBuildStatus(manifest)
