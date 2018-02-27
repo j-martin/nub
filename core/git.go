@@ -304,6 +304,10 @@ func (g *Git) CommitWithBranchName() error {
 	return g.RunGit("commit", "-m", g.GetTitleFromBranchName(), "--all")
 }
 
+func (g *Git) CurrentHEAD() (string, error) {
+	return g.RunGitWithStdout("rev-parse", "HEAD")
+}
+
 func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) error {
 	issueKey := g.GetIssueKeyFromBranch()
 	if message == "" {
