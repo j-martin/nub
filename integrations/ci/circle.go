@@ -79,26 +79,14 @@ func isFinished(build *circleci.Build) bool {
 	return utils.Contains(build.Lifecycle, "finished", "not_run")
 }
 
-func (c *Circle) GetProject(m *core.Manifest) (*circleci.Project, error) {
-	projects, err := c.client.ListProjects()
-	if err != nil {
-		return nil, err
-	}
-	for _, i := range projects {
-		if strings.ToLower(i.Username) == c.cfg.GitHub.Organization && i.Reponame == m.Repository {
-			return i, nil
-		}
-	}
-
-	return nil, NoProjectFound
-}
 func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
-	_, err := c.GetProject(m)
-	if err == NoProjectFound {
-		log.Printf("CircleCI not configured. Skipping check..")
-		return nil
-	} else if err != nil {
+	p, err := c.client.FollowProject(c.cfg.GitHub.Organization, m.Repository)
+	if err != nil && !strings.HasPrefix(err.Error(), "403") {
 		return err
+	} else if p == nil {
+		log.Printf("CircleCI not configured or the current user has no access to the project. Skipping check...")
+		log.Printf("API Error: %v", err)
+		return nil
 	}
 	head, err := core.MustInitGit(".").CurrentHEAD()
 	if err != nil {
