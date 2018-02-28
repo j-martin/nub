@@ -84,8 +84,10 @@ func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
 	if err != nil && !strings.HasPrefix(err.Error(), "403") {
 		return err
 	} else if p == nil {
+		if err != nil {
+			log.Printf("API Error: %v", err)
+		}
 		log.Printf("CircleCI not configured or the current user has no access to the project. Skipping check...")
-		log.Printf("API Error: %v", err)
 		return nil
 	}
 	head, err := core.MustInitGit(".").CurrentHEAD()
