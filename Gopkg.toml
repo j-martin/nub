@@ -19,8 +19,8 @@
   revision = "22e283ad76118c1e1f3812b4a3553809cd434e6a"
 
 [[constraint]]
-  name = "github.com/jszwedko/go-circleci"
-  revision = "820efab65ef1993416cd18434ea18fe09b185627"
+  name = "github.com/benchlabs/go-circleci"
+  revision = "bc3253af82df992fc818331ae6af9cdfb4579ebd"
 
 [[constraint]]
   name = "github.com/mcuadros/go-version"

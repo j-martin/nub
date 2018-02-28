@@ -124,7 +124,7 @@
 [[projects]]
   name = "github.com/jszwedko/go-circleci"
   packages = ["."]
-  revision = "820efab65ef1993416cd18434ea18fe09b185627"
+  revision = "7a6bb2efc31575e7b85b8257d3d081ce50147508"
 
 [[projects]]
   branch = "master"
@@ -269,6 +269,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3d0f0d2d7cb1a041f7b1f8731e0f1dd9e17fee2143a5556c90d2bb34a9da4a81"
+  inputs-digest = "72d3034fe76265937074386410ac9a238e7716467718b25c79c5e6c0c3044185"
   solver-name = "gps-cdcl"
   solver-version = 1
