@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/utils"
-	"github.com/jszwedko/go-circleci"
+	"github.com/benchlabs/go-circleci"
 	"log"
 	"net/url"
 	"os"
+	"strings"
 	"time"
+)
+
+var (
+	NoProjectFound = errors.New("no matching project found")
+	NoBuildFound   = errors.New("no build found for the commit")
 )
 
 type Circle struct {
@@ -73,7 +79,27 @@ func isFinished(build *circleci.Build) bool {
 	return utils.Contains(build.Lifecycle, "finished", "not_run")
 }
 
+func (c *Circle) GetProject(m *core.Manifest) (*circleci.Project, error) {
+	projects, err := c.client.ListProjects()
+	if err != nil {
+		return nil, err
+	}
+	for _, i := range projects {
+		if strings.ToLower(i.Username) == c.cfg.GitHub.Organization && i.Reponame == m.Repository {
+			return i, nil
+		}
+	}
+
+	return nil, NoProjectFound
+}
 func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
+	_, err := c.GetProject(m)
+	if err == NoProjectFound {
+		log.Printf("CircleCI not configured. Skipping check..")
+		return nil
+	} else if err != nil {
+		return err
+	}
 	head, err := core.MustInitGit(".").CurrentHEAD()
 	if err != nil {
 		return err
@@ -106,5 +132,5 @@ func (c *Circle) checkBuildStatus(head string, m *core.Manifest) (*circleci.Buil
 			return b, nil
 		}
 	}
-	return nil, errors.New("no build found for the commit")
+	return nil, NoBuildFound
 }
