@@ -81,17 +81,17 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 	return core.ForEachRepo(func(repoDir string) (string, error) {
 		g := core.MustInitGit(repoDir)
 		if g.ContainedUncommittedChanges() {
-			utils.ConditionalOp("Committing.", noOperation, func() error {
+			utils.ConditionalOp(fmt.Sprintf("%v - Committing.", repoDir), noOperation, func() error {
 				return g.CommitWithBranchName()
 			})
 		}
 
 		if !g.IsDifferentFromMaster() {
-			log.Printf("No commits. Skipping.")
+			log.Printf("%v - No commits. Skipping.", repoDir)
 			return "", nil
 		}
 
-		utils.ConditionalOp("Pushing", noOperation, func() error {
+		utils.ConditionalOp(fmt.Sprintf("%v - Pushing", repoDir), noOperation, func() error {
 			err := g.Push(wf.cfg)
 			if err != nil {
 				return err
