@@ -187,7 +187,7 @@ func buildJIRACommentOnIssuesCmd(cfg *core.Configuration) cli.Command {
 func buildJIRATransitionIssueCmd(cfg *core.Configuration) cli.Command {
 	return cli.Command{
 		Name:    "transition",
-		Aliases: []string{"t"},
+		Aliases: []string{"t", "tr"},
 		Usage:   "Transition issue based on current branch.",
 		Action: func(c *cli.Context) error {
 			var transition string
