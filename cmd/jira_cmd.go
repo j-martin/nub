@@ -23,6 +23,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 		buildJIRACommentOnIssuesCmd(cfg),
 		buildJIRAListAssignedIssuesCmd(cfg),
 		buildJIRATransitionIssueCmd(cfg),
+		buildJIRListWorkDayCmd(cfg),
 	}
 }
 
@@ -206,6 +207,26 @@ func buildJIRAOpenBoardCmd(cfg *core.Configuration) cli.Command {
 		Usage:   "Open your JIRA board.",
 		Action: func(c *cli.Context) error {
 			return utils.OpenURI(cfg.JIRA.Server, "secure/RapidBoard.jspa?rapidView="+cfg.JIRA.Board)
+		},
+	}
+}
+func buildJIRListWorkDayCmd(cfg *core.Configuration) cli.Command {
+	prefix := "prefix"
+	orgFormat := "org"
+	return cli.Command{
+		Name:    "workday",
+		Aliases: []string{"d"},
+		Usage:   "List the work during a specific day.",
+		Flags: []cli.Flag{
+			cli.StringFlag{Name: prefix, Usage: "String to prefix the issue."},
+			cli.BoolFlag{Name: orgFormat, Usage: "Format for org-mode."},
+		},
+		Action: func(c *cli.Context) error {
+			var date string
+			if len(c.Args()) > 0 {
+				date = c.Args().Get(0)
+			}
+			return atlassian.MustInitJIRA(cfg).ListWorkDay(date, c.String(prefix), c.Bool(orgFormat))
 		},
 	}
 }

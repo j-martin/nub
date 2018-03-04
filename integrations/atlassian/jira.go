@@ -15,6 +15,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"
+	"time"
 )
 
 type JIRA struct {
@@ -93,6 +94,44 @@ func (j *JIRA) pickAndOpenIssue(is []jira.Issue, useBee bool) error {
 func (j *JIRA) OpenRecentlyAccessedIssues(useBee bool) error {
 	jql := "assignee was currentUser() or reporter was currentUser() or issuekey in issueHistory() order by updatedDate"
 	return j.SearchIssueJQL(jql, useBee)
+}
+
+func (j *JIRA) ListWorkDay(date, prefix string, orgFormat bool) error {
+	now := time.Now().Format("2006-01-02")
+	if date == "" {
+		date = now
+	}
+	log.Printf("Listing work done on: %s", date)
+	jql := fmt.Sprintf(`assignee = currentUser() AND ((status WAS IN ("In Progress", Review) ON "%s" and (resolutiondate >= "%s" OR resolution IS NULL)) OR (resolution CHANGED ON "%s")) ORDER BY key`, date, date, date)
+	log.Printf("Query: %s", jql)
+	is, err := j.search(jql)
+	if err != nil {
+		return err
+	}
+
+	var format string
+	if orgFormat {
+		format = `{{.Prefix}}[[{{.Server}}/browse/{{.Issue.Key}}][{{.Issue.Key}}]] {{.Issue.Fields.Summary}}
+Status: {{.Issue.Fields.Status.Name}} (as of {{.Now}})
+`
+	} else {
+		format = `{{.Prefix}}{{.Issue.Key}} {{.Issue.Fields.Summary}}
+`
+	}
+	tmp, err := template.New("issue").Parse(format)
+	for _, i := range is {
+		a := struct {
+			Prefix, Server, Now string
+			Issue               jira.Issue
+		}{
+			Prefix: prefix,
+			Server: j.cfg.JIRA.Server,
+			Now:    now,
+			Issue:  i,
+		}
+		tmp.Execute(os.Stdout, a)
+	}
+	return nil
 }
 
 func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, error) {
