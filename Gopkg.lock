@@ -13,11 +13,6 @@
   version = "v1.12.53"
 
 [[projects]]
-  name = "github.com/benchlabs/go-circleci"
-  packages = ["."]
-  revision = "bc3253af82df992fc818331ae6af9cdfb4579ebd"
-
-[[projects]]
   name = "github.com/bndr/gojenkins"
   packages = ["."]
   revision = "fb64d609b014879a799204f02b50db404fc6d995"
@@ -125,6 +120,11 @@
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   revision = "0b12d6b5"
+
+[[projects]]
+  name = "github.com/jszwedko/go-circleci"
+  packages = ["."]
+  revision = "7a6bb2efc31575e7b85b8257d3d081ce50147508"
 
 [[projects]]
   branch = "master"
@@ -269,6 +269,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8f027ff8cfc6e6a932415e0798d40c09d4566a5c306c43afdd7ee2afb0d89bbd"
+  inputs-digest = "4df43cc278f5c349cc9eeb8399ce39219241f43dd2d5a61b15e7aa16e2b8c7ae"
   solver-name = "gps-cdcl"
   solver-version = 1

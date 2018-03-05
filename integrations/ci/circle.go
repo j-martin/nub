@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/benchlabs/bub/core"
 	"github.com/benchlabs/bub/utils"
-	"github.com/benchlabs/go-circleci"
+	"github.com/jszwedko/go-circleci"
 	"log"
 	"net/url"
 	"os"
