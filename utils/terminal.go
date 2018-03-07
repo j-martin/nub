@@ -88,25 +88,22 @@ func AskForConfirmation(s string) bool {
 	}
 }
 
-func IsIterm() bool {
+func IsITerm() bool {
 	return strings.HasPrefix(os.Getenv("TERM_PROGRAM"), "iTerm")
 }
 
 func SetBadge(name string) {
-	if !IsIterm() {
+	if !IsITerm() {
 		return
 	}
 	encoded := base64.StdEncoding.EncodeToString([]byte(name))
-	// TODO: Find the proper escape code for setting badge title and use `print` instead.
 	// https://www.iterm2.com/documentation-badges.html
-	cmd := fmt.Sprintf(`printf "\e]1337;SetBadgeFormat=%v\a"`, encoded)
-	command := exec.Command("sh", "-c", cmd)
-	command.Stdout = os.Stdout
-	command.Run()
+	sequence := fmt.Sprintf("\033]1337;SetBadgeFormat=%v\033\\", encoded)
+	print(sequence)
 }
 
-func ConfigureTerminal(hostname string) {
-	if !IsIterm() {
+func ConfigureITerm(hostname string) {
+	if !IsITerm() {
 		return
 	}
 	// Set escape codes for iTerm2
@@ -120,12 +117,11 @@ func ConfigureTerminal(hostname string) {
 		print("\033]Ph403010\033\\")
 	}
 }
-func ResetIterm() {
-	if !IsIterm() {
+func ResetITerm() {
+	if !IsITerm() {
 		return
 	}
+	print("\033]1337;SetProfile=Default\033\\")
 	hostname, _ := os.Hostname()
 	SetBadge(hostname)
-	// green for safe
-	print("\033]Ph103010\033\\")
 }

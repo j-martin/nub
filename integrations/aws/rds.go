@@ -169,7 +169,7 @@ func (r *RDS) getEngineConfiguration(engine string) EngineConfiguration {
 }
 
 func (r *RDS) rdsCleanup(tunnel ssh.Connection) error {
-	utils.ResetIterm()
+	utils.ResetITerm()
 	return tunnel.Close()
 }
 
@@ -272,7 +272,7 @@ func (r *RDS) connectToRDSInstance(instance *rds.DBInstance, args []string) erro
 	}
 
 	log.Printf("Running: %s %s", command, strings.Join(args, " "))
-	go utils.ConfigureTerminal(strings.Split(endpoint, ".")[0])
+	go utils.ConfigureITerm(strings.Split(endpoint, ".")[0])
 	cmd := exec.Command(command, args...)
 	cmd.Env = env
 	cmd.Stdout = os.Stdout

@@ -113,7 +113,7 @@ func connect(i *ec2.Instance, params ConnectionParams) error {
 		scpJumpHostArgs = []string{"-o", fmt.Sprintf("ProxyCommand ssh %v nc %%h %%p", jumpHost)}
 	}
 
-	go utils.ConfigureTerminal(*i.Architecture)
+	go utils.ConfigureITerm(*i.Architecture)
 	for _, sshUser := range getUsers(i) {
 		host := sshUser + "@" + hostname
 		if isSCP(params) {
@@ -126,7 +126,7 @@ func connect(i *ec2.Instance, params ConnectionParams) error {
 			break
 		}
 	}
-	utils.ResetIterm()
+	utils.ResetITerm()
 	return nil
 }
 
@@ -198,7 +198,7 @@ func prepareSSHArgs(params ConnectionParams) []string {
 		case "tmux":
 			arg := ""
 			usr, _ := user.Current()
-			if utils.IsIterm() && os.Getenv("TMUX") == "" {
+			if utils.IsITerm() && os.Getenv("TMUX") == "" {
 				arg = "-CC"
 			}
 
