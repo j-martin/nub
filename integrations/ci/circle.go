@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	NoProjectFound = errors.New("no matching project found")
-	NoBuildFound   = errors.New("no build found for the commit")
+	NoBuildFound = errors.New("no build found for the commit")
 )
 
 type Circle struct {
@@ -79,7 +78,27 @@ func isFinished(build *circleci.Build) bool {
 	return utils.Contains(build.Lifecycle, "finished", "not_run")
 }
 
+func configurationExist() (bool, error) {
+	legacyConfiguration, err := utils.PathExists("circle.yml")
+	if err != nil {
+		return false, err
+	}
+	configuration, err := utils.PathExists(".circleci")
+	if err != nil {
+		return false, err
+	}
+	return legacyConfiguration || configuration, nil
+}
+
 func (c *Circle) CheckBuildStatus(m *core.Manifest) error {
+	exists, err := configurationExist()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		log.Printf("CircleCI not configured. Skipping check...")
+		return nil
+	}
 	p, err := c.client.FollowProject(c.cfg.GitHub.Organization, m.Repository)
 	if err != nil && !strings.HasPrefix(err.Error(), "403") {
 		return err
