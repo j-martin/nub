@@ -50,6 +50,10 @@ func MustSetupJIRA(cfg *core.Configuration) {
 	mustLoadJIRACredentials(cfg)
 }
 
+func (j *JIRA) IsEnabled() bool {
+	return j.cfg.JIRA.Enabled
+}
+
 func (j *JIRA) init(cfg *core.Configuration) error {
 	core.CheckServerConfig(cfg.JIRA.Server)
 	client, err := jira.NewClient(nil, cfg.JIRA.Server)

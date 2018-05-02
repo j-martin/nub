@@ -103,7 +103,7 @@ func (wf *Workflow) MassDone(noOperation bool) error {
 }
 
 func (wf *Workflow) CreatePR(title, body string, review bool) error {
-	if review || utils.AskForConfirmation("Transition issue?") {
+	if wf.JIRA().IsEnabled() && (review || utils.AskForConfirmation("Transition issue?")) {
 		err := wf.JIRA().TransitionIssue("", "review")
 		if err != nil {
 			return err
