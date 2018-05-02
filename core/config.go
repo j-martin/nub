@@ -20,10 +20,6 @@ const (
 	ConfigSharedFile = "shared.yml"
 )
 
-type RDSConfiguration struct {
-	Prefix, Database, User, Password string
-}
-
 type Environment struct {
 	Prefix, Region, Domain string
 	JumpHost               string `yaml:"jumphost"`
@@ -35,11 +31,6 @@ type User struct {
 }
 
 type Configuration struct {
-	AWS struct {
-		Regions      []string
-		RDS          []RDSConfiguration
-		Environments []Environment
-	}
 	Git struct {
 		NoVerify bool `yaml:"noVerify"`
 	}
@@ -52,20 +43,11 @@ type Configuration struct {
 		Server, Username, Password string
 		Project, Board             string
 		Transitions                []JIRATransition
-		Enabled bool
+		Enabled                    bool
 	}
-	Jenkins ServiceConfiguration
-	Splunk  struct {
-		Server string
-	}
+	Jenkins    ServiceConfiguration
 	Confluence ServiceConfiguration
-	Circle     struct {
-		Token string
-	}
-	Updates struct {
-		Region, Bucket, Prefix string
-	}
-	Vault struct {
+	Vault      struct {
 		AuthMethod, Server, Username, Password, Path string
 	}
 	Ssh struct {
@@ -84,34 +66,6 @@ type ServiceConfiguration struct {
 
 var config = `---
 # use 'bub config --shared' to edit the shared config.
-
-aws:
-	regions:
-		- us-east-1
-		- us-west-2
-
-	rds:
-		# The first prefix match will be used.
-		# The database name, unless specified, will be inferred from the host name.
-		- prefix: staging
-			database: <optional>
-			user: <optional>
-			password: <optional>
-
-	environments:
-		- prefix: staging2
-			jumphost: jump.staging2.example.com
-			domain: staging2.internal.example.com
-			region: us-west-2
-		- prefix: staging
-			jumphost: jump.example.com
-			region: us-west-2
-			domain: staging.internal.example.com
-		# if there is no prefix the last entry act as a catch all.
-		- jumphost: jump.example.com
-			region: us-east-1
-			domain: production.internal.example.com
-
 github:
 	organization: benchlabs
 	reviewers:
@@ -131,17 +85,6 @@ jira:
 	server: "https://example.atlassian.net"
 	project: # default project to use when creating issues.
 	board: id of the board when creating issues in the current sprint.
-
-splunk:
-	server: "https://splunk.example.com"
-
-circle:
-	token: <optional-change-me>
-
-updates:
-	region: us-east-1
-	bucket: s3bucket
-	prefix: contrib/bub
 
 ssh:
 	connectTimeout: 3
@@ -163,9 +106,6 @@ func LoadConfiguration() (*Configuration, error) {
 	err = mergo.Merge(baseCfg, *cfg)
 	if err != nil {
 		return nil, err
-	}
-	if len(cfg.AWS.Regions) == 0 {
-		cfg.AWS.Regions = []string{"us-east-1", "us-west-2"}
 	}
 	resetCredentials := os.Getenv("BUB_UPDATE_CREDENTIALS")
 	if resetCredentials != "" {

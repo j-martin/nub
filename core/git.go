@@ -139,21 +139,11 @@ func (g *Git) Sync(unStash bool) (string, error) {
 	return "", nil
 }
 
-func SyncRepositories() error {
-	manifests := GetManifestRepository().GetAllActiveManifests()
-	var repos []string
-	for _, m := range manifests {
-		repos = append(repos, m.Repository)
-	}
-	return ConcurrentRepositoryOperations(repos, func(repo string) (string, error) {
-		return MustInitGit(repo).syncRepository()
-	})
-}
-
 type ConcurrentResult struct {
 	Output string
 	Err    error
 }
+
 type ConcurrentResults map[string]ConcurrentResult
 
 func ConcurrentRepositoryOperations(repos []string, fn RepoOperation) error {

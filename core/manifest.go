@@ -49,9 +49,9 @@ type Dependency struct {
 	Description string
 	// service, database, front-end
 	Type string
-	// not managed / controlled by us on AWS
+	// not managed / controlled by us on AWS or GCP
 	Dedicated bool
-	// not managed / controlled by us on AWS
+	// not managed / controlled by us on AWS or GCP
 	External bool
 	// e.g. most services don't communicate directly with a service.
 	// like the service relies on it on putting a message/event in the broadcast queue

@@ -20,7 +20,6 @@ func BuildCmds() []cli.Command {
 
 	return []cli.Command{
 		buildSetupCmd(),
-		buildUpdateCmd(cfg),
 		buildConfigCmd(cfg),
 		{
 			Name:        "repository",
@@ -34,10 +33,6 @@ func BuildCmds() []cli.Command {
 			Usage:       "Manifest related commands.",
 			Subcommands: buildManifestCmds(cfg),
 		},
-		buildEC2Cmd(cfg, manifest),
-		buildRDSCmd(cfg),
-		buildR53Cmd(),
-		buildEBCmd(cfg, manifest),
 		{
 			Name:        "github",
 			Usage:       "GitHub related commands.",
@@ -63,21 +58,10 @@ func BuildCmds() []cli.Command {
 			Subcommands: buildJenkinsCmds(cfg, manifest),
 		},
 		{
-			Name:        "splunk",
-			Usage:       "Splunk related commands.",
-			Aliases:     []string{"s"},
-			Subcommands: buildSplunkCmds(cfg, manifest),
-		},
-		{
 			Name:        "confluence",
 			Usage:       "Confluence related commands.",
 			Aliases:     []string{"c"},
 			Subcommands: buildConfluenceCmds(cfg),
-		},
-		{
-			Name:        "circle",
-			Usage:       "CircleCI related commands.",
-			Subcommands: buildCircleCmds(cfg, manifest),
 		},
 	}
 }
