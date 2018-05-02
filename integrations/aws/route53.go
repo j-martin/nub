@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/utils"
 	"github.com/manifoldco/promptui"
 	"os"
 	"strings"
@@ -61,8 +61,8 @@ func ListAllRecords(filter string) error {
 		return err
 	}
 	details := `{{ "Zone:" | faint }} {{ .Zone.Name }}
-{{ "Private:" | faint }} {{ .Zone.Config.PrivateZone }} 
-{{ "Name:" | faint }} {{ .RecordSet.Name }} 
+{{ "Private:" | faint }} {{ .Zone.Config.PrivateZone }}
+{{ "Name:" | faint }} {{ .RecordSet.Name }}
 {{ "Type:" | faint }} {{ .RecordSet.Type }}
 {{ "TTL:" | faint }} {{ if .RecordSet.TTL }}{{ .RecordSet.TTL }}s{{ end }}
 {{ "Alias:" | faint }} {{ if .RecordSet.AliasTarget }}{{ .RecordSet.AliasTarget }}{{ end }}

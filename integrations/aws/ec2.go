@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
 	"github.com/manifoldco/promptui"
 )
 

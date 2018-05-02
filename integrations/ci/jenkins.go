@@ -2,9 +2,9 @@ package ci
 
 import (
 	"fmt"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
 	"github.com/bndr/gojenkins"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
 	"io/ioutil"
 	"log"
 	"os"

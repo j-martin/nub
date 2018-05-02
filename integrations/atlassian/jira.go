@@ -10,8 +10,8 @@ import (
 	"text/template"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"

@@ -1,8 +1,8 @@
 package integrations
 
 import (
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
 )
 
 func OpenSplunk(cfg *core.Configuration, m *core.Manifest, isStaging bool) error {

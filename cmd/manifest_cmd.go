@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations/atlassian"
-	"github.com/benchlabs/bub/integrations/github"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/integrations/atlassian"
+	"github.com/j-martin/bub/integrations/github"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	"log"

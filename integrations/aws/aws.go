@@ -2,7 +2,7 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/utils"
 	"log"
 	"os/user"
 	"path"

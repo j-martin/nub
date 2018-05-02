@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations/aws"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/integrations/aws"
 	"github.com/urfave/cli"
 	"log"
 )

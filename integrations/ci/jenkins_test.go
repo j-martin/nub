@@ -1,7 +1,7 @@
 package ci
 
 import (
-	"github.com/benchlabs/bub/core"
+	"github.com/j-martin/bub/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

@@ -3,10 +3,10 @@ package vault
 import (
 	"errors"
 	"fmt"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
-	"github.com/benchlabs/bub/utils/ssh"
 	"github.com/hashicorp/vault/api"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/bub/utils/ssh"
 	"io/ioutil"
 	"log"
 	"os"

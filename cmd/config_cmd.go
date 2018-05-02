@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"errors"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations/vault"
-	"github.com/benchlabs/bub/utils"
-	"github.com/benchlabs/bub/utils/ssh"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/integrations/vault"
+	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/bub/utils/ssh"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"

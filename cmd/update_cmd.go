@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations/aws"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/integrations/aws"
+	"github.com/j-martin/bub/utils"
 	"github.com/mcuadros/go-version"
 	"github.com/urfave/cli"
 )

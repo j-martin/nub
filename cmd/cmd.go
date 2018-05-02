@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/benchlabs/bub/core"
+	"github.com/j-martin/bub/core"
 	"github.com/urfave/cli"
 	"log"
 	"os"

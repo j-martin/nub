@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/integrations/atlassian"
-	"github.com/benchlabs/bub/integrations/github"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/integrations/atlassian"
+	"github.com/j-martin/bub/integrations/github"
+	"github.com/j-martin/bub/utils"
 	"github.com/urfave/cli"
 	"os"
 )

@@ -3,8 +3,8 @@ package ci
 import (
 	"errors"
 	"fmt"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
 	"github.com/jszwedko/go-circleci"
 	"log"
 	"net/url"

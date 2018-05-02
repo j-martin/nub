@@ -2,8 +2,8 @@ package core
 
 import (
 	"fmt"
-	"github.com/benchlabs/bub/utils"
 	"github.com/imdario/mergo"
+	"github.com/j-martin/bub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/tmc/keyring"
 	"gopkg.in/yaml.v2"
@@ -52,6 +52,7 @@ type Configuration struct {
 		Server, Username, Password string
 		Project, Board             string
 		Transitions                []JIRATransition
+		Enabled bool
 	}
 	Jenkins ServiceConfiguration
 	Splunk  struct {

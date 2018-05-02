@@ -2,7 +2,7 @@ package core
 
 import (
 	"errors"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/utils"
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
@@ -147,21 +147,21 @@ func CreateManifest() {
 name: {{.Name}}
 active: true
 languages:
-  - scala
+	- scala
 types:
-  - service
+	- service
 dependencies:
-  - name: activemq
-    direction: both
-  - name: postgres
-    version: 9.6
+	- name: activemq
+		direction: both
+	- name: postgres
+		version: 9.6
 protocols:
-  - type: raml
-    path: client/src/main/raml
+	- type: raml
+		path: client/src/main/raml
 documentation:
-  pageId: pageID from confluence, not the name.
-  ignoredDirs:
-    - optional/dir/to/be/ignored/from/the/docs
+	pageId: pageID from confluence, not the name.
+	ignoredDirs:
+		- optional/dir/to/be/ignored/from/the/docs
 `
 	manifestTemplate, err := template.New("manifest").Parse(manifestString)
 	if err != nil {

@@ -3,10 +3,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"github.com/benchlabs/bub/core"
-	"github.com/benchlabs/bub/utils"
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -16,6 +12,11 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/google/go-github/github"
+	"github.com/j-martin/bub/core"
+	"github.com/j-martin/bub/utils"
+	"golang.org/x/oauth2"
 )
 
 type GitHub struct {
@@ -108,9 +109,11 @@ func (gh *GitHub) CreatePR(title, body, repoDir string) error {
 	if err != nil {
 		prListOptions := github.PullRequestListOptions{Head: branch, Base: base}
 		existingPRs, _, err := gh.client.PullRequests.List(ctx, org, repo, &prListOptions)
-		if len(existingPRs) > 0 {
-			log.Print("Existing PR found.")
-			return utils.OpenURI(*existingPRs[0].HTMLURL)
+		for _, existingPR := range existingPRs {
+			if strings.Contains(existingPR.GetHead().GetLabel(), branch) {
+				log.Print("Existing PR found.")
+				return utils.OpenURI(*existingPR.HTMLURL)
+			}
 		}
 		return err
 	}

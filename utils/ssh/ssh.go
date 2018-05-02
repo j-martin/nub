@@ -2,7 +2,7 @@ package ssh
 
 import (
 	"fmt"
-	"github.com/benchlabs/bub/utils"
+	"github.com/j-martin/bub/utils"
 	"log"
 	"net"
 	"os"

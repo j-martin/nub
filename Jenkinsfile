@@ -10,7 +10,7 @@ common {
     withCredentials([string(credentialsId: 'bub-bucket', variable: 'S3_BUCKET')]) {
       withEnv(env) {
         commonStage("Build") {
-          def workDir = 'src/github.com/benchlabs/bub'
+          def workDir = 'src/github.com/j-martin/bub'
           sh 'git clean -fdx'
           sh "mkdir -p '${workDir}'"
           sh "find . -mindepth 1 -maxdepth 1 -not -name src -not -name pkg -not -name '.git' -exec cp -r '{}' '${workDir}' \\;"
