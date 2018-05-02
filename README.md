@@ -1,37 +1,16 @@
 # bub
 
-`bench-hub` -> `bhub` -> `bub` a developer workflow cli tool developed at [bench.co](https://bench.co bench.co)
+`bench-hub` -> `bhub` -> `bub` a developer workflow cli tool initially developed
+during my time at [bench.co](https://bench.co).
 
 ![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Lil_Bub_2013_%28crop_for_thumb%29.jpg/440px-Lil_Bub_2013_%28crop_for_thumb%29.jpg)
-
-Some examples of things bub tries to help with:
-
-```
-COMMANDS:
-     setup          Setup bub on your machine.
-     update         Update the bub command to the latest release.
-     config         Edit your bub config.
-     repository, r  Repository related commands.
-     manifest, m    Manifest related commands.
-     ec2, e         EC2 related related actions. The commands 'bash', 'exec', 'jstack' and 'jmap' will be executed inside the container.
-     rds, r         RDS actions.
-     route53, 53    R53 actions.
-     beanstalk, eb  Elasticbeanstalk actions. If no sub-command specified, lists the environements.
-     github, gh     GitHub related commands.
-     jira, ji       JIRA related commands.
-     workflow, w    Git/GitHub/JIRA workflow commands.
-     jenkins, j     Jenkins related commands.
-     splunk, s      Splunk related commands.
-     confluence, c  Confluence related commands.
-     circle         CircleCI related commands.
-     help, h        Shows a list of commands or help for one command
-```
 
 ## Warning / Disclaimer
 
 Everything here is experimental and the commands are subject to, and will,
 change. Also, when listing the manifests the list is also incomplete, until each
-project is properly updated.
+project is properly updated. Also the tool in it's current state largely depends
+on the toolchain of my current employer. E.g. Migrating from AWS to GCP.
 
 
 ## Installation
