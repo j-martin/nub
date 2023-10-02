@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/j-martin/bub/core"
-	"github.com/urfave/cli"
 	"log"
 	"os"
+
+	"github.com/j-martin/bub/core"
+	"github.com/urfave/cli"
 )
 
 func BuildCmds() []cli.Command {
@@ -28,21 +29,15 @@ func BuildCmds() []cli.Command {
 			Subcommands: buildRepositoryCmds(cfg, manifest),
 		},
 		{
-			Name:        "manifest",
-			Aliases:     []string{"m"},
-			Usage:       "Manifest related commands.",
-			Subcommands: buildManifestCmds(cfg),
-		},
-		{
 			Name:        "github",
 			Usage:       "GitHub related commands.",
-			Aliases:     []string{"gh"},
+			Aliases:     []string{"g"},
 			Subcommands: buildGitHubCmds(cfg, manifest),
 		},
 		{
 			Name:        "jira",
 			Usage:       "JIRA related commands.",
-			Aliases:     []string{"ji"},
+			Aliases:     []string{"j"},
 			Subcommands: buildJIRACmds(cfg),
 		},
 		{
@@ -50,12 +45,6 @@ func BuildCmds() []cli.Command {
 			Usage:       "Git/GitHub/JIRA workflow commands.",
 			Aliases:     []string{"w"},
 			Subcommands: buildWorkflowCmds(cfg, manifest),
-		},
-		{
-			Name:        "jenkins",
-			Usage:       "Jenkins related commands.",
-			Aliases:     []string{"j"},
-			Subcommands: buildJenkinsCmds(cfg, manifest),
 		},
 		{
 			Name:        "confluence",

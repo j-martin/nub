@@ -1,13 +1,12 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/j-martin/bub/core"
 	"github.com/j-martin/bub/integrations/atlassian"
-	"github.com/j-martin/bub/integrations/ci"
 	"github.com/j-martin/bub/integrations/github"
-	"github.com/j-martin/bub/integrations/vault"
 	"github.com/urfave/cli"
-	"log"
 )
 
 func buildSetupCmd() cli.Command {
@@ -26,8 +25,6 @@ func buildSetupCmd() cli.Command {
 			atlassian.MustSetupJIRA(cfg)
 			atlassian.MustSetupConfluence(cfg)
 			github.MustSetupGitHub(cfg)
-			ci.MustSetupJenkins(cfg)
-			vault.MustSetupVault(cfg)
 			log.Println("Done.")
 			return nil
 		},
