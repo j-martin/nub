@@ -200,7 +200,7 @@ func (g *Git) PendingChanges(cfg *Configuration, manifest *Manifest, previousVer
 	table := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	output := g.MustRunGitWithStdout("log", "--first-parent", "--pretty=format:%h\t\t%an\t%s", previousVersion+"..."+currentVersion)
 	if formatForSlack {
-		re := g.GetIssueRegex()
+		re := g.GetIssueIdRegex()
 		output = re.ReplaceAllString(output, "<https://"+cfg.JIRA.Server+"/browse/$1|$1>")
 		re = g.GetPRRegex()
 		output = re.ReplaceAllString(output, "<https://github.com/"+cfg.GitHub.Organization+"/"+manifest.Repository+"/pull/$2|PR#$2> ")
@@ -219,14 +219,18 @@ func (g *Git) PendingChanges(cfg *Configuration, manifest *Manifest, previousVer
 func (g *Git) GetPRRegex() *regexp.Regexp {
 	return regexp.MustCompile("(Merge pull request #)(\\d+) from \\w+/")
 }
-func (g *Git) GetIssueRegex() *regexp.Regexp {
+func (g *Git) GetIssueIdRegex() *regexp.Regexp {
 	return regexp.MustCompile("([A-Z]{2,}-\\d+)")
+}
+
+func (g *Git) GetIssueTypeRegex() *regexp.Regexp {
+	return regexp.MustCompile("^([a-zA-Z]{2,})")
 }
 
 func (g *Git) PickCommit(commits []*GitCommit) (*GitCommit, error) {
 	templates := &promptui.SelectTemplates{
-		Label: "{{ . }}:",
-		Active: "▶ {{ .Hash }}	{{ .Subject }}",
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Hash }}	{{ .Subject }}",
 		Inactive: "  {{ .Hash }}	{{ .Subject }}",
 		Selected: "▶ {{ .Hash }}	{{ .Subject }}",
 		Details: `
@@ -265,7 +269,7 @@ func (g *Git) Fetch() error {
 }
 
 func (g *Git) sanitizeBranchName(name string) string {
-	r := regexp.MustCompile("[^a-zA-Z0-9]+")
+	r := regexp.MustCompile("[^a-zA-Z0-9/]+")
 	r2 := regexp.MustCompile("-+")
 	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
 }
@@ -286,6 +290,10 @@ func (g *Git) GetIssueKeyFromBranch() string {
 	return g.extractIssueKeyFromName(g.GetCurrentBranch())
 }
 
+func (g *Git) GetIssueTypeFromBranch() string {
+	return g.extractIssueTypeFromName(g.GetCurrentBranch())
+}
+
 func (g *Git) CommitWithBranchName() error {
 	return g.RunGit("commit", "-m", g.GetTitleFromBranchName(), "--all")
 }
@@ -296,6 +304,7 @@ func (g *Git) CurrentHEAD() (string, error) {
 
 func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs []string) error {
 	issueKey := g.GetIssueKeyFromBranch()
+	issueType := g.GetIssueTypeFromBranch()
 	if message == "" {
 		title := g.GetTitleFromBranchName()
 		pos := strings.Index(title, " ")
@@ -309,7 +318,7 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 		return errors.New("no commit message passed or could not be inferred from branch name")
 	}
 	if issueKey != "" {
-		message = issueKey + " " + message
+		message = issueType + "(" + issueKey + "): " + message
 	}
 	args := []string{
 		"commit", "-m", message,
@@ -322,7 +331,11 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 }
 
 func (g *Git) extractIssueKeyFromName(name string) string {
-	return g.GetIssueRegex().FindString(name)
+	return g.GetIssueIdRegex().FindString(name)
+}
+
+func (g *Git) extractIssueTypeFromName(name string) string {
+	return g.GetIssueTypeRegex().FindString(name)
 }
 
 func (g *Git) CreateBranch(name string) error {

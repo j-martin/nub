@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/j-martin/bub/core"
@@ -15,7 +15,6 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"
-	"time"
 )
 
 type JIRA struct {
@@ -247,10 +246,18 @@ func (j *JIRA) CreateBranchFromAssignedIssue() error {
 func (j *JIRA) CreateBranchFromIssue(issue *jira.Issue, repoDir string, forceNewBranch bool) error {
 	git := core.MustInitGit(repoDir)
 	git.Fetch()
-	err := git.CreateBranch(issue.Key + " " + issue.Fields.Summary)
+	prefix := "chore"
+	issueType := issue.Fields.Type.Name
+	if issueType == "Bug" {
+		prefix = "fix"
+	} else if issueType == "Story" {
+		prefix = "feat"
+	}
+	prefix = prefix + "/" + issue.Key + "/"
+	err := git.CreateBranch(prefix + issue.Fields.Summary)
 	if err != nil {
 		if forceNewBranch || utils.AskForConfirmation("Failed to create branch. Force/overwrite?") {
-			return git.ForceCreateBranch(issue.Key + " " + issue.Fields.Summary)
+			return git.ForceCreateBranch(prefix + " " + issue.Fields.Summary)
 		}
 		return nil
 	}
@@ -362,7 +369,7 @@ func (j JIRA) CreateIssue(project, summary, description, transition string, reac
 		j.logBody(res)
 		return err
 	}
-	log.Printf("%v created. %v", i.Key, path.Join(j.cfg.JIRA.Server, "browse", i.Key))
+	log.Printf("%v created. %v", i.Key, strings.TrimRight(j.cfg.JIRA.Server, "/")+"/browse/"+i.Key)
 	if transition != "" {
 		if err = j.TransitionIssue(i.Key, transition); err != nil {
 			return err
@@ -505,14 +512,15 @@ func (j *JIRA) pickIssue(issues []jira.Issue) (*jira.Issue, error) {
 	funcMaps["wordWrap"] = utils.WordWrap
 
 	templates := &promptui.SelectTemplates{
-		Label: "{{ . }}:",
-		Active: "▶ {{ .Key }}	{{ .Fields.Summary }}",
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Inactive: "  {{ .Key }}	{{ .Fields.Summary }}",
 		Selected: "▶ {{ .Key }}	{{ .Fields.Summary }}",
 		Details: `
 --------- Issue ----------
 {{ "Key:" | faint }}	{{ .Key }}
 {{ "Summary:" | faint }}	{{ .Fields.Summary }}
+{{ "Type:" | faint }}	{{ .Fields.Type.Name }}
 {{ "Assignee:" | faint }}	{{ if .Fields.Assignee }}{{ .Fields.Assignee.DisplayName }}{{ end }}
 {{ "Reporter:" | faint }}	{{ .Fields.Reporter.DisplayName }}
 {{ "Status:" | faint }}	{{ .Fields.Status.Name }}
@@ -550,11 +558,11 @@ func (j *JIRA) pickTransition(transitions []jira.Transition) (jira.Transition, e
 		return transitions[0], nil
 	}
 	templates := &promptui.SelectTemplates{
-		Label: "{{ . }}:",
-		Active: "▶ {{ .Name }}	{{ .ID }}",
+		Label:    "{{ . }}:",
+		Active:   "▶ {{ .Name }}	{{ .ID }}",
 		Inactive: "  {{ .Name }}	{{ .ID }}",
 		Selected: "▶ {{ .Name }}	{{ .ID }}",
-		Details: "",
+		Details:  "",
 	}
 
 	searcher := func(input string, index int) bool {

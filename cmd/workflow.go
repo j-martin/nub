@@ -122,7 +122,7 @@ func (wf *Workflow) Log() error {
 }
 
 func (wf *Workflow) OpenCommit(c *core.GitCommit) error {
-	issueKey := wf.Git().GetIssueRegex().FindString(c.Subject)
+	issueKey := wf.Git().GetIssueIdRegex().FindString(c.Subject)
 	pr := wf.Git().GetPRRegex().FindStringSubmatch(c.Subject)
 
 	openList := map[string]func() error{
