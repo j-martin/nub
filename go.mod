@@ -1,0 +1,53 @@
+module github.com/j-martin/bub
+
+go 1.21.0
+
+require (
+	github.com/andygrunwald/go-jira v1.0.1-0.20171116192138-9f1498acb69b
+	github.com/aws/aws-sdk-go v1.12.53
+	github.com/bndr/gojenkins v0.2.1-0.20161205134347-fb64d609b014
+	github.com/bndr/gopencils v0.0.0-20161113114152-22e283ad7611
+	github.com/chzyer/readline v0.0.0-20171103131923-a4d5111b6178
+	github.com/davecgh/go-spew v1.1.0
+	github.com/fatih/structs v1.0.0
+	github.com/go-ini/ini v1.32.0
+	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf
+	github.com/golang/snappy v0.0.0-20170215233205-553a64147049
+	github.com/google/go-github v14.0.1-0.20171202200427-fbfee053c26d+incompatible
+	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135
+	github.com/guelfey/go.dbus v0.0.0-20131113121618-f6a3a2366cc3
+	github.com/hashicorp/errwrap v0.0.0-20141028054710-7554cd9344ce
+	github.com/hashicorp/go-cleanhttp v0.0.0-20171218145408-d5fe4b57a186
+	github.com/hashicorp/go-multierror v0.0.0-20171204182908-b7773ae21874
+	github.com/hashicorp/go-rootcerts v0.0.0-20160503143440-6bb64b370b90
+	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb
+	github.com/hashicorp/vault v0.9.3-0.20180126235100-43493f27676a
+	github.com/imdario/mergo v0.0.0-20171009183408-7fe0c75c13ab
+	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
+	github.com/jszwedko/go-circleci v0.1.0
+	github.com/juju/ansiterm v0.0.0-20161107204639-35c59b9e0fe2
+	github.com/lunixbochs/vtclean v0.0.0-20170504063817-d14193dfc626
+	github.com/manifoldco/promptui v0.2.2-0.20180202131813-8debffa8c66b
+	github.com/mattn/go-colorable v0.0.9
+	github.com/mattn/go-isatty v0.0.3
+	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
+	github.com/mitchellh/go-homedir v0.0.0-20161203194507-b8bc1bf76747
+	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7
+	github.com/mitchellh/mapstructure v0.0.0-20180111000720-b4575eea38cc
+	github.com/paetzke/godot v0.0.0-20140524154610-d6291c463cf5
+	github.com/pkg/errors v0.8.0
+	github.com/pmezard/go-difflib v1.0.0
+	github.com/russross/blackfriday v0.0.0-20161003162722-5f33e7b78783
+	github.com/sethgrid/pester v0.0.0-20171127025028-760f8913c048
+	github.com/shurcooL/sanitized_anchor_name v0.0.0-20170918181015-86672fcb3f95
+	github.com/stretchr/testify v1.1.5-0.20171018052257-2aa2c176b9da
+	github.com/tmc/keyring v0.0.0-20171121202319-839169085ae1
+	github.com/trivago/tgo v1.0.1
+	github.com/urfave/cli v1.18.1-0.20161112214946-88ae7af8d41d
+	golang.org/x/net v0.0.0-20171212005608-d866cfc389ce
+	golang.org/x/oauth2 v0.0.0-20161107203327-d5040cddfc0d
+	golang.org/x/sys v0.0.0-20171222143536-83801418e1b5
+	golang.org/x/text v0.3.1-0.20171227012246-e19ae1496984
+	google.golang.org/appengine v1.0.0
+	gopkg.in/yaml.v2 v2.0.0-20160928153709-a5b47d31c556
+)

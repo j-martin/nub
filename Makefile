@@ -1,5 +1,5 @@
 PLATFORM	= $(shell uname | tr 'A-Z' 'a-z')
-ARCH		= amd64
+ARCH		= $(shell arch)
 DEP		= ./.dep
 DEP_VERSION	= 0.3.2
 OUTPUT		= bin/bub
@@ -9,22 +9,16 @@ OUTPUT		= bin/bub
 all: clean deps test darwin linux
 
 dev:
-	GOOS=darwin GOARCH=$(ARCH) go build -i -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"
+	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-$(PLATFORM)-$(ARCH)"
 
 darwin:
 	GOOS=darwin GOARCH=$(ARCH) go build -o "$(OUTPUT)-darwin-$(ARCH)"
 
 linux:
-	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-$(ARCH)"
+	GOOS=linux GOARCH=$(ARCH) go build -o "$(OUTPUT)-linux-amd64"
 
-$(DEP):
-	curl --fail --silent --location \
-		"https://github.com/golang/dep/releases/download/v$(DEP_VERSION)/dep-$(PLATFORM)-amd64" \
-		--output "$(DEP)"
-	chmod +x "$(DEP)"
-
-deps: $(DEP)
-	$(DEP) ensure --vendor-only
+deps:
+	go mod download
 
 test:
 	echo $(S3_BUCKET)
@@ -42,9 +36,9 @@ release: all
 		| xargs -n2 aws s3 cp
 	find bin -type f -name *.gz -exec shasum -a 256 {} \;
 
-install: deps dev
 	rm -f /usr/local/bin/bub
 	ln -s $(shell pwd)/bin/bub-$(PLATFORM)-$(ARCH) /usr/local/bin/bub
+install: dev
 
 fmt:
 	go fmt ./...
