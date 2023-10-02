@@ -330,7 +330,7 @@ func (j *JIRA) getIssueKeyFromBranchOrAssigned() (string, error) {
 	return key, nil
 }
 
-func (j JIRA) MoveIssueToCurrentSprint(i *jira.Issue) error {
+func (j *JIRA) MoveIssueToCurrentSprint(i *jira.Issue) error {
 	sp, err := j.getActiveSprint()
 	if err != nil {
 		return err
@@ -343,7 +343,7 @@ func (j JIRA) MoveIssueToCurrentSprint(i *jira.Issue) error {
 	return nil
 }
 
-func (j JIRA) CreateIssue(project, summary, description, transition string, reactive bool) error {
+func (j *JIRA) CreateIssue(project, summary, description, transition string, reactive bool) error {
 	if project == "" && j.cfg.JIRA.Project != "" {
 		project = j.cfg.JIRA.Project
 	} else if project == "" {
