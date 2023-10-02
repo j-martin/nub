@@ -2,17 +2,18 @@ package core
 
 import (
 	"fmt"
-	"github.com/imdario/mergo"
-	"github.com/j-martin/nub/utils"
-	"github.com/manifoldco/promptui"
-	"github.com/tmc/keyring"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path"
 	"strings"
+
+	"github.com/imdario/mergo"
+	"github.com/j-martin/nub/utils"
+	"github.com/manifoldco/promptui"
+	"github.com/tmc/keyring"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -45,14 +46,6 @@ type Configuration struct {
 		Transitions                []JIRATransition
 		Enabled                    bool
 	}
-	Jenkins    ServiceConfiguration
-	Confluence ServiceConfiguration
-	Vault      struct {
-		AuthMethod, Server, Username, Password, Path string
-	}
-	Ssh struct {
-		ConnectTimeout uint `yaml:"connectTimeout"`
-	}
 	ResetCredentials bool
 }
 
@@ -67,16 +60,9 @@ type ServiceConfiguration struct {
 var config = `---
 # use 'nub config --shared' to edit the shared config.
 github:
-	organization: benchlabs
+	organization: nestoca
 	reviewers:
 		# - reviewers (GitHub username) that will be applied to the PRs by default.
-
-jenkins:
-	server: "https://jenkins.example..com"
-
-vault:
-	server: "https://vault.example..com"
-	path: "/secret/tool/nub"
 
 confluence:
 	server: "https://example.atlassian.net/wiki"
@@ -85,9 +71,6 @@ jira:
 	server: "https://example.atlassian.net"
 	project: # default project to use when creating issues.
 	board: id of the board when creating issues in the current sprint.
-
-ssh:
-	connectTimeout: 3
 `
 
 func GetConfigString() string {
