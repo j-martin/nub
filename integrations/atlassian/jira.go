@@ -149,7 +149,7 @@ func (j *JIRA) SearchText(text, project string, resolved bool) ([]jira.Issue, er
 }
 
 func (j *JIRA) getUnassignedIssuesInSprint() ([]jira.Issue, error) {
-	jql := fmt.Sprintf("project = %v AND sprint IN openSprints() AND assignee = null AND resolution = null ORDER BY Rank", j.cfg.JIRA.Project)
+	jql := fmt.Sprintf("project = %v  AND assignee = null AND resolution = null ORDER BY Rank", j.cfg.JIRA.Project)
 	return j.search(jql)
 }
 
