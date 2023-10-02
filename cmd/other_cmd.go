@@ -3,9 +3,9 @@ package cmd
 import (
 	"log"
 
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/integrations/atlassian"
-	"github.com/j-martin/bub/integrations/github"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/integrations/atlassian"
+	"github.com/j-martin/nub/integrations/github"
 	"github.com/urfave/cli"
 )
 
@@ -13,7 +13,7 @@ func buildSetupCmd() cli.Command {
 	resetCredentials := "reset-credentials"
 	return cli.Command{
 		Name:  "setup",
-		Usage: "Setup bub on your machine.",
+		Usage: "Setup nub on your machine.",
 		Flags: []cli.Flag{
 			cli.BoolFlag{Name: resetCredentials, Usage: "Prompt you to re-enter credentials."},
 		},

@@ -1,7 +1,7 @@
-# bub
+# nub
 
-`bench-hub` -> `bhub` -> `bub` a developer workflow cli tool initially developed
-during my time at [bench.co](https://bench.co).
+`bench-hub` -> `bhub` -> `nub` -> `nub` a developer workflow cli tool initially developed
+during my time at [bench.co](https://bench.co) and now a [Nesto](https://nesto.ca).
 
 ![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Lil_Bub_2013_%28crop_for_thumb%29.jpg/440px-Lil_Bub_2013_%28crop_for_thumb%29.jpg)
 
@@ -25,9 +25,9 @@ Install prereqs below.
 
 ## Setup
 
-To setup bub, you need to have AWS credentials. Run:
+To setup nub, you need to have AWS credentials. Run:
 
-    $ bub setup
+    $ nub setup
 
 ## Usage
 
@@ -35,11 +35,11 @@ To be expanded, when in doubt, `-h` with any command/sub-command should give you
 an idea of what you can do.
 
     # from any directory
-    $ bub # or with --help
+    $ nub # or with --help
 
     # in a repo
-    $ bub gh repo
-    $ bub gh issues
+    $ nub gh repo
+    $ nub gh issues
     # ...
 
 ## Prerequisites
@@ -51,7 +51,7 @@ an idea of what you can do.
 
     $ make deps
     $ make
-    $ bin/bub<your-platform>
+    $ bin/nub<your-platform>
 
     $ make install
     $ make dev

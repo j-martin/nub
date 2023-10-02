@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/j-martin/bub/core"
+	"github.com/j-martin/nub/core"
 	"github.com/urfave/cli"
 )
 
@@ -13,7 +13,7 @@ func BuildCmds() []cli.Command {
 	if err != nil {
 		log.Printf("The configuration failed to load... %v", err)
 		core.MustSetupConfig()
-		log.Print("Run 'bub setup' to complete the setup.")
+		log.Print("Run 'nub setup' to complete the setup.")
 		os.Exit(0)
 	}
 

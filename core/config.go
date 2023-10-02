@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/imdario/mergo"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/tmc/keyring"
 	"gopkg.in/yaml.v2"
@@ -65,7 +65,7 @@ type ServiceConfiguration struct {
 }
 
 var config = `---
-# use 'bub config --shared' to edit the shared config.
+# use 'nub config --shared' to edit the shared config.
 github:
 	organization: benchlabs
 	reviewers:
@@ -76,7 +76,7 @@ jenkins:
 
 vault:
 	server: "https://vault.example..com"
-	path: "/secret/tool/bub"
+	path: "/secret/tool/nub"
 
 confluence:
 	server: "https://example.atlassian.net/wiki"
@@ -120,7 +120,7 @@ func getConfigPath(configFile string) (string, error) {
 		return "", nil
 	}
 
-	configPath := path.Join(usr.HomeDir, ".config", "bub", configFile)
+	configPath := path.Join(usr.HomeDir, ".config", "nub", configFile)
 	return configPath, nil
 }
 
@@ -137,7 +137,7 @@ func loadConfiguration(configFile string) (*Configuration, error) {
 
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Print("No bub configuration found. Please run `bub setup`")
+		log.Print("No nub configuration found. Please run `nub setup`")
 		return cfg, err
 	}
 
@@ -154,7 +154,7 @@ func GetConfigPath(configFile string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return path.Join(usr.HomeDir, ".config", "bub", configFile)
+	return path.Join(usr.HomeDir, ".config", "nub", configFile)
 }
 
 func MustSetupConfig() {
@@ -173,7 +173,7 @@ func ShowConfig(cfg *Configuration) error {
 
 func CheckServerConfig(server string) {
 	if server == "" {
-		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'bub config'.")
+		log.Fatal("Server cannot be empty, make sure the config file is properly configured. run 'nub config'.")
 	}
 }
 
@@ -206,7 +206,7 @@ func LoadCredentialItem(item string, ptr *string, resetCredentials bool) (err er
 }
 
 func LoadKeyringItem(item string, ptr *string) (err error) {
-	service := "bub"
+	service := "nub"
 	if pw, err := keyring.Get(service, item); err == nil {
 		*ptr = pw
 		return nil
@@ -218,7 +218,7 @@ func LoadKeyringItem(item string, ptr *string) (err error) {
 }
 
 func setKeyringItem(item string, ptr *string) (err error) {
-	service := "bub"
+	service := "nub"
 	prompt := promptui.Prompt{
 		Label: "Enter " + item,
 	}

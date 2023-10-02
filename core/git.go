@@ -11,7 +11,7 @@ import (
 	"sync"
 	"text/tabwriter"
 
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 )

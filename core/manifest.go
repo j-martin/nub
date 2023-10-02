@@ -2,7 +2,7 @@ package core
 
 import (
 	"errors"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/utils"
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"

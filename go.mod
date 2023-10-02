@@ -1,4 +1,4 @@
-module github.com/j-martin/bub
+module github.com/j-martin/nub
 
 go 1.21.0
 

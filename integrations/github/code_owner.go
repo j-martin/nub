@@ -1,8 +1,8 @@
 package github
 
 import (
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/utils"
 	"io/ioutil"
 	"path"
 	"regexp"

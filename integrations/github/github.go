@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/utils"
 	"golang.org/x/oauth2"
 )
 

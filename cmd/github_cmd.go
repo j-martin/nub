@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/integrations/github"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/integrations/github"
 	"github.com/urfave/cli"
 )
 

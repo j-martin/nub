@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"

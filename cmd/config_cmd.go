@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/j-martin/bub/core"
+	"github.com/j-martin/nub/core"
 	"github.com/urfave/cli"
 	"log"
 )
@@ -14,7 +14,7 @@ func buildConfigCmd(cfg *core.Configuration) cli.Command {
 	preview := "preview"
 	return cli.Command{
 		Name:  "config",
-		Usage: "Edit your bub config.",
+		Usage: "Edit your nub config.",
 		Flags: []cli.Flag{
 			cli.BoolFlag{Name: showDefaults, Usage: "Show default config for reference"},
 			cli.BoolFlag{Name: shared, Usage: "Edit shared config."},
@@ -33,7 +33,7 @@ func buildConfigCmd(cfg *core.Configuration) cli.Command {
 			if c.Bool(preview) {
 				return core.ShowConfig(cfg)
 			}
-			log.Printf("Use 'bub config --shared' to edit the shared config.")
+			log.Printf("Use 'nub config --shared' to edit the shared config.")
 			return core.EditConfiguration(core.ConfigUserFile)
 		},
 	}

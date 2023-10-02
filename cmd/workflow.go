@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/j-martin/bub/core"
-	"github.com/j-martin/bub/integrations/atlassian"
-	"github.com/j-martin/bub/integrations/github"
-	"github.com/j-martin/bub/utils"
+	"github.com/j-martin/nub/core"
+	"github.com/j-martin/nub/integrations/atlassian"
+	"github.com/j-martin/nub/integrations/github"
+	"github.com/j-martin/nub/utils"
 )
 
 type Workflow struct {
