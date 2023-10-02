@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/j-martin/bub/core"
 	"github.com/j-martin/bub/integrations/atlassian"
 	"github.com/j-martin/bub/integrations/github"
 	"github.com/j-martin/bub/utils"
-	"log"
 )
 
 type Workflow struct {

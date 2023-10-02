@@ -2,9 +2,6 @@ package core
 
 import (
 	"fmt"
-	"github.com/j-martin/bub/utils"
-	"github.com/manifoldco/promptui"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,11 +10,16 @@ import (
 	"strings"
 	"sync"
 	"text/tabwriter"
+
+	"github.com/j-martin/bub/utils"
+	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
 )
 
 type Git struct {
-	cfg *Configuration
-	dir string
+	cfg           *Configuration
+	dir           string
+	currentBranch string
 }
 
 type GitCommit struct {
@@ -73,18 +75,12 @@ func (g *Git) GetCurrentRepositoryName() string {
 }
 
 func (g *Git) GetCurrentBranch() string {
-	result, err := g.RunGitWithStdout("symbolic-ref", "--short", "-q", "HEAD")
-	if err != nil {
-		// if on jenkins the HEAD is usually detached, but you can infer the branch name.
-		branchEnv := os.Getenv("BRANCH_NAME")
-		if branchEnv != "" {
-			log.Printf("Could not get branch name from git: %v", err)
-			log.Printf("Inferring from environment variables: %v", branchEnv)
-		}
-		return branchEnv
+	if g.currentBranch != "" {
+		return g.currentBranch
 	}
-
-	return strings.Trim(string(result), "\n ")
+	result, _ := g.RunGitWithStdout("symbolic-ref", "--short", "-q", "HEAD")
+	g.currentBranch = strings.Trim(string(result), "\n ")
+	return g.currentBranch
 }
 
 func (g *Git) GetRepositoryRootPath() (string, error) {
