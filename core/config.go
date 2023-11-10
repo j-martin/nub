@@ -40,6 +40,7 @@ type Configuration struct {
 		Reviewers                     []string
 	}
 	Users []User
+	Confluence ServiceConfiguration
 	JIRA  struct {
 		Server, Username, Password string
 		Project, Board             string

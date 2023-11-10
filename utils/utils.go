@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"github.com/manifoldco/promptui"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,7 +12,43 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
+
+	"github.com/manifoldco/promptui"
 )
+
+func ProperWordWrap(text string, lineWidth int) string {
+	wrap := make([]byte, 0, len(text)+2*len(text)/lineWidth)
+	eoLine := lineWidth
+	inWord := false
+	for i, j := 0, 0; ; {
+		r, size := utf8.DecodeRuneInString(text[i:])
+		if size == 0 && r == utf8.RuneError {
+			r = ' '
+		}
+		if unicode.IsSpace(r) {
+			if inWord {
+				if i >= eoLine {
+					wrap = append(wrap, '\n')
+					eoLine = len(wrap) + lineWidth
+				} else if len(wrap) > 0 {
+					wrap = append(wrap, ' ')
+				}
+				wrap = append(wrap, text[j:i]...)
+			}
+			inWord = false
+		} else if !inWord {
+			inWord = true
+			j = i
+		}
+		if size == 0 && r == ' ' {
+			break
+		}
+		i += size
+	}
+	return string(wrap)
+}
 
 var (
 	FileDoesNotExist = errors.New("file or directory does not exists")
@@ -203,11 +238,12 @@ func RemoveDuplicatesUnordered(elements []string) []string {
 }
 
 // TimeTrack measure the excution time of a method
-// func factorial(n *big.Int) (result *big.Int) {
-//		// defer timeTrack(time.Now(), "factorial")
-//		// ... do some things, maybe even return under some condition
-//		return n
-// }
+//
+//	func factorial(n *big.Int) (result *big.Int) {
+//			// defer timeTrack(time.Now(), "factorial")
+//			// ... do some things, maybe even return under some condition
+//			return n
+//	}
 func TimeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	log.Printf("%s took %s", name, elapsed)

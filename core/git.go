@@ -268,10 +268,17 @@ func (g *Git) Fetch() error {
 	return g.RunGit("fetch")
 }
 
+func truncateText(s string, max int) string {
+	if max >= len(s) {
+		return s
+	}
+	return s[0:max]
+}
+
 func (g *Git) sanitizeBranchName(name string) string {
 	r := regexp.MustCompile("[^a-zA-Z0-9/]+")
 	r2 := regexp.MustCompile("-+")
-	return strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-")
+	return truncateText(strings.Trim(r2.ReplaceAllString(r.ReplaceAllString(name, "-"), "-"), "-"), 60)
 }
 
 func (g *Git) LogNotInMasterSubjects() []string {
@@ -319,7 +326,10 @@ func (g *Git) CommitWithIssueKey(cfg *Configuration, message string, extraArgs [
 	}
 	if issueKey != "" {
 		message = issueType + "(" + issueKey + "): " + message
+	} else if issueType != "" {
+		message = issueType + ": " + message
 	}
+	message = utils.ProperWordWrap(message, 72)
 	args := []string{
 		"commit", "-m", message,
 	}
