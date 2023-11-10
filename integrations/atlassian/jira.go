@@ -343,7 +343,7 @@ func (j *JIRA) MoveIssueToCurrentSprint(i *jira.Issue) error {
 	return nil
 }
 
-func (j *JIRA) CreateIssue(project, summary, description, transition string, reactive bool) error {
+func (j *JIRA) CreateIssue(project, summary, description, transition string, reactive, claim bool) error {
 	if project == "" && j.cfg.JIRA.Project != "" {
 		project = j.cfg.JIRA.Project
 	} else if project == "" {
@@ -358,8 +358,11 @@ func (j *JIRA) CreateIssue(project, summary, description, transition string, rea
 		},
 	}
 
-	if reactive {
+	if reactive || claim {
 		fields.Assignee = &jira.User{Name: j.cfg.JIRA.Username}
+	}
+
+	if reactive {
 		fields.Labels = []string{"reactive"}
 		fields.Unknowns = tcontainer.MarshalMap{"customfield_10100": 1}
 	}
@@ -380,6 +383,8 @@ func (j *JIRA) CreateIssue(project, summary, description, transition string, rea
 		if err != nil {
 			return err
 		}
+	}
+	if reactive || claim {
 		if utils.InRepository() && utils.AskForConfirmation("Checkout branch?") {
 			i, _, err = j.client.Issue.Get(i.Key, &jira.GetQueryOptions{})
 			if err != nil {

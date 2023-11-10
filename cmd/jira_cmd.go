@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"log"
+	"strings"
+
 	"github.com/j-martin/nub/core"
 	"github.com/j-martin/nub/integrations/atlassian"
 	"github.com/j-martin/nub/utils"
 	"github.com/urfave/cli"
-	"log"
-	"strings"
 )
 
 const jiraBeeDesc = "Open with Bee, if present."
@@ -28,6 +29,7 @@ func buildJIRACmds(cfg *core.Configuration) []cli.Command {
 }
 
 func buildJIRACreateIssueCmd(cfg *core.Configuration) cli.Command {
+	claim := "claim"
 	reactive := "reactive"
 	project := "project"
 	transition := "transition"
@@ -38,6 +40,7 @@ func buildJIRACreateIssueCmd(cfg *core.Configuration) cli.Command {
 		Usage:     "Creates a JIRA issue.",
 		ArgsUsage: "SUMMARY DESCRIPTION ... [ARGS]",
 		Flags: []cli.Flag{
+			cli.BoolFlag{Name: claim, Usage: "The issue will assigned to the current user."},
 			cli.BoolFlag{Name: reactive, Usage: "The issue will be added to the current sprint."},
 			cli.StringFlag{Name: project, Usage: "Sets project, uses the default project is not set."},
 			cli.StringFlag{Name: transition, Usage: "Set the issue transition. e.g. Done."},
@@ -48,7 +51,7 @@ func buildJIRACreateIssueCmd(cfg *core.Configuration) cli.Command {
 			}
 			summary := c.Args().Get(0)
 			desc := c.Args().Get(1)
-			return atlassian.MustInitJIRA(cfg).CreateIssue(c.String(project), summary, desc, c.String(transition), c.Bool(reactive))
+			return atlassian.MustInitJIRA(cfg).CreateIssue(c.String(project), summary, desc, c.String(transition), c.Bool(reactive), c.Bool(claim))
 		},
 	}
 }
